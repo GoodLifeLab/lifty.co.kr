@@ -15,16 +15,16 @@ const nextConfig: NextConfig = {
     // Supabase node-fetch 관련 설정
     config.resolve.alias = {
       ...config.resolve.alias,
-      'node-fetch': 'isomorphic-fetch',
+      "node-fetch": "isomorphic-fetch",
     };
 
     return config;
   },
   experimental: {
-    esmExternals: 'loose',
+    esmExternals: "loose",
   },
   // Turbopack 호환성을 위한 설정
-  transpilePackages: ['@supabase/supabase-js'],
+  transpilePackages: ["@supabase/supabase-js"],
 };
 
 export default nextConfig;
