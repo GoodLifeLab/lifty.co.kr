@@ -15,6 +15,8 @@ export default function SignupPage() {
   const [passwordError, setPasswordError] = useState("");
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isCheckingCode, setIsCheckingCode] = useState(false);
   const [error, setError] = useState("");
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -26,14 +28,9 @@ export default function SignupPage() {
     // 숫자만 입력 가능하도록 처리
     let value = e.target.value.replace(/[^\d]/g, "");
 
-    // 010으로 시작하는 경우 10으로 변환
-    if (value.startsWith("010")) {
-      value = "10" + value.slice(3);
-    }
-
     // 최대 10자리로 제한 (10 + 8자리)
-    if (value.length > 10) {
-      value = value.slice(0, 10);
+    if (value.length > 11) {
+      value = value.slice(0, 11);
     }
 
     setPhoneNumber(value);
@@ -47,7 +44,8 @@ export default function SignupPage() {
 
     try {
       setError("");
-
+      setIsSendingEmail(true);
+      setIsEmailVerified(false);
       // 이메일 인증 코드 전송 API 호출
       const response = await fetch("/api/auth/send-verification", {
         method: "POST",
@@ -72,7 +70,7 @@ export default function SignupPage() {
       setError("이메일 인증 코드 전송에 실패했습니다. 다시 시도해주세요.");
       console.error(err);
     } finally {
-      setIsLoading(false);
+      setIsSendingEmail(false);
     }
   };
 
@@ -84,7 +82,7 @@ export default function SignupPage() {
 
     try {
       setError("");
-      setIsLoading(true);
+      setIsCheckingCode(true);
 
       const response = await fetch("/api/auth/verify-code", {
         method: "POST",
@@ -106,7 +104,7 @@ export default function SignupPage() {
       setError("인증 코드 확인에 실패했습니다. 다시 시도해주세요.");
       console.error(err);
     } finally {
-      setIsLoading(false);
+      setIsCheckingCode(false);
     }
   };
 
@@ -177,10 +175,14 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={handleSendEmailVerification}
-                disabled={!email || isEmailSent || isLoading}
+                disabled={!email || isEmailSent || isSendingEmail}
                 className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
               >
-                {isLoading ? "처리중..." : isEmailSent ? "전송됨" : "인증메일"}
+                {isSendingEmail
+                  ? "처리중..."
+                  : isEmailSent
+                    ? "전송됨"
+                    : "인증메일"}
               </button>
             </div>
             {isEmailSent && (
@@ -203,11 +205,13 @@ export default function SignupPage() {
                     disabled={
                       !verificationCode ||
                       verificationCode.length !== 6 ||
+                      isEmailVerified ||
+                      isCheckingCode ||
                       isLoading
                     }
                     className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
                   >
-                    확인
+                    {isCheckingCode ? "확인중..." : "확인"}
                   </button>
                 </div>
                 <div className="flex space-x-2">
