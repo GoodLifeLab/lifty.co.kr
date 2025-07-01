@@ -1,4 +1,4 @@
-- [GITHUB ISSUE LINK]()
+- #
 
 ## 💡 변경사항 & 이슈
 
