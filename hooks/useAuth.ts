@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface User {
   id: string;
@@ -22,9 +22,9 @@ export function useAuth() {
 
   const fetchUser = async () => {
     try {
-      setAuthState(prev => ({ ...prev, loading: true, error: null }));
+      setAuthState((prev) => ({ ...prev, loading: true, error: null }));
 
-      const response = await fetch('/api/auth/me');
+      const response = await fetch("/api/auth/me");
 
       // 응답 상태 확인
       if (!response.ok) {
@@ -52,25 +52,25 @@ export function useAuth() {
         setAuthState({
           user: null,
           loading: false,
-          error: data.error || '사용자 정보를 가져올 수 없습니다.',
+          error: data.error || "사용자 정보를 가져올 수 없습니다.",
         });
       }
     } catch (error) {
-      console.error('사용자 정보 가져오기 실패:', error);
+      console.error("사용자 정보 가져오기 실패:", error);
       setAuthState({
         user: null,
         loading: false,
-        error: '네트워크 오류가 발생했습니다.',
+        error: "네트워크 오류가 발생했습니다.",
       });
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
@@ -88,15 +88,15 @@ export function useAuth() {
         return { success: false, error: data.error };
       }
     } catch (error) {
-      console.error('로그인 실패:', error);
-      return { success: false, error: '로그인 중 오류가 발생했습니다.' };
+      console.error("로그인 실패:", error);
+      return { success: false, error: "로그인 중 오류가 발생했습니다." };
     }
   };
 
   const logout = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
       });
 
       if (!response.ok) {
@@ -111,17 +111,17 @@ export function useAuth() {
 
       return { success: true };
     } catch (error) {
-      console.error('로그아웃 실패:', error);
-      return { success: false, error: '로그아웃 중 오류가 발생했습니다.' };
+      console.error("로그아웃 실패:", error);
+      return { success: false, error: "로그아웃 중 오류가 발생했습니다." };
     }
   };
 
   const signup = async (email: string, phone: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, phone, password }),
       });
@@ -138,8 +138,8 @@ export function useAuth() {
         return { success: false, error: data.error };
       }
     } catch (error) {
-      console.error('회원가입 실패:', error);
-      return { success: false, error: '회원가입 중 오류가 발생했습니다.' };
+      console.error("회원가입 실패:", error);
+      return { success: false, error: "회원가입 중 오류가 발생했습니다." };
     }
   };
 
@@ -156,4 +156,4 @@ export function useAuth() {
     signup,
     refetch: fetchUser,
   };
-} 
+}

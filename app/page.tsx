@@ -1,16 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { logout } from "./logout/action";
 
 export default function Home() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-    router.refresh();
+    await logout();
   };
 
   return (
