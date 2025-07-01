@@ -10,7 +10,8 @@ Next.js 15 + TypeScript + Tailwind CSS + Supabase + Prisma 기반의 웹 애플�
 - **ORM**: Prisma
 - **Authentication**: JWT + Cookies
 - **Email**: Nodemailer (Gmail SMTP)
-- **Deployment**: Vercel (예정)
+- **CI/CD**: GitHub Actions
+- **Deployment**: Vercel
 
 ## 환경 설정
 
@@ -32,6 +33,7 @@ NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
 # Prisma Database URL (Supabase PostgreSQL)
 DATABASE_URL="postgresql://postgres.your-project:your-password@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres"
+DIRECT_URL="postgresql://postgres.your-project:your-password@aws-0-ap-northeast-1.supabase.com:5432/postgres"
 
 # JWT 설정
 JWT_SECRET=your-super-secret-jwt-key
@@ -121,7 +123,11 @@ pnpm dev
 │   ├── email.ts         # 이메일 관련 함수
 │   ├── jwt.ts           # JWT 관련 함수
 │   └── supabase/        # Supabase 설정
-└── middleware.ts         # Next.js 미들웨어
+├── .github/              # GitHub Actions
+│   └── workflows/        # CI/CD 워크플로우
+├── middleware.ts         # Next.js 미들웨어
+├── CI.md                 # CI/CD 가이드
+└── DEPLOYMENT.md         # 배포 가이드
 ```
 
 ## 데이터베이스 스키마
@@ -197,21 +203,99 @@ pnpm db:studio      # Prisma Studio
 pnpm db:reset       # 데이터베이스 리셋
 ```
 
+## CI/CD 파이프라인
+
+이 프로젝트는 GitHub Actions를 사용한 자동화된 CI/CD 파이프라인을 구축했습니다.
+
+### CI (Continuous Integration)
+
+**트리거 조건:**
+
+- `main` 브랜치에 푸시
+- 모든 브랜치에서 Pull Request 생성
+
+**실행 단계:**
+
+1. 코드 체크아웃 및 환경 설정
+2. 의존성 설치 (`pnpm install --frozen-lockfile`)
+3. 코드 품질 검사 (ESLint, Stylelint, Prettier)
+4. 타입 검사 (TypeScript)
+5. 테스트 실행 (Jest)
+6. 빌드 테스트 (Next.js)
+7. Prisma 스키마 검사
+
+### Database Migration
+
+**PostgreSQL 서비스:**
+
+- PostgreSQL 15 컨테이너 실행
+- 자동 마이그레이션 배포
+- 스키마 검증 및 테스트
+
+### 자세한 내용
+
+- [CI/CD 가이드](./CI.md) - 파이프라인 상세 설명
+- [배포 가이드](./DEPLOYMENT.md) - Vercel 배포 가이드
+
 ## 배포
 
-### Vercel 배포 (권장)
+### Vercel 자동 배포
 
-1. GitHub 저장소 연결
-2. 환경변수 설정
-3. 자동 배포
+1. **GitHub 연동**
 
-### 환경변수 (프로덕션)
+   - Vercel에서 GitHub 저장소 연결
+   - 자동 배포 활성화
 
-- `DATABASE_URL`: Supabase PostgreSQL 연결 문자열
-- `JWT_SECRET`: 안전한 JWT 시크릿 키
-- `EMAIL_USER`: 이메일 계정
-- `EMAIL_PASS`: 이메일 앱 비밀번호
+2. **환경 변수 설정**
 
-## 라이센스
+   - Vercel 대시보드에서 환경 변수 설정
+   - 프로덕션/프리뷰 환경 분리
 
-MIT License
+3. **배포 프로세스**
+   - `main` 브랜치 푸시 → 자동 배포
+   - Pull Request → 프리뷰 배포
+   - CI 통과 후 배포 진행
+
+### 배포 상태
+
+- **Production**: [https://lifty.co.kr](https://lifty.co.kr) (예정)
+- **Preview**: Pull Request 시 자동 생성
+
+## 문제 해결
+
+### 일반적인 문제들
+
+1. **환경 변수 문제**
+
+   ```bash
+   # .env.local 파일 확인
+   cat .env.local
+
+   # 환경 변수 로드 확인
+   pnpm dev
+   ```
+
+2. **데이터베이스 연결 문제**
+
+   ```bash
+   # Prisma 연결 테스트
+   pnpm prisma db push
+
+   # 마이그레이션 상태 확인
+   pnpm prisma migrate status
+   ```
+
+3. **CI/CD 실패**
+   - GitHub Actions 로그 확인
+   - 로컬에서 동일한 명령어 실행
+   - [CI.md](./CI.md) 참조
+
+### 지원
+
+- **문서**: [CI.md](./CI.md), [DEPLOYMENT.md](./DEPLOYMENT.md)
+- **이슈**: GitHub Issues 사용
+- **커뮤니티**: 프로젝트 토론 탭
+
+## 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 배포됩니다.
