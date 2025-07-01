@@ -1,0 +1,114 @@
+name: Database Migration
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  migrate-staging-db:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: Run Prisma Migrations on Staging DB
+        run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: Run Data Migration Scripts
+        run: |
+          for script in prisma/migrations/migrate-*.ts; do
+            if [ -f "$script" ]; then
+              echo "Running migration script: $script"
+              npx tsx "$script"
+            fi
+          done
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: Verify Staging Database Schema
+        run: |
+          pnpm prisma migrate status
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: Check for Drift in Staging
+        run: |
+          if pnpm prisma migrate status | grep -q "sync with"; then
+            echo "Staging database schema is out of sync with Prisma schema!"
+            exit 1
+          else
+            echo "Staging database schema is up to date."
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+  migrate-production-db:
+    runs-on: ubuntu-latest
+    needs: migrate-staging-db
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: Run Prisma Migrations on Production DB
+        run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+
+      - name: Run Data Migration Scripts
+        run: |
+          for script in prisma/migrations/migrate-*.ts; do
+            if [ -f "$script" ]; then
+              echo "Running migration script: $script"
+              npx tsx "$script"
+            fi
+          done
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+
+      - name: Verify Production Database Schema
+        run: |
+          pnpm prisma migrate status
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+
+      - name: Check for Drift in Production
+        run: |
+          if pnpm prisma migrate status | grep -q "sync with"; then
+            echo "Production database schema is out of sync with Prisma schema!"
+            exit 1
+          else
+            echo "Production database schema is up to date."
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}

@@ -9,6 +9,7 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
+    "check-format": "prettier --check .",
     "type-check": "tsc --noEmit",
     "stylelint": "stylelint '**/*.{css,scss}' --fix",
     "test": "jest",

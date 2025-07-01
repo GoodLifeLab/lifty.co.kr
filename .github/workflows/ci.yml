@@ -1,0 +1,127 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Style Check with Stylelint
+        run: pnpm stylelint
+
+      - name: Check Format
+        run: pnpm check-format
+
+      - name: Run ESLint with Fix and Detect Changes
+        run: |
+          pnpm run lint:fix
+          git diff --exit-code || (
+            echo "⚠️ ESLint has automatically fixed some files. Please review the changes.";
+            exit 1;
+          )
+
+      - name: Type Check
+        run: pnpm type-check
+
+      - name: Run Tests
+        run: pnpm test
+        env:
+          NODE_OPTIONS: --max_old_space_size=4096
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Check Prisma Schema
+        run: pnpm prisma format --check
+
+  database-migration:
+    needs: ci
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: Run Prisma Migrations
+        run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
+      - name: Verify Database Schema
+        run: |
+          pnpm prisma migrate status
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
+      - name: Check Prisma Migrate Diff
+        run: |
+          pnpm prisma migrate diff \
+            --from-url $DATABASE_URL \
+            --to-schema-datamodel ./prisma/schema.prisma \
+            --exit-code
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
+      - name: Test Database Connection
+        run: |
+          pnpm prisma db push --accept-data-loss
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
+
+      - name: Verify Database Tables
+        run: |
+          pnpm prisma db execute --stdin <<< "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
