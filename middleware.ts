@@ -11,7 +11,14 @@ export async function middleware(request: NextRequest) {
   }
 
   // 공개 경로 (인증 불필요)
-  const publicPaths = ["/login", "/signup", "/error", "/terms"];
+  const publicPaths = [
+    "/login",
+    "/signup",
+    "/error",
+    "/terms",
+    "/reset-password",
+    "/forgot-password",
+  ];
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
 
   // 인증 토큰 확인
