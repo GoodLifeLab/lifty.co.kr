@@ -2,24 +2,60 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
 import { logout } from "./logout/action";
 
 export default function Home() {
   const router = useRouter();
+  const { deleteAccount } = useAuth();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleLogout = async () => {
     await logout();
   };
 
+  const handleDeleteAccount = async () => {
+    if (
+      !confirm("정말로 회원탈퇴를 하시겠습니까? 이 작업은 되돌릴 수 없습니다.")
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteAccount();
+
+      if (result.success) {
+        alert("회원탈퇴가 완료되었습니다.");
+        router.push("/login");
+      } else {
+        alert(result.error || "회원탈퇴에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("회원탈퇴 오류:", error);
+      alert("회원탈퇴 중 오류가 발생했습니다.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <div className="flex justify-end w-full">
+        <div className="flex justify-end w-full gap-2">
           <button
             onClick={handleLogout}
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
           >
             로그아웃
+          </button>
+          <button
+            onClick={handleDeleteAccount}
+            disabled={isDeleting}
+            className="rounded-full border border-solid border-red-500/[.3] transition-colors flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-500 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 text-red-600 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeleting ? "처리중..." : "회원탈퇴"}
           </button>
         </div>
         <Image

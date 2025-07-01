@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateUser, setAuthCookie } from "@/utils/auth";
 import { generateToken } from "@/utils/jwt";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +22,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (user.disabled) {
+      console.log("비활성화된 계정 로그인 시도:", email);
+      return NextResponse.json(
+        { success: false, error: "탈퇴된 계정입니다." },
+        { status: 403 },
+      );
+    }
+
     if (!user.emailVerified) {
       console.log("이메일 미인증:", email);
       return NextResponse.json(
@@ -29,13 +38,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    console.log("인증 성공, 토큰 생성 중:", email);
     const token = await generateToken({
       userId: user.id,
       email: user.email,
       phone: user.phone,
     });
+    console.log("토큰 생성 완료, 쿠키 설정 중");
 
     await setAuthCookie(token);
+    console.log("쿠키 설정 완료");
+
+    // 마지막 로그인 시간 업데이트
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+    console.log("마지막 로그인 시간 업데이트 완료");
 
     return NextResponse.json({
       success: true,

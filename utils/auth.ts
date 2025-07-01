@@ -6,7 +6,7 @@ import {
   JWTPayload,
 } from "./jwt";
 import { cookies } from "next/headers";
-import { createClient } from "./supabase/server";
+import { prisma } from "@/lib/prisma";
 
 export interface User {
   id: string;
@@ -14,6 +14,8 @@ export interface User {
   phone?: string;
   password: string;
   emailVerified: boolean;
+  disabled: boolean;
+  disabledAt?: Date;
   createdAt: Date;
 }
 
@@ -28,84 +30,79 @@ export async function createUser(
   phone: string,
   password: string,
 ): Promise<User> {
-  const supabase = await createClient();
-
   // 비밀번호 해시화
   const hashedPassword = await hashPassword(password);
 
-  // Supabase에 사용자 저장
-  const { data, error } = await supabase
-    .from("users")
-    .insert([
-      {
-        email,
-        phone,
-        password: hashedPassword,
-        email_verified: true,
-      },
-    ])
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`사용자 생성 실패: ${error.message}`);
-  }
+  // Prisma를 사용하여 사용자 저장
+  const user = await prisma.user.create({
+    data: {
+      email,
+      phone,
+      password: hashedPassword,
+      emailVerified: true,
+    },
+  });
 
   return {
-    id: data.id,
-    email: data.email,
-    phone: data.phone,
-    password: data.password,
-    emailVerified: data.email_verified,
-    createdAt: new Date(data.created_at),
+    id: user.id,
+    email: user.email,
+    phone: user.phone || undefined,
+    password: user.password,
+    emailVerified: user.emailVerified,
+    disabled: user.disabled,
+    disabledAt: user.disabledAt || undefined,
+    createdAt: user.createdAt,
   };
 }
 
 export async function findUserByEmail(
   email: string,
 ): Promise<User | undefined> {
-  const supabase = await createClient();
+  console.log(await prisma.user.findMany());
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+      disabled: false,
+    },
+  });
 
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .single();
-
-  if (error || !data) {
+  if (!user) {
     return undefined;
   }
 
   return {
-    id: data.id,
-    email: data.email,
-    phone: data.phone,
-    password: data.password,
-    emailVerified: data.email_verified,
-    createdAt: new Date(data.created_at),
+    id: user.id,
+    email: user.email,
+    phone: user.phone || undefined,
+    password: user.password,
+    emailVerified: user.emailVerified,
+    disabled: user.disabled,
+    disabledAt: user.disabledAt || undefined,
+    createdAt: user.createdAt,
   };
 }
 
 export async function findUserById(id: string): Promise<User | undefined> {
-  const supabase = await createClient();
+  const user = await prisma.user.findUnique({
+    where: {
+      id,
+      disabled: false,
+    },
+  });
 
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error || !data) {
+  if (!user) {
     return undefined;
   }
 
   return {
-    id: data.id,
-    email: data.email,
-    phone: data.phone,
-    password: data.password,
-    emailVerified: data.email_verified,
-    createdAt: new Date(data.created_at),
+    id: user.id,
+    email: user.email,
+    phone: user.phone || undefined,
+    password: user.password,
+    emailVerified: user.emailVerified,
+    disabled: user.disabled,
+    disabledAt: user.disabledAt || undefined,
+    createdAt: user.createdAt,
   };
 }
 

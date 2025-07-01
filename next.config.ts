@@ -20,9 +20,6 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-  experimental: {
-    esmExternals: "loose",
-  },
   // Turbopack 호환성을 위한 설정
   transpilePackages: ["@supabase/supabase-js"],
 };

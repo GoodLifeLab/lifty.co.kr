@@ -12,9 +12,15 @@
     "type-check": "tsc --noEmit",
     "stylelint": "stylelint '**/*.{css,scss}' --fix",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset"
   },
   "dependencies": {
+    "@prisma/client": "^6.10.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.0",
     "@types/bcryptjs": "^3.0.0",
@@ -25,6 +31,7 @@
     "jsonwebtoken": "^9.0.2",
     "next": "15.3.3",
     "nodemailer": "^7.0.4",
+    "prisma": "^6.10.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

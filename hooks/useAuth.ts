@@ -143,6 +143,34 @@ export function useAuth() {
     }
   };
 
+  const deleteAccount = async () => {
+    try {
+      const response = await fetch("/api/auth/delete-account", {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAuthState({
+          user: null,
+          loading: false,
+          error: null,
+        });
+        return { success: true };
+      } else {
+        return { success: false, error: data.error };
+      }
+    } catch (error) {
+      console.error("회원탈퇴 실패:", error);
+      return { success: false, error: "회원탈퇴 중 오류가 발생했습니다." };
+    }
+  };
+
   useEffect(() => {
     fetchUser();
   }, []);
@@ -154,6 +182,7 @@ export function useAuth() {
     login,
     logout,
     signup,
+    deleteAccount,
     refetch: fetchUser,
   };
 }

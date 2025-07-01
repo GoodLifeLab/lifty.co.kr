@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { prisma } from "@/lib/prisma";
 
 // 이메일 전송을 위한 transporter 설정
 const transporter = nodemailer.createTransport({
@@ -15,51 +16,159 @@ export interface EmailVerificationData {
   expiresAt: Date;
 }
 
-// 이메일 인증 코드 저장소 (메모리)
+// 이메일 인증 코드 저장소 (메모리 캐시)
 const emailVerificationCodes = new Map<string, EmailVerificationData>();
 
 export function generateEmailVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-export function saveEmailVerificationCode(email: string, code: string): void {
+export async function saveEmailVerificationCode(
+  email: string,
+  code: string,
+): Promise<void> {
+  console.log("=== saveEmailVerificationCode 함수 시작 ===");
+  console.log("저장할 이메일:", email);
+  console.log("저장할 코드:", code);
+
   const expiresAt = new Date();
   expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10분 유효
 
+  // 1. 메모리에 저장 (빠른 접근용)
   emailVerificationCodes.set(email, {
     email,
     code,
     expiresAt,
   });
+
+  // 2. 데이터베이스에 저장 (영구 저장용)
+  try {
+    // 기존 코드 삭제
+    await prisma.emailVerificationCode.deleteMany({
+      where: { email },
+    });
+
+    // 새 코드 저장
+    await prisma.emailVerificationCode.create({
+      data: {
+        email,
+        code,
+        expiresAt,
+      },
+    });
+
+    console.log(
+      "인증 코드를 메모리와 데이터베이스에 저장했습니다:",
+      email,
+      code,
+    );
+  } catch (error) {
+    console.error("데이터베이스 저장 실패 (메모리는 유지):", error);
+    // 데이터베이스 저장 실패해도 메모리는 유지
+  }
+
+  console.log(
+    "현재 저장된 모든 코드:",
+    Array.from(emailVerificationCodes.entries()),
+  );
+  console.log("=== saveEmailVerificationCode 함수 끝 ===");
 }
 
-export function verifyEmailCode(email: string, code: string): boolean {
-  const data = emailVerificationCodes.get(email);
+export async function verifyEmailCode(
+  email: string,
+  code: string,
+): Promise<boolean> {
+  console.log("=== verifyEmailCode 함수 시작 ===");
+  console.log("입력된 이메일:", email);
+  console.log("입력된 코드:", code);
+  console.log("코드 길이:", code?.length);
+  console.log(
+    "현재 저장된 모든 코드:",
+    Array.from(emailVerificationCodes.entries()),
+  );
 
-  if (!data) {
-    console.log("인증 코드를 찾을 수 없음");
-    return false;
+  // 1. 먼저 메모리에서 확인 (빠름)
+  const memoryData = emailVerificationCodes.get(email);
+  console.log("메모리에서 찾은 데이터:", memoryData);
+
+  if (memoryData) {
+    // 만료 시간 확인
+    const now = new Date();
+    const expiresAt = memoryData.expiresAt;
+    console.log("현재 시간:", now);
+    console.log("만료 시간:", expiresAt);
+    console.log("만료 여부:", now > expiresAt);
+
+    if (now > expiresAt) {
+      console.log("메모리 인증 코드가 만료됨");
+      emailVerificationCodes.delete(email);
+      // 데이터베이스에서도 삭제
+      await deleteFromDatabase(email);
+    } else if (memoryData.code === code) {
+      console.log("메모리에서 인증 코드 확인 성공");
+      // 성공 시 메모리와 데이터베이스에서 모두 삭제
+      emailVerificationCodes.delete(email);
+      await deleteFromDatabase(email);
+      return true;
+    }
   }
 
-  // 만료 시간 확인
-  const now = new Date();
-  const expiresAt = data.expiresAt;
+  // 2. 메모리에 없거나 만료된 경우 데이터베이스에서 확인
+  try {
+    const dbData = await prisma.emailVerificationCode.findUnique({
+      where: {
+        email,
+      },
+    });
 
-  if (now > expiresAt) {
-    console.log("인증 코드가 만료됨");
+    if (!dbData) {
+      console.log("데이터베이스에서 인증 코드를 찾을 수 없음");
+      return false;
+    }
+
+    console.log("데이터베이스에서 찾은 데이터:", dbData);
+
+    // 만료 시간 확인
+    const now = new Date();
+    const expiresAt = dbData.expiresAt;
+    console.log("현재 시간:", now);
+    console.log("만료 시간:", expiresAt);
+    console.log("만료 여부:", now > expiresAt);
+
+    if (now > expiresAt) {
+      console.log("데이터베이스 인증 코드가 만료됨");
+      // 만료된 코드 삭제
+      await deleteFromDatabase(email);
+      return false;
+    }
+
+    // 인증번호 확인
+    if (dbData.code !== code) {
+      console.log("데이터베이스 인증 코드가 일치하지 않음");
+      return false;
+    }
+
+    console.log("데이터베이스에서 인증 코드 확인 성공");
+    // 인증 성공 시 메모리와 데이터베이스에서 모두 삭제
     emailVerificationCodes.delete(email);
+    await deleteFromDatabase(email);
+    return true;
+  } catch (error) {
+    console.error("데이터베이스 인증 코드 확인 오류:", error);
     return false;
   }
+}
 
-  // 인증번호 확인
-  if (data.code !== code) {
-    console.log("인증 코드가 일치하지 않음");
-    return false;
+// 데이터베이스에서 인증 코드 삭제 헬퍼 함수
+async function deleteFromDatabase(email: string): Promise<void> {
+  try {
+    await prisma.emailVerificationCode.deleteMany({
+      where: { email },
+    });
+    console.log("데이터베이스에서 인증 코드 삭제 완료:", email);
+  } catch (error) {
+    console.error("데이터베이스에서 인증 코드 삭제 실패:", error);
   }
-
-  // 인증 성공 시 저장된 인증번호 삭제
-  emailVerificationCodes.delete(email);
-  return true;
 }
 
 export async function sendVerificationEmail(

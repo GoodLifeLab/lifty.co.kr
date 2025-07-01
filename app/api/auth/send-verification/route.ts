@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     // 인증 코드 생성 및 저장
     const code = generateEmailVerificationCode();
-    saveEmailVerificationCode(email, code);
+    await saveEmailVerificationCode(email, code);
 
     // 인증 코드 이메일 전송
     const success = await sendVerificationEmail(email, code);
