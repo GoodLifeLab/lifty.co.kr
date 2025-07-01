@@ -1,6 +1,12 @@
-import { generateToken, verifyToken, hashPassword, comparePassword, JWTPayload } from './jwt';
-import { cookies } from 'next/headers';
-import { createClient } from './supabase/server';
+import {
+  generateToken,
+  verifyToken,
+  hashPassword,
+  comparePassword,
+  JWTPayload,
+} from "./jwt";
+import { cookies } from "next/headers";
+import { createClient } from "./supabase/server";
 
 export interface User {
   id: string;
@@ -12,9 +18,16 @@ export interface User {
 }
 
 // 인증번호 저장소
-const verificationCodes = new Map<string, { code: string; timestamp: number }>();
+const verificationCodes = new Map<
+  string,
+  { code: string; timestamp: number }
+>();
 
-export async function createUser(email: string, phone: string, password: string): Promise<User> {
+export async function createUser(
+  email: string,
+  phone: string,
+  password: string,
+): Promise<User> {
   const supabase = await createClient();
 
   // 비밀번호 해시화
@@ -22,14 +35,14 @@ export async function createUser(email: string, phone: string, password: string)
 
   // Supabase에 사용자 저장
   const { data, error } = await supabase
-    .from('users')
+    .from("users")
     .insert([
       {
         email,
         phone,
         password: hashedPassword,
-        email_verified: false,
-      }
+        email_verified: true,
+      },
     ])
     .select()
     .single();
@@ -48,13 +61,15 @@ export async function createUser(email: string, phone: string, password: string)
   };
 }
 
-export async function findUserByEmail(email: string): Promise<User | undefined> {
+export async function findUserByEmail(
+  email: string,
+): Promise<User | undefined> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('email', email)
+    .from("users")
+    .select("*")
+    .eq("email", email)
     .single();
 
   if (error || !data) {
@@ -75,9 +90,9 @@ export async function findUserById(id: string): Promise<User | undefined> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', id)
+    .from("users")
+    .select("*")
+    .eq("id", id)
     .single();
 
   if (error || !data) {
@@ -94,7 +109,10 @@ export async function findUserById(id: string): Promise<User | undefined> {
   };
 }
 
-export async function authenticateUser(email: string, password: string): Promise<User | null> {
+export async function authenticateUser(
+  email: string,
+  password: string,
+): Promise<User | null> {
   const user = await findUserByEmail(email);
   if (!user) {
     return null;
@@ -144,13 +162,13 @@ export function verifyCode(phone: string, code: string): boolean {
 
 export async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get('auth-token')?.value;
+  const token = cookieStore.get("auth-token")?.value;
 
   if (!token) {
     return null;
   }
 
-  const payload = verifyToken(token);
+  const payload = await verifyToken(token);
   if (!payload) {
     return null;
   }
@@ -161,20 +179,20 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export async function setAuthCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set('auth-token', token, {
+  cookieStore.set("auth-token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60, // 7 days
   });
 }
 
 export async function clearAuthCookie(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete('auth-token');
+  cookieStore.delete("auth-token");
 }
 
 export async function isEmailVerified(email: string): Promise<boolean> {
   const user = await findUserByEmail(email);
   return user?.emailVerified || false;
-} 
+}

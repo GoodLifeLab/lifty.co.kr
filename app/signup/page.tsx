@@ -49,10 +49,10 @@ export default function SignupPage() {
       setError("");
 
       // 이메일 인증 코드 전송 API 호출
-      const response = await fetch('/api/auth/send-verification', {
-        method: 'POST',
+      const response = await fetch("/api/auth/send-verification", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email }),
       });
@@ -63,7 +63,10 @@ export default function SignupPage() {
         setIsEmailSent(true);
         setError("");
       } else {
-        setError(data.error || "이메일 인증 코드 전송에 실패했습니다. 다시 시도해주세요.");
+        setError(
+          data.error ||
+            "이메일 인증 코드 전송에 실패했습니다. 다시 시도해주세요.",
+        );
       }
     } catch (err) {
       setError("이메일 인증 코드 전송에 실패했습니다. 다시 시도해주세요.");
@@ -83,10 +86,10 @@ export default function SignupPage() {
       setError("");
       setIsLoading(true);
 
-      const response = await fetch('/api/auth/verify-code', {
-        method: 'POST',
+      const response = await fetch("/api/auth/verify-code", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, code: verificationCode }),
       });
@@ -197,7 +200,11 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={handleVerifyCode}
-                    disabled={!verificationCode || verificationCode.length !== 6 || isLoading}
+                    disabled={
+                      !verificationCode ||
+                      verificationCode.length !== 6 ||
+                      isLoading
+                    }
                     className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
                   >
                     확인
@@ -323,7 +330,11 @@ export default function SignupPage() {
               }
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
             >
-              {isLoading ? "가입 중..." : !isEmailVerified ? "이메일 인증 필요" : "가입하기"}
+              {isLoading
+                ? "가입 중..."
+                : !isEmailVerified
+                  ? "이메일 인증 필요"
+                  : "가입하기"}
             </button>
           </div>
 

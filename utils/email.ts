@@ -1,8 +1,8 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 // 이메일 전송을 위한 transporter 설정
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Gmail 사용 (다른 서비스도 가능)
+  service: "gmail", // Gmail 사용 (다른 서비스도 가능)
   auth: {
     user: process.env.EMAIL_USER, // Gmail 계정
     pass: process.env.EMAIL_PASS, // Gmail 앱 비밀번호
@@ -31,15 +31,13 @@ export function saveEmailVerificationCode(email: string, code: string): void {
     code,
     expiresAt,
   });
-
-  console.log('인증 코드를 메모리에 저장했습니다:', email, code);
 }
 
 export function verifyEmailCode(email: string, code: string): boolean {
   const data = emailVerificationCodes.get(email);
 
   if (!data) {
-    console.log('인증 코드를 찾을 수 없음');
+    console.log("인증 코드를 찾을 수 없음");
     return false;
   }
 
@@ -48,29 +46,31 @@ export function verifyEmailCode(email: string, code: string): boolean {
   const expiresAt = data.expiresAt;
 
   if (now > expiresAt) {
-    console.log('인증 코드가 만료됨');
+    console.log("인증 코드가 만료됨");
     emailVerificationCodes.delete(email);
     return false;
   }
 
   // 인증번호 확인
   if (data.code !== code) {
-    console.log('인증 코드가 일치하지 않음');
+    console.log("인증 코드가 일치하지 않음");
     return false;
   }
 
   // 인증 성공 시 저장된 인증번호 삭제
-  console.log('인증 코드 확인 성공');
   emailVerificationCodes.delete(email);
   return true;
 }
 
-export async function sendVerificationEmail(email: string, code: string): Promise<boolean> {
+export async function sendVerificationEmail(
+  email: string,
+  code: string,
+): Promise<boolean> {
   try {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: '[Lifty] 이메일 인증 코드',
+      subject: "[Lifty] 이메일 인증 코드",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">Lifty 이메일 인증</h2>
@@ -93,19 +93,22 @@ export async function sendVerificationEmail(email: string, code: string): Promis
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('이메일 전송 실패:', error);
+    console.error("이메일 전송 실패:", error);
     return false;
   }
 }
 
-export async function sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
+export async function sendPasswordResetEmail(
+  email: string,
+  token: string,
+): Promise<boolean> {
   try {
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: '[Lifty] 비밀번호 재설정',
+      subject: "[Lifty] 비밀번호 재설정",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">비밀번호 재설정</h2>
@@ -131,7 +134,7 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
-    console.error('이메일 전송 실패:', error);
+    console.error("이메일 전송 실패:", error);
     return false;
   }
-} 
+}
