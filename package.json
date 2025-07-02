@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "build": "pnpm run clean && pnpm prisma:generate && pnpm next build",
+    "start": "next start -p $PORT",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
@@ -17,6 +17,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:local": "dotenv -e .env.local pnpm prisma migrate dev",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset"
   },
