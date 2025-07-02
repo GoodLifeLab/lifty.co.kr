@@ -1,11 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -20,8 +14,10 @@
     "NODE_ENV": "production"
   },
   "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30
+    "pages/api/**/*": {
+      "memory": 3009,
+      "maxDuration": 300,
+      "includeFiles": "**/*"
     }
   },
   "installCommand": "pnpm install --frozen-lockfile",
