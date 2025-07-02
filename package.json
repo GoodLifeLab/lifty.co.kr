@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "clean": "rm -rf .next",
+    "build": "pnpm run clean && pnpm prisma:generate && pnpm next build",
+    "start": "next start -p $PORT",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
@@ -14,11 +15,12 @@
     "stylelint": "stylelint '**/*.{css,scss}' --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset"
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:local": "dotenv -e .env.local pnpm prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "prisma:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",
