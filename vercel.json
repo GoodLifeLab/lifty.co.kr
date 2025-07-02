@@ -1,29 +1,13 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30
+    "pages/api/**/*": {
+      "memory": 3009,
+      "maxDuration": 300,
+      "includeFiles": "**/*"
     }
   },
+  "crons": [],
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build"
 }
