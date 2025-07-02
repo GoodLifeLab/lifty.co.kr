@@ -115,7 +115,7 @@ jobs:
       - name: Check Prisma Migrate Diff
         run: |
           pnpm prisma migrate diff \
-            --from-url $DATABASE_URL \
+            --from-url $DIRECT_URL \
             --to-schema-datamodel ./prisma/schema.prisma \
             --exit-code
         env:
