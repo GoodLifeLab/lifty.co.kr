@@ -102,14 +102,14 @@ jobs:
       - name: Run Prisma Migrations
         run: pnpm prisma migrate deploy
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
 
       - name: Verify Database Schema
         run: |
           pnpm prisma migrate status
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
 
       - name: Check Prisma Migrate Diff
@@ -119,19 +119,19 @@ jobs:
             --to-schema-datamodel ./prisma/schema.prisma \
             --exit-code
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb?pgbouncer=true
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
 
       - name: Test Database Connection
         run: |
           pnpm prisma db push --accept-data-loss
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
 
       - name: Verify Database Tables
         run: |
           pnpm prisma db execute --stdin <<< "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
