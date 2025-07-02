@@ -121,7 +121,7 @@ jobs:
 
       - name: Verify Database Tables
         run: |
-          pnpm prisma db execute --stdin <<< "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
+          pnpm prisma db execute --url $DIRECT_URL --stdin <<< "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
