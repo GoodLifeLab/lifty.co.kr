@@ -1,18 +1,5 @@
 {
-  "version": 2,
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "pages/api/**/*": {
       "memory": 3009,
@@ -20,6 +7,7 @@
       "includeFiles": "**/*"
     }
   },
+  "crons": [],
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build"
 }
