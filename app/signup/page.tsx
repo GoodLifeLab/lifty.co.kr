@@ -248,9 +248,6 @@ export default function SignupPage() {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               placeholder="1012345678"
             />
-            <p className="mt-1 text-sm text-gray-500">
-              예시: 1012345678 (010으로 시작해도 자동 변환됩니다)
-            </p>
           </div>
 
           {/* 비밀번호 섹션 */}
