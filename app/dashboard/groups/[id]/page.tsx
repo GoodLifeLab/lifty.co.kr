@@ -459,7 +459,7 @@ export default function GroupDetailPage() {
                             </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900">
-                                {member.user.email}
+                                {member.user.name || member.user.email}
                                 {currentUser?.id === member.user.id && (
                                   <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                     나
