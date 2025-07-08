@@ -11,16 +11,17 @@ import {
   CogIcon,
   PlusIcon,
   ArrowLeftIcon,
-  EnvelopeIcon,
-  PhoneIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { Group, User } from "@prisma/client";
+import { Group, GroupMember, User } from "@prisma/client";
 import InviteMembersModal from "@/app/components/InviteMembersModal";
 import GroupSettingsModal from "@/app/components/GroupSettingsModal";
 
 type GroupWithMembers = Group & {
-  members: Pick<User, "id" | "email">[];
+  memberships: GroupMember &
+    {
+      user: User;
+    }[];
 };
 
 export default function GroupDetailPage() {
@@ -356,7 +357,7 @@ export default function GroupDetailPage() {
               </span>
               <span className="flex items-center">
                 <UserIcon className="h-4 w-4 mr-1" />
-                멤버 {group.members ? group.members.length : 0}명
+                멤버 {group.memberships ? group.memberships.length : 0}명
               </span>
             </div>
           </div>
@@ -369,7 +370,7 @@ export default function GroupDetailPage() {
           <h3 className="text-lg font-medium text-gray-900">멤버 목록</h3>
         </div>
         <div className="p-6">
-          {group.members && group.members.length > 0 ? (
+          {group.memberships && group.memberships.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -395,8 +396,8 @@ export default function GroupDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {group.members.map((member) => (
-                    <tr key={member.id} className="hover:bg-gray-50">
+                  {group.memberships.map((member) => (
+                    <tr key={member.user.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
@@ -404,8 +405,8 @@ export default function GroupDetailPage() {
                           </div>
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {member.email}
-                              {currentUser?.id === member.id && (
+                              {member.user.email}
+                              {currentUser?.id === member.user.id && (
                                 <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                   나
                                 </span>
@@ -416,17 +417,17 @@ export default function GroupDetailPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {member.email}
+                        {member.user.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {currentUser?.id !== member.id && (
+                        {currentUser?.id !== member.user.id && (
                           <button
-                            onClick={() => handleRemoveMember(member.id)}
-                            disabled={removingMember === member.id}
+                            onClick={() => handleRemoveMember(member.user.id)}
+                            disabled={removingMember === member.user.id}
                             className="text-red-600 hover:text-red-900 transition-colors disabled:opacity-50"
                             title="멤버 방출"
                           >
-                            {removingMember === member.id ? (
+                            {removingMember === member.user.id ? (
                               <svg
                                 className="animate-spin h-5 w-5 text-red-600"
                                 xmlns="http://www.w3.org/2000/svg"
@@ -474,7 +475,7 @@ export default function GroupDetailPage() {
         onSubmit={handleInviteMembers}
         loading={inviting}
         groupId={groupId}
-        existingMembers={group?.members || []}
+        existingMembers={group?.memberships.map((member) => member.user) || []}
       />
 
       {/* 그룹 설정 모달 */}

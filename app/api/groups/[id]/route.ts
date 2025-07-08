@@ -30,21 +30,17 @@ export async function GET(
     const group = await prisma.group.findFirst({
       where: {
         id: groupId,
-        members: {
-          some: {
-            id: currentUser.id,
-          },
-        },
       },
       include: {
-        members: {
-          select: {
-            id: true,
-            email: true,
+        memberships: {
+          include: {
+            user: true,
           },
         },
       },
     });
+
+    console.log(group?.memberships);
 
     if (!group) {
       return NextResponse.json(
@@ -114,11 +110,14 @@ export async function PUT(
     const existingGroup = await prisma.group.findFirst({
       where: {
         id: groupId,
-        members: {
+        memberships: {
           some: {
-            id: currentUser.id,
+            userId: currentUser.id,
           },
         },
+      },
+      include: {
+        memberships: true,
       },
     });
 
@@ -129,6 +128,13 @@ export async function PUT(
       );
     }
 
+    if (existingGroup.memberships[0].role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "그룹 관리자만 그룹 정보를 업데이트할 수 있습니다." },
+        { status: 403 },
+      );
+    }
+
     // 그룹 정보 업데이트
     const updatedGroup = await prisma.group.update({
       where: { id: groupId },
@@ -136,14 +142,6 @@ export async function PUT(
         name: name.trim(),
         description: description?.trim() || null,
         isPublic: Boolean(isPublic),
-      },
-      include: {
-        members: {
-          select: {
-            id: true,
-            email: true,
-          },
-        },
       },
     });
 
@@ -188,17 +186,17 @@ export async function DELETE(
     const group = await prisma.group.findFirst({
       where: {
         id: groupId,
-        members: {
+        memberships: {
           some: {
-            id: currentUser.id,
+            userId: currentUser.id,
           },
         },
       },
       include: {
-        members: {
+        memberships: {
           select: {
             id: true,
-            email: true,
+            userId: true,
           },
         },
       },

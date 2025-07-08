@@ -17,7 +17,7 @@ export async function GET() {
     // 그룹 데이터를 클라이언트에 맞게 변환
     const groups = await prisma.group.findMany({
       include: {
-        members: true,
+        memberships: true,
       },
     });
 
@@ -72,16 +72,21 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         description: description?.trim() || null,
         isPublic: isPublic ?? true,
-        members: {
-          connect: { id: user.id },
+        memberships: {
+          create: {
+            userId: user.id,
+            role: "ADMIN",
+            startDate: new Date(),
+          },
         },
       },
       include: {
-        members: {
+        memberships: {
           select: {
             id: true,
-            name: true,
-            email: true,
+            userId: true,
+            role: true,
+            startDate: true,
           },
         },
       },
@@ -94,7 +99,7 @@ export async function POST(request: NextRequest) {
       description: newGroup.description,
       image: newGroup.image,
       isPublic: newGroup.isPublic,
-      memberCount: newGroup.members.length,
+      memberCount: newGroup.memberships.length,
       createdAt: newGroup.createdAt.toISOString().split("T")[0],
     };
 

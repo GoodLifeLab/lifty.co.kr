@@ -31,8 +31,8 @@ export async function DELETE(
     const group = await prisma.group.findUnique({
       where: { id: groupId },
       include: {
-        members: {
-          where: { id: currentUser.id },
+        memberships: {
+          where: { userId: currentUser.id },
         },
       },
     });
@@ -45,9 +45,9 @@ export async function DELETE(
     }
 
     // 그룹 멤버인지 확인
-    if (group.members.length === 0) {
+    if (group.memberships[0].role !== "ADMIN") {
       return NextResponse.json(
-        { error: "그룹 멤버가 아닙니다." },
+        { error: "그룹 관리자만 멤버를 방출할 수 있습니다." },
         { status: 403 },
       );
     }
@@ -61,12 +61,9 @@ export async function DELETE(
     }
 
     // 멤버 방출
-    await prisma.group.update({
-      where: { id: groupId },
-      data: {
-        members: {
-          disconnect: { id: memberId },
-        },
+    await prisma.groupMember.delete({
+      where: {
+        userId_groupId: { userId: memberId, groupId },
       },
     });
 

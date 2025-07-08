@@ -38,8 +38,10 @@ export async function POST(
     const group = await prisma.group.findUnique({
       where: { id: groupId },
       include: {
-        members: {
-          where: { id: currentUser.id },
+        memberships: {
+          where: {
+            userId: currentUser.id,
+          },
         },
       },
     });
@@ -52,9 +54,9 @@ export async function POST(
     }
 
     // 그룹 멤버인지 확인
-    if (group.members.length === 0) {
+    if (group.memberships[0].role !== "ADMIN") {
       return NextResponse.json(
-        { error: "그룹 멤버가 아닙니다." },
+        { error: "그룹 관리자만 초대할 수 있습니다." },
         { status: 403 },
       );
     }
@@ -79,18 +81,18 @@ export async function POST(
     const existingMembers = await prisma.group.findUnique({
       where: { id: groupId },
       include: {
-        members: {
+        memberships: {
           where: {
-            id: { in: memberIds },
+            userId: { in: memberIds },
           },
-          select: { id: true, email: true },
+          select: { id: true, userId: true },
         },
       },
     });
 
-    const alreadyMembers = existingMembers?.members || [];
+    const alreadyMembers = existingMembers?.memberships || [];
     const newMembers = usersToInvite.filter(
-      (user) => !alreadyMembers.some((member) => member.id === user.id),
+      (user) => !alreadyMembers.some((member) => member.userId === user.id),
     );
 
     if (newMembers.length === 0) {
@@ -101,12 +103,12 @@ export async function POST(
     }
 
     // 새 멤버들을 그룹에 추가
-    await prisma.group.update({
-      where: { id: groupId },
+    await prisma.groupMember.create({
       data: {
-        members: {
-          connect: newMembers.map((user) => ({ id: user.id })),
-        },
+        userId: newMembers[0].id,
+        groupId,
+        startDate: new Date(),
+        role: "member",
       },
     });
 

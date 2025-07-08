@@ -22,7 +22,6 @@ export default function InviteMembersModal({
   onClose,
   onSubmit,
   loading = false,
-  groupId,
   existingMembers = [],
 }: InviteMembersModalProps) {
   const [users, setUsers] = useState<User[]>([]);
@@ -59,7 +58,7 @@ export default function InviteMembersModal({
     if (isOpen) {
       fetchUsers();
     }
-  }, [isOpen, existingMembers]);
+  }, [isOpen]);
 
   // 검색어에 따른 필터링된 사용자 목록
   const filteredUsers = users.filter(
