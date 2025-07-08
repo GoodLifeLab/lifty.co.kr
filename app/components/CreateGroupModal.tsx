@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import ImageUploadInput from "@/components/ImageUploadInput";
 import Image from "next/image";
+import { useAuth } from "@/hooks/useAuth";
 
 interface User {
   id: string;
@@ -35,6 +36,7 @@ export default function CreateGroupModal({
   onSubmit,
   loading = false,
 }: CreateGroupModalProps) {
+  const { user: currentUser } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -57,7 +59,11 @@ export default function CreateGroupModal({
       }
 
       const data = await response.json();
-      setUsers(data.users || []);
+      // 현재 사용자 제외
+      const filteredUsers = data.users.filter(
+        (user: User) => user.id !== currentUser?.id,
+      );
+      setUsers(filteredUsers || []);
     } catch (error) {
       console.error("사용자 목록 조회 오류:", error);
     } finally {
@@ -67,10 +73,10 @@ export default function CreateGroupModal({
 
   // 모달이 열릴 때 사용자 목록 가져오기
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && currentUser) {
       fetchUsers();
     }
-  }, [isOpen]);
+  }, [isOpen, currentUser]);
 
   // 검색어에 따른 필터링된 사용자 목록
   const filteredUsers = users.filter(

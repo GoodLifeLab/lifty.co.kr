@@ -337,10 +337,11 @@ export default function GroupDetailPage() {
                 {group.name}
               </h2>
               <span
-                className={`px-3 py-1 text-sm font-medium rounded-full ${group.isPublic
+                className={`px-3 py-1 text-sm font-medium rounded-full ${
+                  group.isPublic
                     ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-800"
-                  }`}
+                }`}
               >
                 {group.isPublic ? (
                   <>
@@ -436,10 +437,11 @@ export default function GroupDetailPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {member.endDate ? (
                           <span
-                            className={`${new Date(member.endDate) < new Date()
+                            className={`${
+                              new Date(member.endDate) < new Date()
                                 ? "text-red-600 font-medium"
                                 : "text-gray-500"
-                              }`}
+                            }`}
                           >
                             {new Date(member.endDate).toLocaleDateString()}
                             {new Date(member.endDate) < new Date() && (
