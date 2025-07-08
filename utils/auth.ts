@@ -158,20 +158,27 @@ export function verifyCode(phone: string, code: string): boolean {
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth-token")?.value;
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth-token")?.value;
 
-  if (!token) {
+    if (!token) {
+      return null;
+    }
+
+    const payload = await verifyToken(token);
+
+    if (!payload) {
+      return null;
+    }
+
+    const user = await findUserById(payload.userId);
+
+    return user || null;
+  } catch (error) {
+    console.error("getCurrentUser 오류:", error);
     return null;
   }
-
-  const payload = await verifyToken(token);
-  if (!payload) {
-    return null;
-  }
-
-  const user = await findUserById(payload.userId);
-  return user || null;
 }
 
 export async function setAuthCookie(token: string): Promise<void> {

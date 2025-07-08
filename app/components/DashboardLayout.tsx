@@ -5,6 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { logout } from "../logout/action";
+import {
+  HomeIcon,
+  FolderIcon,
+  UserGroupIcon,
+  UsersIcon,
+  Bars3Icon,
+  XMarkIcon,
+  MagnifyingGlassIcon,
+  BellIcon,
+  ArrowRightOnRectangleIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -41,9 +53,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const navigation = [
-    { name: "대시보드", href: "/dashboard", icon: "📊" },
-    { name: "프로젝트", href: "/dashboard/projects", icon: "📁" },
-    { name: "팀", href: "/dashboard/team", icon: "👥" },
+    { name: "대시보드", href: "/dashboard", icon: HomeIcon },
+    { name: "프로젝트", href: "/dashboard/projects", icon: FolderIcon },
+    { name: "그룹", href: "/dashboard/groups", icon: UserGroupIcon },
+    { name: "팀", href: "/dashboard/team", icon: UsersIcon },
   ];
 
   return (
@@ -69,7 +82,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
             >
-              <span className="sr-only">사이드바 닫기</span>✕
+              <span className="sr-only">사이드바 닫기</span>
+              <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
 
@@ -81,7 +95,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   href={item.href}
                   className="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                 >
-                  <span className="mr-3 text-lg">{item.icon}</span>
+                  <item.icon className="mr-3 h-5 w-5" />
                   {item.name}
                 </Link>
               ))}
@@ -107,14 +121,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 onClick={handleLogout}
                 className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
               >
-                <span className="mr-3">🚪</span>
+                <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5" />
                 로그아웃
               </button>
               <button
                 onClick={handleDeleteAccount}
                 className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
               >
-                <span className="mr-3">🗑️</span>
+                <TrashIcon className="mr-3 h-5 w-5" />
                 회원탈퇴
               </button>
             </div>
@@ -131,7 +145,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
             >
-              <span className="sr-only">사이드바 열기</span>☰
+              <span className="sr-only">사이드바 열기</span>
+              <Bars3Icon className="h-6 w-6" />
             </button>
 
             <div className="flex items-center space-x-4">
@@ -142,13 +157,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-400">🔍</span>
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
                 </div>
               </div>
 
               <button className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md">
                 <span className="sr-only">알림</span>
-                🔔
+                <BellIcon className="h-6 w-6" />
               </button>
             </div>
           </div>
