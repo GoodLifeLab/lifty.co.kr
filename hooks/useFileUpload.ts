@@ -9,6 +9,7 @@ interface UploadProgress {
 interface UseFileUploadOptions {
   maxSize?: number; // MB 단위
   allowedTypes?: string[];
+  folder?: string; // S3 폴더 경로
   onProgress?: (progress: UploadProgress) => void;
   onSuccess?: (url: string) => void;
   onError?: (error: string) => void;
@@ -29,6 +30,7 @@ export const useFileUpload = (
   const {
     maxSize = 10, // 기본 10MB
     allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"],
+    folder,
     onProgress,
     onSuccess,
     onError,
@@ -83,6 +85,7 @@ export const useFileUpload = (
             fileName: file.name,
             fileType: file.type,
             fileSize: file.size,
+            folder: folder, // 폴더 정보 추가
           }),
         });
 
@@ -141,7 +144,7 @@ export const useFileUpload = (
         setProgress(null);
       }
     },
-    [validateFile, onSuccess, onError],
+    [validateFile, folder, onSuccess, onError],
   );
 
   const uploadMultipleFiles = useCallback(

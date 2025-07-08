@@ -15,7 +15,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { fileName, fileType, fileSize } = await request.json();
+    const {
+      fileName,
+      fileType,
+      fileSize,
+      folder = "uploads",
+    } = await request.json();
 
     if (!fileName || !fileType || !fileSize) {
       return NextResponse.json(
@@ -46,7 +51,7 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
     const fileExtension = fileName.split(".").pop();
-    const s3Key = `uploads/${timestamp}_${randomString}.${fileExtension}`;
+    const s3Key = `${folder}/${timestamp}_${randomString}.${fileExtension}`;
 
     // AWS S3 클라이언트 생성
     const s3Client = new S3Client({

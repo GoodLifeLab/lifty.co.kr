@@ -20,6 +20,7 @@ interface ImageUploadInputProps {
   placeholder?: string;
   maxFiles?: number;
   hideAfterUpload?: boolean; // 업로드 완료 후 입력 필드 숨김
+  folder?: string; // S3 폴더 경로
 }
 
 export default function ImageUploadInput({
@@ -34,6 +35,7 @@ export default function ImageUploadInput({
   placeholder = "이미지를 선택하거나 여기에 드래그하세요",
   maxFiles = 5,
   hideAfterUpload = false,
+  folder = "uploads",
 }: ImageUploadInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -42,6 +44,7 @@ export default function ImageUploadInput({
   const { uploadFile, isUploading, error, reset } = useFileUpload({
     maxSize,
     allowedTypes,
+    folder,
     onSuccess: (url) => {
       onUploadComplete(url);
       setIsUploaded(true);

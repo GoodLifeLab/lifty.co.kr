@@ -233,6 +233,7 @@ export default function GroupSettingsModal({
                 placeholder="그룹 이미지를 업로드하세요"
                 disabled={loading || deleting}
                 hideAfterUpload={true}
+                folder="groups"
               />
             )}
             <p className="mt-1 text-xs text-gray-500">

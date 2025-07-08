@@ -219,6 +219,7 @@ export default function CreateGroupModal({
                 placeholder="그룹 이미지를 업로드하세요"
                 disabled={loading}
                 hideAfterUpload={true}
+                folder="groups"
               />
             )}
           </div>
