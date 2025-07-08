@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/utils/auth";
 
-// 사용자 목록 가져오기
-export async function GET() {
+// 사용자 목록 조회
+export async function GET(request: NextRequest) {
   try {
     const currentUser = await getCurrentUser();
 
@@ -14,27 +14,50 @@ export async function GET() {
       );
     }
 
-    // 활성화된 사용자만 가져오기 (비활성화된 사용자 제외)
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || "";
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const offset = parseInt(searchParams.get("offset") || "0");
+
+    // 검색 조건
+    const where: any = {
+      disabled: false,
+    };
+
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    // 사용자 목록 조회
     const users = await prisma.user.findMany({
-      where: {
-        disabled: false,
-      },
+      where,
       select: {
         id: true,
         email: true,
         phone: true,
         createdAt: true,
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
     });
 
-    return NextResponse.json({ users });
+    // 전체 개수 조회
+    const total = await prisma.user.count({ where });
+
+    return NextResponse.json({
+      users,
+      total,
+      limit,
+      offset,
+    });
   } catch (error) {
     console.error("사용자 목록 조회 오류:", error);
     return NextResponse.json(
-      { error: "사용자 목록을 가져오는 중 오류가 발생했습니다." },
+      { error: "사용자 목록을 가져오는데 실패했습니다." },
       { status: 500 },
     );
   }

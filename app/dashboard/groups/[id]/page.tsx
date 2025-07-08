@@ -16,6 +16,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Group, User } from "@prisma/client";
+import InviteMembersModal from "@/app/components/InviteMembersModal";
 
 type GroupWithMembers = Group & {
   members: Pick<User, "id" | "email">[];
@@ -34,6 +35,8 @@ export default function GroupDetailPage() {
     id: string;
     email: string;
   } | null>(null);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviting, setInviting] = useState(false);
 
   // 현재 사용자 정보 가져오기
   const fetchCurrentUser = async () => {
@@ -109,6 +112,39 @@ export default function GroupDetailPage() {
       );
     } finally {
       setRemovingMember(null);
+    }
+  };
+
+  // 멤버 초대
+  const handleInviteMembers = async (memberIds: string[]) => {
+    try {
+      setInviting(true);
+      const response = await fetch(`/api/groups/${groupId}/invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ memberIds }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "멤버 초대에 실패했습니다.");
+      }
+
+      const data = await response.json();
+      alert(data.message);
+
+      // 그룹 정보 새로고침
+      await fetchGroupDetail();
+      setInviteModalOpen(false);
+    } catch (error) {
+      console.error("멤버 초대 오류:", error);
+      alert(
+        error instanceof Error ? error.message : "멤버 초대에 실패했습니다.",
+      );
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -193,7 +229,10 @@ export default function GroupDetailPage() {
             <CogIcon className="h-4 w-4 mr-2" />
             설정
           </button>
-          <button className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center">
+          <button
+            onClick={() => setInviteModalOpen(true)}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center"
+          >
             <PlusIcon className="h-4 w-4 mr-2" />
             멤버 초대
           </button>
@@ -303,7 +342,7 @@ export default function GroupDetailPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {member.email}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {currentUser?.id !== member.id && (
                           <button
                             onClick={() => handleRemoveMember(member.id)}
@@ -351,6 +390,16 @@ export default function GroupDetailPage() {
           )}
         </div>
       </div>
+
+      {/* 멤버 초대 모달 */}
+      <InviteMembersModal
+        isOpen={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        onSubmit={handleInviteMembers}
+        loading={inviting}
+        groupId={groupId}
+        existingMembers={group?.members || []}
+      />
     </div>
   );
 }
