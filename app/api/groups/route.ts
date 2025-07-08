@@ -45,12 +45,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, isPublic } = body;
+    const { name, description, isPublic, image } = body;
 
     // 필수 필드 검증
     if (!name || !name.trim()) {
       return NextResponse.json(
         { error: "그룹 이름은 필수입니다." },
+        { status: 400 },
+      );
+    }
+
+    // 이미지 URL 검증 (선택사항이지만 제공된 경우 유효성 검사)
+    if (image && !image.trim()) {
+      return NextResponse.json(
+        { error: "이미지 URL이 유효하지 않습니다." },
         { status: 400 },
       );
     }
@@ -72,6 +80,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: name.trim(),
         description: description?.trim() || null,
+        image: image?.trim() || null,
         isPublic: isPublic ?? true,
         memberships: {
           create: {

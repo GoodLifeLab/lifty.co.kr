@@ -6,7 +6,7 @@ import { GroupMemberRole } from "@prisma/client";
 // 그룹에서 멤버 방출
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; memberId: string } },
+  { params }: { params: Promise<{ id: string; memberId: string }> },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -18,8 +18,8 @@ export async function DELETE(
       );
     }
 
-    const groupId = parseInt(params.id);
-    const memberId = params.memberId;
+    const { id, memberId } = await params;
+    const groupId = parseInt(id);
 
     if (isNaN(groupId)) {
       return NextResponse.json(

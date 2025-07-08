@@ -151,6 +151,7 @@ export default function GroupDetailPage() {
     name: string;
     description: string;
     isPublic: boolean;
+    image?: string;
   }) => {
     try {
       setUpdating(true);
@@ -312,7 +313,22 @@ export default function GroupDetailPage() {
       {/* 그룹 정보 카드 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-start space-x-6">
-          <div className="w-20 h-20 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          {group.image ? (
+            <img
+              src={group.image}
+              alt={group.name}
+              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+              onError={(e) => {
+                // 이미지 로드 실패 시 기본 아이콘으로 대체
+                const target = e.target as HTMLImageElement;
+                target.style.display = "none";
+                target.nextElementSibling?.classList.remove("hidden");
+              }}
+            />
+          ) : null}
+          <div
+            className={`w-20 h-20 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0 ${group.image ? "hidden" : ""}`}
+          >
             <UserGroupIcon className="h-10 w-10 text-indigo-600" />
           </div>
           <div className="flex-1">

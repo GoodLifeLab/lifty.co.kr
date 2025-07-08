@@ -46,6 +46,7 @@ export default function GroupsPage() {
     name: string;
     description: string;
     isPublic: boolean;
+    image?: string;
     memberIds: string[];
   }) => {
     try {
@@ -182,7 +183,22 @@ export default function GroupsPage() {
                   onClick={() => router.push(`/dashboard/groups/${group.id}`)}
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    {group.image ? (
+                      <img
+                        src={group.image}
+                        alt={group.name}
+                        className="w-12 h-12 rounded-lg object-cover"
+                        onError={(e) => {
+                          // 이미지 로드 실패 시 기본 아이콘으로 대체
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                          target.nextElementSibling?.classList.remove("hidden");
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center ${group.image ? "hidden" : ""}`}
+                    >
                       <UserGroupIcon className="h-6 w-6 text-indigo-600" />
                     </div>
                     <div className="flex items-center space-x-2">

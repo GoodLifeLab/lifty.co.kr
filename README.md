@@ -10,6 +10,7 @@ Next.js 15 + TypeScript + Tailwind CSS + Supabase + Prisma 기반의 웹 애플�
 - **ORM**: Prisma
 - **Authentication**: JWT + Cookies
 - **Email**: Nodemailer (Gmail SMTP)
+- **File Upload**: AWS S3 Presigned URL
 - **CI/CD**: GitHub Actions
 - **Deployment**: Vercel
 
@@ -41,6 +42,12 @@ JWT_SECRET=your-super-secret-jwt-key
 # 이메일 설정 (Gmail)
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
+
+# AWS S3 설정 (파일 업로드)
+AWS_REGION=ap-northeast-2
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+AWS_S3_BUCKET=your_s3_bucket_name
 
 # 앱 URL
 NEXT_PUBLIC_APP_URL=http://localhost:3001
@@ -95,6 +102,14 @@ pnpm dev
 - ✅ 인증 코드 검증
 - ✅ 하이브리드 저장 (메모리 + 데이터베이스)
 
+### 파일 업로드
+
+- ✅ AWS S3 Presigned URL 기반 업로드
+- ✅ 드래그 앤 드롭 지원
+- ✅ 이미지 미리보기
+- ✅ 다중 파일 업로드
+- ✅ 파일 크기 및 타입 검증
+
 ### 보안
 
 - ✅ 비밀번호 해시화 (bcrypt)
@@ -107,11 +122,15 @@ pnpm dev
 ```
 ├── app/                    # Next.js App Router
 │   ├── api/               # API Routes
+│   │   └── upload/        # 파일 업로드 API
 │   ├── login/             # 로그인 페이지
 │   ├── signup/            # 회원가입 페이지
 │   └── page.tsx           # 홈페이지
 ├── components/            # React 컴포넌트
+│   ├── FileUploadInput.tsx    # 파일 업로드 컴포넌트
+│   └── ImageUploadInput.tsx   # 이미지 업로드 컴포넌트
 ├── hooks/                 # Custom React Hooks
+│   └── useFileUpload.ts   # 파일 업로드 훅
 ├── lib/                   # 라이브러리 설정
 │   └── prisma.ts         # Prisma 클라이언트
 ├── prisma/               # Prisma 설정
@@ -123,6 +142,8 @@ pnpm dev
 │   ├── email.ts         # 이메일 관련 함수
 │   ├── jwt.ts           # JWT 관련 함수
 │   └── supabase/        # Supabase 설정
+├── docs/                 # 문서
+│   └── file-upload-usage.md  # 파일 업로드 사용법
 ├── .github/              # GitHub Actions
 │   └── workflows/        # CI/CD 워크플로우
 ├── middleware.ts         # Next.js 미들웨어
@@ -166,6 +187,10 @@ pnpm dev
 
 - `POST /api/auth/send-verification` - 인증 코드 전송
 - `POST /api/auth/verify-code` - 인증 코드 확인
+
+### 파일 업로드
+
+- `POST /api/upload/presigned-url` - AWS S3 Presigned URL 생성
 
 ### 관리자 (선택사항)
 
@@ -285,14 +310,58 @@ pnpm db:reset       # 데이터베이스 리셋
    pnpm prisma migrate status
    ```
 
-3. **CI/CD 실패**
+3. **AWS S3 설정 문제**
+
+   ```bash
+   # AWS 자격 증명 확인
+   aws sts get-caller-identity
+
+   # S3 버킷 접근 권한 확인
+   aws s3 ls s3://your-bucket-name
+
+   # CORS 설정 확인
+   aws s3api get-bucket-cors --bucket your-bucket-name
+   ```
+
+4. **파일 업로드 문제**
+
+   - 브라우저 개발자 도구에서 네트워크 탭 확인
+   - Presigned URL 만료 시간 확인 (기본 1시간)
+   - 파일 크기 및 타입 제한 확인
+
+5. **CI/CD 실패**
    - GitHub Actions 로그 확인
    - 로컬에서 동일한 명령어 실행
    - [CI.md](./CI.md) 참조
 
+### AWS S3 설정 가이드
+
+1. **S3 버킷 생성**
+
+   - AWS S3 콘솔에서 새 버킷 생성
+   - 퍼블릭 액세스 차단 해제 (필요시)
+   - 버킷 정책 설정
+
+2. **IAM 사용자 생성**
+
+   - S3 접근 권한을 가진 IAM 사용자 생성
+   - Access Key ID와 Secret Access Key 발급
+
+3. **CORS 설정**
+   ```json
+   [
+     {
+       "AllowedHeaders": ["*"],
+       "AllowedMethods": ["PUT", "POST", "GET"],
+       "AllowedOrigins": ["https://your-domain.com"],
+       "ExposeHeaders": ["ETag"]
+     }
+   ]
+   ```
+
 ### 지원
 
-- **문서**: [CI.md](./CI.md), [DEPLOYMENT.md](./DEPLOYMENT.md)
+- **문서**: [CI.md](./CI.md), [DEPLOYMENT.md](./DEPLOYMENT.md), [파일 업로드 사용법](./docs/file-upload-usage.md)
 - **이슈**: GitHub Issues 사용
 - **커뮤니티**: 프로젝트 토론 탭
 

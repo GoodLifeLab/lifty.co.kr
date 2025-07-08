@@ -6,7 +6,7 @@ import { GroupMemberRole } from "@prisma/client";
 // 그룹 상세 정보 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -18,7 +18,8 @@ export async function GET(
       );
     }
 
-    const groupId = parseInt(params.id);
+    const { id } = await params;
+    const groupId = parseInt(id);
 
     if (isNaN(groupId)) {
       return NextResponse.json(
@@ -61,7 +62,7 @@ export async function GET(
 // 그룹 정보 업데이트
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -73,8 +74,9 @@ export async function PUT(
       );
     }
 
-    const groupId = parseInt(params.id);
-    const { name, description, isPublic } = await request.json();
+    const { id } = await params;
+    const groupId = parseInt(id);
+    const { name, description, isPublic, image } = await request.json();
 
     if (isNaN(groupId)) {
       return NextResponse.json(
@@ -101,6 +103,14 @@ export async function PUT(
     if (description && description.length > 500) {
       return NextResponse.json(
         { error: "그룹 설명은 500자 이하여야 합니다." },
+        { status: 400 },
+      );
+    }
+
+    // 이미지 URL 검증 (선택사항이지만 제공된 경우 유효성 검사)
+    if (image && !image.trim()) {
+      return NextResponse.json(
+        { error: "이미지 URL이 유효하지 않습니다." },
         { status: 400 },
       );
     }
@@ -140,6 +150,7 @@ export async function PUT(
       data: {
         name: name.trim(),
         description: description?.trim() || null,
+        image: image?.trim() || null,
         isPublic: Boolean(isPublic),
       },
     });
@@ -160,7 +171,7 @@ export async function PUT(
 // 그룹 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -172,7 +183,8 @@ export async function DELETE(
       );
     }
 
-    const groupId = parseInt(params.id);
+    const { id } = await params;
+    const groupId = parseInt(id);
 
     if (isNaN(groupId)) {
       return NextResponse.json(

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { XMarkIcon, CogIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Group } from "@prisma/client";
-
+import ImageUploadInput from "@/components/ImageUploadInput";
+import Image from "next/image";
 interface GroupSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,6 +12,7 @@ interface GroupSettingsModalProps {
     name: string;
     description: string;
     isPublic: boolean;
+    image?: string;
   }) => Promise<void>;
   onDelete?: () => Promise<void>;
   loading?: boolean;
@@ -29,6 +31,7 @@ export default function GroupSettingsModal({
 }: GroupSettingsModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [image, setImage] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -38,6 +41,7 @@ export default function GroupSettingsModal({
     if (group) {
       setName(group.name || "");
       setDescription(group.description || "");
+      setImage(group.image || "");
       setIsPublic(group.isPublic || false);
       setErrors({});
       setDeleteConfirmText("");
@@ -72,6 +76,7 @@ export default function GroupSettingsModal({
       await onSubmit({
         name: name.trim(),
         description: description.trim(),
+        image: image || undefined,
         isPublic,
       });
     } catch (error) {
@@ -101,12 +106,21 @@ export default function GroupSettingsModal({
       if (group) {
         setName(group.name || "");
         setDescription(group.description || "");
+        setImage(group.image || "");
         setIsPublic(group.isPublic || false);
       }
       setErrors({});
       setDeleteConfirmText("");
       onClose();
     }
+  };
+
+  const handleImageUpload = (url: string) => {
+    setImage(url);
+  };
+
+  const handleImageError = (error: string) => {
+    alert(`이미지 업로드 오류: ${error}`);
   };
 
   if (!isOpen) return null;
@@ -180,6 +194,49 @@ export default function GroupSettingsModal({
             )}
             <p className="mt-1 text-xs text-gray-500">
               {description.length}/500자
+            </p>
+          </div>
+
+          {/* 그룹 이미지 업로드 */}
+          <div>
+            <label
+              htmlFor="image"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              그룹 이미지 (선택사항)
+            </label>
+            {image ? (
+              <div className="flex items-end gap-3">
+                <div className="relative w-24 h-24">
+                  <Image
+                    src={image}
+                    alt="그룹 이미지"
+                    fill
+                    className="object-cover rounded-md"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setImage("")}
+                  className="bg-red-500 rounded-md px-2 py-1 text-sm text-white hover:bg-red-600 transition-colors"
+                >
+                  이미지 교체
+                </button>
+              </div>
+            ) : (
+              <ImageUploadInput
+                onUploadComplete={handleImageUpload}
+                onUploadError={handleImageError}
+                maxSize={5}
+                multiple={false}
+                aspectRatio={1}
+                placeholder="그룹 이미지를 업로드하세요"
+                disabled={loading || deleting}
+                hideAfterUpload={true}
+              />
+            )}
+            <p className="mt-1 text-xs text-gray-500">
+              현재 이미지가 설정되어 있으면 새 이미지로 교체됩니다.
             </p>
           </div>
 

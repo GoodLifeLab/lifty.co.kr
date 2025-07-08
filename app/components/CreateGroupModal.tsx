@@ -6,6 +6,8 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import ImageUploadInput from "@/components/ImageUploadInput";
+import Image from "next/image";
 
 interface User {
   id: string;
@@ -21,6 +23,7 @@ interface CreateGroupModalProps {
     name: string;
     description: string;
     isPublic: boolean;
+    image?: string;
     memberIds: string[];
   }) => Promise<void>;
   loading?: boolean;
@@ -36,6 +39,7 @@ export default function CreateGroupModal({
     name: "",
     description: "",
     isPublic: true,
+    image: "",
   });
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
@@ -102,10 +106,11 @@ export default function CreateGroupModal({
     try {
       await onSubmit({
         ...formData,
+        image: formData.image || undefined,
         memberIds: selectedUsers.map((user) => user.id),
       });
       // 성공 시 폼 초기화
-      setFormData({ name: "", description: "", isPublic: true });
+      setFormData({ name: "", description: "", isPublic: true, image: "" });
       setSelectedUsers([]);
       setSearchTerm("");
     } catch (error) {
@@ -116,11 +121,19 @@ export default function CreateGroupModal({
 
   const handleClose = () => {
     if (!loading) {
-      setFormData({ name: "", description: "", isPublic: true });
+      setFormData({ name: "", description: "", isPublic: true, image: "" });
       setSelectedUsers([]);
       setSearchTerm("");
       onClose();
     }
+  };
+
+  const handleImageUpload = (url: string) => {
+    setFormData((prev) => ({ ...prev, image: url }));
+  };
+
+  const handleImageError = (error: string) => {
+    alert(`이미지 업로드 오류: ${error}`);
   };
 
   if (!isOpen) return null;
@@ -164,6 +177,44 @@ export default function CreateGroupModal({
               placeholder="그룹에 대한 설명을 입력하세요"
               disabled={loading}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              그룹 이미지 (선택 사항)
+            </label>
+            {formData.image ? (
+              <div className="flex items-end gap-3">
+                <div className="relative w-24 h-24">
+                  <Image
+                    src={formData.image}
+                    alt="그룹 이미지"
+                    fill
+                    className="object-cover rounded-md"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, image: "" }))
+                  }
+                  className="bg-red-500 rounded-md px-2 py-1 text-sm text-white hover:bg-red-600 transition-colors"
+                >
+                  이미지 교체
+                </button>
+              </div>
+            ) : (
+              <ImageUploadInput
+                onUploadComplete={handleImageUpload}
+                onUploadError={handleImageError}
+                maxSize={5}
+                multiple={false}
+                aspectRatio={1}
+                placeholder="그룹 이미지를 업로드하세요"
+                disabled={loading}
+                hideAfterUpload={true}
+              />
+            )}
           </div>
 
           <div className="flex items-center">
