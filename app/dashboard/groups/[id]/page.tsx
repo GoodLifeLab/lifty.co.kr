@@ -17,6 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Group, User } from "@prisma/client";
 import InviteMembersModal from "@/app/components/InviteMembersModal";
+import GroupSettingsModal from "@/app/components/GroupSettingsModal";
 
 type GroupWithMembers = Group & {
   members: Pick<User, "id" | "email">[];
@@ -37,6 +38,8 @@ export default function GroupDetailPage() {
   } | null>(null);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviting, setInviting] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   // 현재 사용자 정보 가져오기
   const fetchCurrentUser = async () => {
@@ -148,6 +151,43 @@ export default function GroupDetailPage() {
     }
   };
 
+  // 그룹 설정 업데이트
+  const handleUpdateSettings = async (data: {
+    name: string;
+    description: string;
+    isPublic: boolean;
+  }) => {
+    try {
+      setUpdating(true);
+      const response = await fetch(`/api/groups/${groupId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "그룹 설정 업데이트에 실패했습니다.");
+      }
+
+      const result = await response.json();
+      alert(result.message);
+
+      // 그룹 정보 새로고침
+      await fetchGroupDetail();
+      setSettingsModalOpen(false);
+    } catch (error) {
+      console.error("그룹 설정 업데이트 오류:", error);
+      alert(
+        error instanceof Error ? error.message : "그룹 설정 업데이트에 실패했습니다.",
+      );
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   useEffect(() => {
     if (groupId) {
       fetchGroupDetail();
@@ -225,7 +265,10 @@ export default function GroupDetailPage() {
           </div>
         </div>
         <div className="flex space-x-3">
-          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center">
+          <button
+            onClick={() => setSettingsModalOpen(true)}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center"
+          >
             <CogIcon className="h-4 w-4 mr-2" />
             설정
           </button>
@@ -251,11 +294,10 @@ export default function GroupDetailPage() {
                 {group.name}
               </h2>
               <span
-                className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  group.isPublic
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
+                className={`px-3 py-1 text-sm font-medium rounded-full ${group.isPublic
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-800"
+                  }`}
               >
                 {group.isPublic ? (
                   <>
@@ -399,6 +441,15 @@ export default function GroupDetailPage() {
         loading={inviting}
         groupId={groupId}
         existingMembers={group?.members || []}
+      />
+
+      {/* 그룹 설정 모달 */}
+      <GroupSettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        onSubmit={handleUpdateSettings}
+        loading={updating}
+        group={group}
       />
     </div>
   );
