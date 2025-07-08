@@ -384,6 +384,12 @@ export default function GroupDetailPage() {
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
+                      종료일
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       조치
                     </th>
                   </tr>
@@ -411,6 +417,26 @@ export default function GroupDetailPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {member.user.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {member.endDate ? (
+                          <span
+                            className={`${
+                              new Date(member.endDate) < new Date()
+                                ? "text-red-600 font-medium"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {new Date(member.endDate).toLocaleDateString()}
+                            {new Date(member.endDate) < new Date() && (
+                              <span className="ml-1 text-xs text-red-500">
+                                (만료됨)
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">무기한</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {currentUser?.id !== member.user.id && (

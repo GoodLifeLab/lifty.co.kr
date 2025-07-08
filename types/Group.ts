@@ -5,8 +5,7 @@ import { Group } from "@prisma/client";
 import { User } from "@prisma/client";
 
 export type GroupWithMembers = Group & {
-  memberships: GroupMember &
-    {
-      user: User;
-    }[];
+  memberships: (GroupMember & {
+    user: User;
+  })[];
 };

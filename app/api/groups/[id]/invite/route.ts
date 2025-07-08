@@ -104,14 +104,16 @@ export async function POST(
     }
 
     // 새 멤버들을 그룹에 추가
-    await prisma.groupMember.create({
-      data: {
-        userId: newMembers[0].id,
-        groupId,
-        startDate: new Date(),
-        role: GroupMemberRole.MEMBER,
-        endDate,
-      },
+    const memberData = newMembers.map((user) => ({
+      userId: user.id,
+      groupId,
+      startDate: new Date(),
+      role: GroupMemberRole.MEMBER,
+      endDate: endDate ? new Date(endDate) : null,
+    }));
+
+    await prisma.groupMember.createMany({
+      data: memberData,
     });
 
     return NextResponse.json(
