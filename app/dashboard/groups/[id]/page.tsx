@@ -13,30 +13,42 @@ import {
   ArrowLeftIcon,
   EnvelopeIcon,
   PhoneIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
+import { Group, User } from "@prisma/client";
 
-interface Group {
-  id: number;
-  name: string;
-  description: string | null;
-  image: string | null;
-  isPublic: boolean;
-  memberCount: number;
-  createdAt: string;
-  members?: Array<{
-    id: string;
-    email: string;
-  }>;
-}
+type GroupWithMembers = Group & {
+  members: Pick<User, "id" | "email">[];
+};
 
 export default function GroupDetailPage() {
   const params = useParams();
   const router = useRouter();
   const groupId = params.id as string;
 
-  const [group, setGroup] = useState<Group | null>(null);
+  const [group, setGroup] = useState<GroupWithMembers | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [removingMember, setRemovingMember] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    email: string;
+  } | null>(null);
+
+  // 현재 사용자 정보 가져오기
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await fetch("/api/auth/me");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setCurrentUser(data.user);
+        }
+      }
+    } catch (error) {
+      console.error("현재 사용자 정보 조회 오류:", error);
+    }
+  };
 
   // 그룹 상세 정보 가져오기
   const fetchGroupDetail = async () => {
@@ -67,9 +79,43 @@ export default function GroupDetailPage() {
     }
   };
 
+  // 멤버 방출
+  const handleRemoveMember = async (memberId: string) => {
+    if (!confirm("정말로 이 멤버를 방출하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      setRemovingMember(memberId);
+      const response = await fetch(
+        `/api/groups/${groupId}/members/${memberId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "멤버 방출에 실패했습니다.");
+      }
+
+      // 그룹 정보 새로고침
+      await fetchGroupDetail();
+      alert("멤버가 성공적으로 방출되었습니다.");
+    } catch (error) {
+      console.error("멤버 방출 오류:", error);
+      alert(
+        error instanceof Error ? error.message : "멤버 방출에 실패했습니다.",
+      );
+    } finally {
+      setRemovingMember(null);
+    }
+  };
+
   useEffect(() => {
     if (groupId) {
       fetchGroupDetail();
+      fetchCurrentUser();
     }
   }, [groupId]);
 
@@ -191,7 +237,7 @@ export default function GroupDetailPage() {
             <div className="flex items-center space-x-6 text-sm text-gray-500">
               <span className="flex items-center">
                 <CalendarIcon className="h-4 w-4 mr-1" />
-                생성일: {group.createdAt}
+                생성일: {new Date(group.createdAt).toLocaleDateString()}
               </span>
               <span className="flex items-center">
                 <UserIcon className="h-4 w-4 mr-1" />
@@ -209,33 +255,93 @@ export default function GroupDetailPage() {
         </div>
         <div className="p-6">
           {group.members && group.members.length > 0 ? (
-            <div className="space-y-4">
-              {group.members.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                      <UserIcon className="h-5 w-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      멤버
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      이메일
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      조치
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {group.members.map((member) => (
+                    <tr key={member.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                            <UserIcon className="h-4 w-4 text-indigo-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {member.email}
+                              {currentUser?.id === member.id && (
+                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                  나
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-500">멤버</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {member.email}
-                      </p>
-                      <p className="text-sm text-gray-500">멤버</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                      <EnvelopeIcon className="h-4 w-4" />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                      <PhoneIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        {currentUser?.id !== member.id && (
+                          <button
+                            onClick={() => handleRemoveMember(member.id)}
+                            disabled={removingMember === member.id}
+                            className="text-red-600 hover:text-red-900 transition-colors disabled:opacity-50"
+                            title="멤버 방출"
+                          >
+                            {removingMember === member.id ? (
+                              <svg
+                                className="animate-spin h-5 w-5 text-red-600"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                            ) : (
+                              <TrashIcon className="h-5 w-5" />
+                            )}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="text-center py-8">
