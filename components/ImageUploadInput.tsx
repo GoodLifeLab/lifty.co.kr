@@ -119,11 +119,10 @@ export default function ImageUploadInput({
       {/* 드래그 앤 드롭 영역 - 업로드 완료 후 숨김 */}
       {(!hideAfterUpload || !isUploaded) && (
         <div
-          className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-            isDragOver
+          className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isDragOver
               ? "border-indigo-500 bg-indigo-50"
               : "border-gray-300 hover:border-gray-400"
-          } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}

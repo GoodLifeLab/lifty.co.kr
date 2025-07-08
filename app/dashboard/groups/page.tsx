@@ -203,11 +203,10 @@ export default function GroupsPage() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          group.isPublic
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${group.isPublic
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"
-                        }`}
+                          }`}
                       >
                         {group.isPublic ? (
                           <GlobeAltIcon className="h-3 w-3 inline mr-1" />
