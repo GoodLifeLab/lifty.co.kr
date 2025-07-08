@@ -55,4 +55,6 @@ model Group {
   createdAt   DateTime @default(now()) @map("created_at")
   isPublic    Boolean
   members     User[]   @relation("GroupToUser")
+
+  @@map("groups")
 }
