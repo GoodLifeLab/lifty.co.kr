@@ -74,14 +74,14 @@ model Group {
 
 // 그룹 멤버십 테이블 (시작일, 종료일 관리)
 model GroupMember {
-  id        Int              @id @default(autoincrement())
+  id        Int             @id @default(autoincrement())
   userId    String
   groupId   Int
-  startDate DateTime         @default(now())
+  startDate DateTime        @default(now())
   endDate   DateTime?
-  role      GroupMemberRole  @default(MEMBER)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  role      GroupMemberRole @default(MEMBER)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
   // 관계
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -91,5 +91,3 @@ model GroupMember {
   @@unique([userId, groupId])
   @@map("group_members")
 }
-
-
