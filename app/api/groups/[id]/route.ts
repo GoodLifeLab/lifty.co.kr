@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/utils/auth";
 // 그룹 상세 정보 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -13,7 +13,7 @@ export async function GET(
     if (!currentUser) {
       return NextResponse.json(
         { error: "인증이 필요합니다." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -22,7 +22,7 @@ export async function GET(
     if (isNaN(groupId)) {
       return NextResponse.json(
         { error: "유효하지 않은 그룹 ID입니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,7 +49,7 @@ export async function GET(
     if (!group) {
       return NextResponse.json(
         { error: "그룹을 찾을 수 없거나 접근 권한이 없습니다." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -58,7 +58,7 @@ export async function GET(
     console.error("그룹 상세 정보 조회 오류:", error);
     return NextResponse.json(
       { error: "그룹 정보를 가져오는데 실패했습니다." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -66,7 +66,7 @@ export async function GET(
 // 그룹 정보 업데이트
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -74,7 +74,7 @@ export async function PUT(
     if (!currentUser) {
       return NextResponse.json(
         { error: "인증이 필요합니다." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -84,7 +84,7 @@ export async function PUT(
     if (isNaN(groupId)) {
       return NextResponse.json(
         { error: "유효하지 않은 그룹 ID입니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -92,21 +92,21 @@ export async function PUT(
     if (!name || name.trim().length === 0) {
       return NextResponse.json(
         { error: "그룹 이름은 필수입니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (name.trim().length > 100) {
       return NextResponse.json(
         { error: "그룹 이름은 100자 이하여야 합니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (description && description.length > 500) {
       return NextResponse.json(
         { error: "그룹 설명은 500자 이하여야 합니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -125,7 +125,7 @@ export async function PUT(
     if (!existingGroup) {
       return NextResponse.json(
         { error: "그룹을 찾을 수 없거나 접근 권한이 없습니다." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -155,7 +155,75 @@ export async function PUT(
     console.error("그룹 정보 업데이트 오류:", error);
     return NextResponse.json(
       { error: "그룹 정보 업데이트에 실패했습니다." },
-      { status: 500 }
+      { status: 500 },
+    );
+  }
+}
+
+// 그룹 삭제
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "인증이 필요합니다." },
+        { status: 401 },
+      );
+    }
+
+    const groupId = parseInt(params.id);
+
+    if (isNaN(groupId)) {
+      return NextResponse.json(
+        { error: "유효하지 않은 그룹 ID입니다." },
+        { status: 400 },
+      );
+    }
+
+    // 그룹 존재 확인 및 권한 확인
+    const group = await prisma.group.findFirst({
+      where: {
+        id: groupId,
+        members: {
+          some: {
+            id: currentUser.id,
+          },
+        },
+      },
+      include: {
+        members: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!group) {
+      return NextResponse.json(
+        { error: "그룹을 찾을 수 없거나 접근 권한이 없습니다." },
+        { status: 404 },
+      );
+    }
+
+    // 그룹 삭제 (관계 테이블도 자동으로 정리됨)
+    await prisma.group.delete({
+      where: { id: groupId },
+    });
+
+    return NextResponse.json({
+      message: "그룹이 성공적으로 삭제되었습니다.",
+    });
+  } catch (error) {
+    console.error("그룹 삭제 오류:", error);
+    return NextResponse.json(
+      { error: "그룹 삭제에 실패했습니다." },
+      { status: 500 },
     );
   }
 }

@@ -40,6 +40,7 @@ export default function GroupDetailPage() {
   const [inviting, setInviting] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // 현재 사용자 정보 가져오기
   const fetchCurrentUser = async () => {
@@ -169,7 +170,9 @@ export default function GroupDetailPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "그룹 설정 업데이트에 실패했습니다.");
+        throw new Error(
+          errorData.error || "그룹 설정 업데이트에 실패했습니다.",
+        );
       }
 
       const result = await response.json();
@@ -181,10 +184,40 @@ export default function GroupDetailPage() {
     } catch (error) {
       console.error("그룹 설정 업데이트 오류:", error);
       alert(
-        error instanceof Error ? error.message : "그룹 설정 업데이트에 실패했습니다.",
+        error instanceof Error
+          ? error.message
+          : "그룹 설정 업데이트에 실패했습니다.",
       );
     } finally {
       setUpdating(false);
+    }
+  };
+
+  // 그룹 삭제
+  const handleDeleteGroup = async () => {
+    try {
+      setDeleting(true);
+      const response = await fetch(`/api/groups/${groupId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "그룹 삭제에 실패했습니다.");
+      }
+
+      const data = await response.json();
+      alert(data.message);
+
+      // 그룹 목록 페이지로 이동
+      router.push("/dashboard/groups");
+    } catch (error) {
+      console.error("그룹 삭제 오류:", error);
+      alert(
+        error instanceof Error ? error.message : "그룹 삭제에 실패했습니다.",
+      );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -294,10 +327,11 @@ export default function GroupDetailPage() {
                 {group.name}
               </h2>
               <span
-                className={`px-3 py-1 text-sm font-medium rounded-full ${group.isPublic
-                  ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-800"
-                  }`}
+                className={`px-3 py-1 text-sm font-medium rounded-full ${
+                  group.isPublic
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
               >
                 {group.isPublic ? (
                   <>
@@ -448,7 +482,9 @@ export default function GroupDetailPage() {
         isOpen={settingsModalOpen}
         onClose={() => setSettingsModalOpen(false)}
         onSubmit={handleUpdateSettings}
+        onDelete={handleDeleteGroup}
         loading={updating}
+        deleting={deleting}
         group={group}
       />
     </div>
