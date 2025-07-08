@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/utils/auth";
+import { GroupMemberRole } from "@prisma/client";
 
 // 그룹에 멤버 초대
 export async function POST(
@@ -18,7 +19,7 @@ export async function POST(
     }
 
     const groupId = parseInt(params.id);
-    const { memberIds } = await request.json();
+    const { memberIds, endDate } = await request.json();
 
     if (isNaN(groupId)) {
       return NextResponse.json(
@@ -108,7 +109,8 @@ export async function POST(
         userId: newMembers[0].id,
         groupId,
         startDate: new Date(),
-        role: "member",
+        role: GroupMemberRole.MEMBER,
+        endDate,
       },
     });
 

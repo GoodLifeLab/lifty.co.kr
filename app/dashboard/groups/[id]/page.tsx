@@ -121,7 +121,7 @@ export default function GroupDetailPage() {
   };
 
   // 멤버 초대
-  const handleInviteMembers = async (memberIds: string[]) => {
+  const handleInviteMembers = async (memberIds: string[], endDate?: Date) => {
     try {
       setInviting(true);
       const response = await fetch(`/api/groups/${groupId}/invite`, {
@@ -129,7 +129,7 @@ export default function GroupDetailPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ memberIds }),
+        body: JSON.stringify({ memberIds, endDate }),
       });
 
       if (!response.ok) {

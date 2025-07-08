@@ -109,18 +109,12 @@ export default function GroupsPage() {
             팀과 그룹을 관리하고 구성원을 초대하세요
           </p>
         </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={() => setShowCreateGroup(true)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center"
-          >
-            <PlusIcon className="h-4 w-4 mr-2" />새 그룹 만들기
-          </button>
-          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center">
-            <UserGroupIcon className="h-4 w-4 mr-2" />
-            그룹 가입
-          </button>
-        </div>
+        <button
+          onClick={() => setShowCreateGroup(true)}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center"
+        >
+          <PlusIcon className="h-4 w-4 mr-2" />새 그룹 만들기
+        </button>
       </div>
 
       {/* 통계 카드 */}
@@ -205,11 +199,10 @@ export default function GroupsPage() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          group.isPublic
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${group.isPublic
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"
-                        }`}
+                          }`}
                       >
                         {group.isPublic ? (
                           <GlobeAltIcon className="h-3 w-3 inline mr-1" />

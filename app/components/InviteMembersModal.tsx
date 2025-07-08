@@ -11,7 +11,7 @@ import { User } from "@prisma/client";
 interface InviteMembersModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (memberIds: string[]) => Promise<void>;
+  onSubmit: (memberIds: string[], endDate?: Date) => Promise<void>;
   loading?: boolean;
   groupId: string;
   existingMembers?: Array<{ id: string; email: string }>;
@@ -28,6 +28,7 @@ export default function InviteMembersModal({
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [usersLoading, setUsersLoading] = useState(false);
+  const [endDate, setEndDate] = useState<string>("");
 
   // 사용자 목록 가져오기
   const fetchUsers = async () => {
@@ -92,10 +93,14 @@ export default function InviteMembersModal({
     }
 
     try {
-      await onSubmit(selectedUsers.map((user) => user.id));
+      const memberIds = selectedUsers.map((user) => user.id);
+      const endDateValue = endDate ? new Date(endDate) : undefined;
+
+      await onSubmit(memberIds, endDateValue);
       // 성공 시 폼 초기화
       setSelectedUsers([]);
       setSearchTerm("");
+      setEndDate("");
     } catch (error) {
       // 에러는 onSubmit에서 처리됨
       console.error("멤버 초대 오류:", error);
@@ -106,6 +111,7 @@ export default function InviteMembersModal({
     if (!loading) {
       setSelectedUsers([]);
       setSearchTerm("");
+      setEndDate("");
       onClose();
     }
   };
@@ -144,6 +150,29 @@ export default function InviteMembersModal({
               </div>
             </div>
           )}
+
+          {/* 종료일 설정 */}
+          <div className="flex items-center space-x-2">
+            <label className="text-sm text-gray-700">종료일 (선택사항):</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              min={new Date().toISOString().split("T")[0]}
+              disabled={loading}
+            />
+            {endDate && (
+              <button
+                type="button"
+                onClick={() => setEndDate("")}
+                className="text-xs text-red-600 hover:text-red-800"
+                disabled={loading}
+              >
+                제거
+              </button>
+            )}
+          </div>
 
           {/* 사용자 검색 */}
           <div className="relative">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/utils/auth";
+import { GroupMemberRole } from "@prisma/client";
 
 // 그룹 상세 정보 조회
 export async function GET(
@@ -39,8 +40,6 @@ export async function GET(
         },
       },
     });
-
-    console.log(group?.memberships);
 
     if (!group) {
       return NextResponse.json(
@@ -128,7 +127,7 @@ export async function PUT(
       );
     }
 
-    if (existingGroup.memberships[0].role !== "ADMIN") {
+    if (existingGroup.memberships[0].role !== GroupMemberRole.ADMIN) {
       return NextResponse.json(
         { error: "그룹 관리자만 그룹 정보를 업데이트할 수 있습니다." },
         { status: 403 },

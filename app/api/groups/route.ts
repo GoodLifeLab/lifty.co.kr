@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/utils/auth";
+import { GroupMemberRole } from "@prisma/client";
 
 // 그룹 목록 가져오기
 export async function GET() {
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
         memberships: {
           create: {
             userId: user.id,
-            role: "ADMIN",
+            role: GroupMemberRole.ADMIN,
             startDate: new Date(),
           },
         },

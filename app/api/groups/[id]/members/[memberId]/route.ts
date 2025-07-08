@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/utils/auth";
+import { GroupMemberRole } from "@prisma/client";
 
 // 그룹에서 멤버 방출
 export async function DELETE(
@@ -45,7 +46,7 @@ export async function DELETE(
     }
 
     // 그룹 멤버인지 확인
-    if (group.memberships[0].role !== "ADMIN") {
+    if (group.memberships[0].role !== GroupMemberRole.ADMIN) {
       return NextResponse.json(
         { error: "그룹 관리자만 멤버를 방출할 수 있습니다." },
         { status: 403 },
