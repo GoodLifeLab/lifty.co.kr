@@ -12,6 +12,7 @@ import {
   PlusIcon,
   ArrowLeftIcon,
   TrashIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import InviteMembersModal from "@/app/components/InviteMembersModal";
 import GroupSettingsModal from "@/app/components/GroupSettingsModal";
@@ -35,6 +36,8 @@ export default function GroupDetailPage() {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [memberSearchTerm, setMemberSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
 
   // 현재 사용자 정보 가져오기
   const fetchCurrentUser = async () => {
@@ -223,6 +226,16 @@ export default function GroupDetailPage() {
     }
   }, [groupId]);
 
+  // 멤버 검색 필터링
+  const filteredMembers =
+    group?.memberships?.filter((member) => {
+      const matchesSearch = member.user.email
+        .toLowerCase()
+        .includes(memberSearchTerm.toLowerCase());
+      const matchesRole = roleFilter === "all" || member.role === roleFilter;
+      return matchesSearch && matchesRole;
+    }) || [];
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -376,7 +389,32 @@ export default function GroupDetailPage() {
       {/* 멤버 목록 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">멤버 목록</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-900">멤버 목록</h3>
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={memberSearchTerm}
+                  onChange={(e) => setMemberSearchTerm(e.target.value)}
+                  className="w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  placeholder="멤버 검색..."
+                />
+              </div>
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              >
+                <option value="all">모든 역할</option>
+                <option value="ADMIN">관리자</option>
+                <option value="MEMBER">멤버</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div className="p-6">
           {group.memberships && group.memberships.length > 0 ? (
@@ -411,86 +449,101 @@ export default function GroupDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {group.memberships.map((member) => (
-                    <tr key={member.user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                            <UserIcon className="h-4 w-4 text-indigo-600" />
+                  {filteredMembers.length > 0 ? (
+                    filteredMembers.map((member) => (
+                      <tr key={member.user.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                              <UserIcon className="h-4 w-4 text-indigo-600" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {member.user.email}
+                                {currentUser?.id === member.user.id && (
+                                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                    나
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {member.role}
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {member.user.email}
-                              {currentUser?.id === member.user.id && (
-                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                  나
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {member.user.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {member.endDate ? (
+                            <span
+                              className={`${
+                                new Date(member.endDate) < new Date()
+                                  ? "text-red-600 font-medium"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {new Date(member.endDate).toLocaleDateString()}
+                              {new Date(member.endDate) < new Date() && (
+                                <span className="ml-1 text-xs text-red-500">
+                                  (만료됨)
                                 </span>
                               )}
-                            </div>
-                            <div className="text-sm text-gray-500">멤버</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {member.user.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {member.endDate ? (
-                          <span
-                            className={`${
-                              new Date(member.endDate) < new Date()
-                                ? "text-red-600 font-medium"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {new Date(member.endDate).toLocaleDateString()}
-                            {new Date(member.endDate) < new Date() && (
-                              <span className="ml-1 text-xs text-red-500">
-                                (만료됨)
-                              </span>
-                            )}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">무기한</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {currentUser?.id !== member.user.id && (
-                          <button
-                            onClick={() => handleRemoveMember(member.user.id)}
-                            disabled={removingMember === member.user.id}
-                            className="text-red-600 hover:text-red-900 transition-colors disabled:opacity-50"
-                            title="멤버 방출"
-                          >
-                            {removingMember === member.user.id ? (
-                              <svg
-                                className="animate-spin h-5 w-5 text-red-600"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                ></circle>
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                              </svg>
-                            ) : (
-                              <TrashIcon className="h-5 w-5" />
-                            )}
-                          </button>
-                        )}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">무기한</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {currentUser?.id !== member.user.id && (
+                            <button
+                              onClick={() => handleRemoveMember(member.user.id)}
+                              disabled={removingMember === member.user.id}
+                              className="text-red-600 hover:text-red-900 transition-colors disabled:opacity-50"
+                              title="멤버 방출"
+                            >
+                              {removingMember === member.user.id ? (
+                                <svg
+                                  className="animate-spin h-5 w-5 text-red-600"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                              ) : (
+                                <TrashIcon className="h-5 w-5" />
+                              )}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-6 py-8 text-center text-gray-500"
+                      >
+                        {memberSearchTerm
+                          ? "검색 결과가 없습니다."
+                          : "멤버가 없습니다."}
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
