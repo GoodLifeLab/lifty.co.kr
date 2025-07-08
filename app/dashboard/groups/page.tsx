@@ -11,24 +11,12 @@ import {
   CalendarIcon,
 } from "@heroicons/react/24/outline";
 import CreateGroupModal from "@/app/components/CreateGroupModal";
-
-interface Group {
-  id: number;
-  name: string;
-  description: string | null;
-  image: string | null;
-  isPublic: boolean;
-  memberCount: number;
-  createdAt: string;
-  members?: Array<{
-    id: string;
-    email: string;
-  }>;
-}
+import { Group } from "@prisma/client";
+import { GroupWithMembers } from "@/types/Group";
 
 export default function GroupsPage() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [groups, setGroups] = useState<GroupWithMembers[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const router = useRouter();
@@ -199,10 +187,11 @@ export default function GroupsPage() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${group.isPublic
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          group.isPublic
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"
-                          }`}
+                        }`}
                       >
                         {group.isPublic ? (
                           <GlobeAltIcon className="h-3 w-3 inline mr-1" />
@@ -222,11 +211,11 @@ export default function GroupsPage() {
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                     <span className="flex items-center">
                       <UserIcon className="h-4 w-4 mr-1" />
-                      멤버 {group.members ? group.members.length : 0}명
+                      멤버 {group.memberships ? group.memberships.length : 0}명
                     </span>
                     <span className="flex items-center">
                       <CalendarIcon className="h-4 w-4 mr-1" />
-                      {group.createdAt}
+                      {new Date(group.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>

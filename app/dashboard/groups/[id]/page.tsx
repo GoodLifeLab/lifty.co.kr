@@ -13,16 +13,9 @@ import {
   ArrowLeftIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { Group, GroupMember, User } from "@prisma/client";
 import InviteMembersModal from "@/app/components/InviteMembersModal";
 import GroupSettingsModal from "@/app/components/GroupSettingsModal";
-
-type GroupWithMembers = Group & {
-  memberships: GroupMember &
-    {
-      user: User;
-    }[];
-};
+import { GroupWithMembers } from "@/types/Group";
 
 export default function GroupDetailPage() {
   const params = useParams();
