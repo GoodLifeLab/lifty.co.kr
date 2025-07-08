@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   UserGroupIcon,
   GlobeAltIcon,
@@ -31,6 +32,7 @@ export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const router = useRouter();
 
   // 그룹 목록 가져오기
   const fetchGroups = async () => {
@@ -196,6 +198,7 @@ export default function GroupsPage() {
                 <div
                   key={group.id}
                   className="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => router.push(`/dashboard/groups/${group.id}`)}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -233,16 +236,6 @@ export default function GroupsPage() {
                       <CalendarIcon className="h-4 w-4 mr-1" />
                       {group.createdAt}
                     </span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition-colors flex items-center justify-center">
-                      <CogIcon className="h-4 w-4 mr-1" />
-                      관리
-                    </button>
-                    <button className="flex-1 px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center">
-                      <PlusIcon className="h-4 w-4 mr-1" />
-                      초대
-                    </button>
                   </div>
                 </div>
               ))}

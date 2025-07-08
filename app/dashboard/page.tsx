@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   FolderIcon,
   ArrowPathIcon,
@@ -38,6 +39,7 @@ export default function DashboardPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const router = useRouter();
 
   // 이번 달에 생성된 그룹 수 계산
   const getThisMonthGroups = () => {
@@ -244,11 +246,10 @@ export default function DashboardPage() {
             </div>
             <div className="mt-4 flex items-center">
               <span
-                className={`text-sm font-medium ${
-                  stat.changeType === "positive"
+                className={`text-sm font-medium ${stat.changeType === "positive"
                     ? "text-green-600"
                     : "text-red-600"
-                }`}
+                  }`}
               >
                 {stat.change}
               </span>
@@ -267,11 +268,10 @@ export default function DashboardPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab
                       ? "border-indigo-500 text-indigo-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   {tab === "overview" && "개요"}
                   {tab === "projects" && "프로젝트"}
@@ -303,13 +303,12 @@ export default function DashboardPage() {
                           {project.name}
                         </h4>
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            project.status === "완료됨"
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${project.status === "완료됨"
                               ? "bg-green-100 text-green-800"
                               : project.status === "진행 중"
                                 ? "bg-blue-100 text-blue-800"
                                 : "bg-yellow-100 text-yellow-800"
-                          }`}
+                            }`}
                         >
                           {project.status}
                         </span>
@@ -432,7 +431,10 @@ export default function DashboardPage() {
                   {groups.map((group) => (
                     <div
                       key={group.id}
-                      className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                      className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() =>
+                        router.push(`/dashboard/groups/${group.id}`)
+                      }
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -440,11 +442,10 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center space-x-2">
                           <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              group.isPublic
+                            className={`px-2 py-1 text-xs font-medium rounded-full ${group.isPublic
                                 ? "bg-green-100 text-green-800"
                                 : "bg-gray-100 text-gray-800"
-                            }`}
+                              }`}
                           >
                             {group.isPublic ? (
                               <GlobeAltIcon className="h-3 w-3 inline mr-1" />

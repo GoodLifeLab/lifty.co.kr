@@ -1,0 +1,250 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import {
+  UserGroupIcon,
+  GlobeAltIcon,
+  LockClosedIcon,
+  UserIcon,
+  CalendarIcon,
+  CogIcon,
+  PlusIcon,
+  ArrowLeftIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+} from "@heroicons/react/24/outline";
+
+interface Group {
+  id: number;
+  name: string;
+  description: string | null;
+  image: string | null;
+  isPublic: boolean;
+  memberCount: number;
+  createdAt: string;
+  members?: Array<{
+    id: string;
+    email: string;
+  }>;
+}
+
+export default function GroupDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const groupId = params.id as string;
+
+  const [group, setGroup] = useState<Group | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 그룹 상세 정보 가져오기
+  const fetchGroupDetail = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`/api/groups/${groupId}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("그룹을 찾을 수 없습니다.");
+        }
+        throw new Error("그룹 정보를 가져오는데 실패했습니다.");
+      }
+
+      const data = await response.json();
+      setGroup(data.group);
+    } catch (error) {
+      console.error("그룹 상세 정보 조회 오류:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (groupId) {
+      fetchGroupDetail();
+    }
+  }, [groupId]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeftIcon className="h-5 w-5" />
+          </button>
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-48"></div>
+          </div>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">그룹 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !group) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeftIcon className="h-5 w-5" />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900">그룹 상세</h1>
+        </div>
+        <div className="text-center py-12">
+          <UserGroupIcon className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {error || "그룹을 찾을 수 없습니다"}
+          </h3>
+          <p className="text-gray-600 mb-4">
+            그룹이 존재하지 않거나 접근 권한이 없습니다.
+          </p>
+          <button
+            onClick={() => router.push("/dashboard/groups")}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+          >
+            그룹 목록으로 돌아가기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeftIcon className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
+            <p className="text-gray-600">그룹 상세 정보</p>
+          </div>
+        </div>
+        <div className="flex space-x-3">
+          <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center">
+            <CogIcon className="h-4 w-4 mr-2" />
+            설정
+          </button>
+          <button className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center">
+            <PlusIcon className="h-4 w-4 mr-2" />
+            멤버 초대
+          </button>
+        </div>
+      </div>
+
+      {/* 그룹 정보 카드 */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-start space-x-6">
+          <div className="w-20 h-20 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <UserGroupIcon className="h-10 w-10 text-indigo-600" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center space-x-3 mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {group.name}
+              </h2>
+              <span
+                className={`px-3 py-1 text-sm font-medium rounded-full ${
+                  group.isPublic
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {group.isPublic ? (
+                  <>
+                    <GlobeAltIcon className="h-4 w-4 inline mr-1" />
+                    공개
+                  </>
+                ) : (
+                  <>
+                    <LockClosedIcon className="h-4 w-4 inline mr-1" />
+                    비공개
+                  </>
+                )}
+              </span>
+            </div>
+            <p className="text-gray-600 mb-4">
+              {group.description || "설명이 없습니다."}
+            </p>
+            <div className="flex items-center space-x-6 text-sm text-gray-500">
+              <span className="flex items-center">
+                <CalendarIcon className="h-4 w-4 mr-1" />
+                생성일: {group.createdAt}
+              </span>
+              <span className="flex items-center">
+                <UserIcon className="h-4 w-4 mr-1" />
+                멤버 {group.members ? group.members.length : 0}명
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 멤버 목록 */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">멤버 목록</h3>
+        </div>
+        <div className="p-6">
+          {group.members && group.members.length > 0 ? (
+            <div className="space-y-4">
+              {group.members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <UserIcon className="h-5 w-5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {member.email}
+                      </p>
+                      <p className="text-sm text-gray-500">멤버</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                      <EnvelopeIcon className="h-4 w-4" />
+                    </button>
+                    <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                      <PhoneIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <UserIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-600">아직 멤버가 없습니다.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
