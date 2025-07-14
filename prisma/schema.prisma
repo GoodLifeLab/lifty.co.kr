@@ -32,7 +32,8 @@ model User {
   position      String?
   profileImage  String?
 
-  // 그룹 멤버십 관계
+  // 관계
+  organizations UserOrganization[]
   groupMemberships GroupMember[]
 
   @@map("users")
@@ -91,3 +92,41 @@ model GroupMember {
   @@unique([userId, groupId])
   @@map("group_members")
 }
+
+// 기관 모델
+model Organization {
+  id              String   @id @default(cuid())
+  name            String   // 기관명 (필수)
+  department      String   // 기관부서 (필수)
+  contactName     String?  // 담당자 이름 (선택)
+  contactPhone    String?  // 담당자 연락처 (선택)
+  code            String   @unique // 기관 코드
+  emailDomain     String?  // 이메일 도메인 (선택)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // 관계
+  users UserOrganization[]
+
+  @@map("organizations")
+}
+
+// 사용자-기관 관계 테이블 (다대다 관계)
+model UserOrganization {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  role           String?  // 사용자의 기관 내 역할 (선택)
+  joinedAt       DateTime @default(now()) @map("joined_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // 관계
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // 복합 유니크 제약조건
+  @@unique([userId, organizationId])
+  @@map("user_organizations")
+}
+
