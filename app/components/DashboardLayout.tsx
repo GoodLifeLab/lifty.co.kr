@@ -16,6 +16,7 @@ import {
   BellIcon,
   ArrowRightOnRectangleIcon,
   TrashIcon,
+  BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 
 interface DashboardLayoutProps {
@@ -57,6 +58,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "프로젝트", href: "/dashboard/projects", icon: FolderIcon },
     { name: "그룹", href: "/dashboard/groups", icon: UserGroupIcon },
     { name: "팀", href: "/dashboard/team", icon: UsersIcon },
+    {
+      name: "기관관리",
+      href: "/dashboard/organizations",
+      icon: BuildingOfficeIcon,
+    },
   ];
 
   return (
