@@ -4,11 +4,12 @@ import { prisma } from "@/lib/prisma";
 // 개별 기관 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const organization = await prisma.organization.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!organization) {
@@ -31,9 +32,10 @@ export async function GET(
 // 기관 수정
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { name, department, contactName, contactPhone, emailDomain } = body;
 
@@ -47,7 +49,7 @@ export async function PUT(
 
     // 기존 기관 확인
     const existingOrg = await prisma.organization.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingOrg) {
@@ -59,7 +61,7 @@ export async function PUT(
 
     // 기관 수정 (기관 코드는 변경하지 않음)
     const organization = await prisma.organization.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name,
         department,
@@ -82,15 +84,14 @@ export async function PUT(
 // 기관 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
+
     // 기존 기관 확인
     const existingOrg = await prisma.organization.findUnique({
-      where: { id: params.id },
-      include: {
-        users: true, // 연결된 사용자 확인
-      },
+      where: { id },
     });
 
     if (!existingOrg) {
@@ -100,17 +101,9 @@ export async function DELETE(
       );
     }
 
-    // 연결된 사용자가 있는지 확인
-    if (existingOrg.users.length > 0) {
-      return NextResponse.json(
-        { message: "이 기관에 속한 사용자가 있어 삭제할 수 없습니다." },
-        { status: 400 },
-      );
-    }
-
-    // 기관 삭제
+    // 기관 삭제 (Cascade로 연결된 UserOrganization도 자동 삭제)
     await prisma.organization.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "기관이 삭제되었습니다." });

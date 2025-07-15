@@ -101,7 +101,9 @@ export default function OrganizationsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("정말로 이 기관을 삭제하시겠습니까?")) {
+    if (
+      !confirm("정말로 이 기관을 삭제하시겠습니까? 삭제 후 복구할 수 없습니다.")
+    ) {
       return;
     }
 
