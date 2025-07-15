@@ -247,3 +247,43 @@ export async function sendPasswordResetEmail(
     return false;
   }
 }
+
+export async function sendOrganizationVerificationEmail(
+  email: string,
+  code: string,
+  organizationName: string,
+): Promise<boolean> {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: `[Lifty] ${organizationName} 기관 연동 인증 코드`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Lifty 기관 연동 인증</h2>
+          <p>안녕하세요! <strong>${organizationName}</strong> 기관에 연동하기 위해 이메일 인증을 진행해주세요.</p>
+          <p>아래 인증 코드를 입력해주세요:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; display: inline-block;">
+              <span style="font-size: 32px; font-weight: bold; color: #4F46E5; letter-spacing: 8px;">${code}</span>
+            </div>
+          </div>
+          <p>이 인증 코드는 10분 동안 유효합니다.</p>
+          <p style="color: #666; font-size: 14px;">
+            기관 연동이 완료되면 해당 기관의 프로젝트와 그룹에 참여할 수 있습니다.
+          </p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+          <p style="color: #666; font-size: 12px;">
+            이 이메일을 요청하지 않으셨다면 무시하셔도 됩니다.
+          </p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("기관 연동 이메일 전송 실패:", error);
+    return false;
+  }
+}

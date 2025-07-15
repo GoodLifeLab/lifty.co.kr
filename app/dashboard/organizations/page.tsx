@@ -207,7 +207,7 @@ export default function OrganizationsPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     생성일
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     작업
                   </th>
                 </tr>
@@ -240,8 +240,8 @@ export default function OrganizationsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(org.createdAt).toLocaleDateString("ko-KR")}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                      <div className="flex items-center justify-center space-x-2">
                         <button
                           onClick={() => handleEdit(org)}
                           className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"

@@ -17,6 +17,7 @@ import {
   ArrowRightOnRectangleIcon,
   TrashIcon,
   BuildingOfficeIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 
 interface DashboardLayoutProps {
@@ -123,6 +124,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             <div className="mt-3 space-y-1">
+              <Link
+                href="/dashboard/settings"
+                className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                <Cog6ToothIcon className="mr-3 h-5 w-5" />
+                설정
+              </Link>
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
