@@ -287,3 +287,49 @@ export async function sendOrganizationVerificationEmail(
     return false;
   }
 }
+
+export async function sendTempPasswordEmail(
+  email: string,
+  tempPassword: string,
+): Promise<boolean> {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "[Lifty] 임시 비밀번호 발급",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Lifty 임시 비밀번호 발급</h2>
+          <p>안녕하세요! 관리자가 귀하의 비밀번호를 초기화했습니다.</p>
+          <p>아래 임시 비밀번호로 로그인하신 후, 반드시 새 비밀번호로 변경해주세요.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; display: inline-block;">
+              <span style="font-size: 24px; font-weight: bold; color: #4F46E5; letter-spacing: 4px;">${tempPassword}</span>
+            </div>
+          </div>
+          <div style="background-color: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <p style="color: #92400e; margin: 0; font-weight: bold;">⚠️ 보안 주의사항</p>
+            <ul style="color: #92400e; margin: 10px 0 0 0; padding-left: 20px;">
+              <li>임시 비밀번호는 한 번만 사용 가능합니다</li>
+              <li>로그인 후 즉시 새 비밀번호로 변경해주세요</li>
+              <li>비밀번호는 다른 사람과 공유하지 마세요</li>
+            </ul>
+          </div>
+          <p style="color: #666; font-size: 14px;">
+            로그인 후 설정 페이지에서 비밀번호를 변경할 수 있습니다.
+          </p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+          <p style="color: #666; font-size: 12px;">
+            이 이메일을 요청하지 않으셨다면 관리자에게 문의하세요.
+          </p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("임시 비밀번호 이메일 전송 실패:", error);
+    return false;
+  }
+}
