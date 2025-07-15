@@ -323,7 +323,7 @@ export default function SettingsPage() {
         },
         body: JSON.stringify({
           userId: user.id,
-          organizationId,
+          organizationId: organizationId,
         }),
       });
 

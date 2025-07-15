@@ -4,9 +4,8 @@ import { prisma } from "@/lib/prisma";
 // 기관 연동 해제
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-    const organizationId = searchParams.get("organizationId");
+    const body = await request.json();
+    const { userId, organizationId } = body;
 
     if (!userId || !organizationId) {
       return NextResponse.json(
