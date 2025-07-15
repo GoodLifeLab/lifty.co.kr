@@ -224,10 +224,14 @@ export default function GroupsPage() {
                   <p className="text-gray-600 text-sm mb-4">
                     {group.description || "설명이 없습니다."}
                   </p>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center justify-between text-sm text-gray-500">
                     <span className="flex items-center">
                       <UserIcon className="h-4 w-4 mr-1" />
-                      멤버 {group.memberships ? group.memberships.length : 0}명
+                      멤버{" "}
+                      {group.memberships
+                        ? group.memberships.length.toLocaleString()
+                        : 0}
+                      명
                     </span>
                     <span className="flex items-center">
                       <CalendarIcon className="h-4 w-4 mr-1" />

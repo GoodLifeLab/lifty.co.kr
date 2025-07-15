@@ -7,9 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { logout } from "../logout/action";
 import {
   HomeIcon,
-  FolderIcon,
   UserGroupIcon,
-  UsersIcon,
   UserIcon,
   Bars3Icon,
   XMarkIcon,
@@ -57,18 +55,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navigation = [
     { name: "대시보드", href: "/dashboard", icon: HomeIcon },
-    { name: "프로젝트", href: "/dashboard/projects", icon: FolderIcon },
     { name: "그룹", href: "/dashboard/groups", icon: UserGroupIcon },
-    { name: "팀", href: "/dashboard/team", icon: UsersIcon },
     {
-      name: "기관관리",
-      href: "/dashboard/organizations",
-      icon: BuildingOfficeIcon,
-    },
-    {
-      name: "사용자관리",
+      name: "사용자",
       href: "/dashboard/users",
       icon: UserIcon,
+    },
+    {
+      name: "소속 기관",
+      href: "/dashboard/organizations",
+      icon: BuildingOfficeIcon,
     },
   ];
 

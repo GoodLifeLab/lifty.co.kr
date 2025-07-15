@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
       orderBy: {
         name: "asc",
       },
+      include: {
+        memberships: true,
+      },
     });
 
     return NextResponse.json({
