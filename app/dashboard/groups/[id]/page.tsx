@@ -438,6 +438,12 @@ export default function GroupDetailPage() {
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
+                      소속 기관
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       종료일
                     </th>
                     <th
@@ -451,7 +457,13 @@ export default function GroupDetailPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredMembers.length > 0 ? (
                     filteredMembers.map((member) => (
-                      <tr key={member.user.id} className="hover:bg-gray-50">
+                      <tr
+                        key={member.user.id}
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() =>
+                          router.push(`/dashboard/users/${member.user.id}`)
+                        }
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
@@ -476,6 +488,32 @@ export default function GroupDetailPage() {
                           {member.user.email}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {member.user.organizations &&
+                          member.user.organizations.length > 0 ? (
+                            <div className="space-y-1">
+                              {member.user.organizations.map((org) => (
+                                <div
+                                  key={org.organization.id}
+                                  className="flex items-center"
+                                >
+                                  <span className="text-sm text-gray-900">
+                                    {org.organization.name}
+                                  </span>
+                                  {org.role && (
+                                    <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                                      {org.role}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">
+                              소속 기관 없음
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {member.endDate ? (
                             <span
                               className={`${
@@ -498,7 +536,10 @@ export default function GroupDetailPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           {currentUser?.id !== member.user.id && (
                             <button
-                              onClick={() => handleRemoveMember(member.user.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveMember(member.user.id);
+                              }}
                               disabled={removingMember === member.user.id}
                               className="text-red-600 hover:text-red-900 transition-colors disabled:opacity-50"
                               title="멤버 방출"

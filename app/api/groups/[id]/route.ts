@@ -36,7 +36,15 @@ export async function GET(
       include: {
         memberships: {
           include: {
-            user: true,
+            user: {
+              include: {
+                organizations: {
+                  include: {
+                    organization: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
