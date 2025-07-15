@@ -42,15 +42,16 @@ export default function SettingsPage() {
   } | null>(null);
   const [isSendingCode, setIsSendingCode] = useState(false);
 
+  // 프로필 상태를 실제 사용자 정보로 초기화
   const [profile, setProfile] = useState({
-    name: "김철수",
-    email: "kim@example.com",
-    role: "프로젝트 매니저",
-    department: "개발팀",
-    bio: "프로젝트 관리와 팀 협업에 열정을 가진 개발자입니다.",
-    phone: "010-1234-5678",
-    location: "서울시 강남구",
+    name: "",
+    email: "",
+    position: "",
+    phone: "",
   });
+
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
 
   const [notifications, setNotifications] = useState({
     email: true,
@@ -68,11 +69,77 @@ export default function SettingsPage() {
     passwordExpiry: "90",
   });
 
+  // 사용자 정보 로드
   useEffect(() => {
     if (user?.id) {
       fetchUserOrganizations();
+      loadUserProfile();
     }
   }, [user]);
+
+  // 사용자 프로필 정보 로드
+  const loadUserProfile = async () => {
+    if (!user?.id) return;
+
+    try {
+      setProfileLoading(true);
+      const response = await fetch(`/api/users/${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        const userData = data.user;
+        if (userData) {
+          setProfile({
+            name: userData.name || "",
+            email: userData.email || "",
+            position: userData.position || "",
+            phone: userData.phone || "",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("사용자 프로필 로드 오류:", error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // 프로필 저장
+  const handleSaveProfile = async () => {
+    if (!user?.id) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      setProfileSaving(true);
+      const response = await fetch("/api/users", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          name: profile.name,
+          email: profile.email,
+          position: profile.position,
+          phone: profile.phone,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message);
+      } else {
+        const error = await response.json();
+        alert(error.message || "프로필 저장에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("프로필 저장 오류:", error);
+      alert("프로필 저장에 실패했습니다.");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const fetchUserOrganizations = async () => {
     try {
@@ -198,8 +265,8 @@ export default function SettingsPage() {
   };
 
   const handleResendCode = async () => {
-    if (!user?.id) {
-      alert("로그인이 필요합니다.");
+    if (!user?.id || !joinData.email) {
+      alert("이메일을 입력해주세요.");
       return;
     }
 
@@ -249,15 +316,20 @@ export default function SettingsPage() {
     }
 
     try {
-      const response = await fetch(
-        `/api/organizations/leave?userId=${user.id}&organizationId=${organizationId}`,
-        {
-          method: "DELETE",
+      const response = await fetch("/api/organizations/leave", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          userId: user.id,
+          organizationId,
+        }),
+      });
 
       if (response.ok) {
-        alert("기관 연동이 해제되었습니다.");
+        const result = await response.json();
+        alert(result.message);
         fetchUserOrganizations();
       } else {
         const error = await response.json();
@@ -326,102 +398,89 @@ export default function SettingsPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   프로필 정보
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      이름
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.name}
-                      onChange={(e) =>
-                        handleProfileChange("name", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
+                {profileLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">
+                      프로필 정보를 불러오는 중...
+                    </p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      이메일
-                    </label>
-                    <input
-                      type="email"
-                      value={profile.email}
-                      onChange={(e) =>
-                        handleProfileChange("email", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        이름
+                      </label>
+                      <input
+                        type="text"
+                        value={profile.name}
+                        onChange={(e) =>
+                          handleProfileChange("name", e.target.value)
+                        }
+                        placeholder="이름을 입력하세요"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        이메일
+                      </label>
+                      <input
+                        type="email"
+                        value={profile.email}
+                        onChange={(e) =>
+                          handleProfileChange("email", e.target.value)
+                        }
+                        placeholder="이메일을 입력하세요"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        직책
+                      </label>
+                      <input
+                        type="text"
+                        value={profile.position}
+                        onChange={(e) =>
+                          handleProfileChange("position", e.target.value)
+                        }
+                        placeholder="직책을 입력하세요"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        전화번호
+                      </label>
+                      <input
+                        type="tel"
+                        value={profile.phone}
+                        onChange={(e) =>
+                          handleProfileChange("phone", e.target.value)
+                        }
+                        placeholder="전화번호를 입력하세요"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      역할
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.role}
-                      onChange={(e) =>
-                        handleProfileChange("role", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      부서
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.department}
-                      onChange={(e) =>
-                        handleProfileChange("department", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      전화번호
-                    </label>
-                    <input
-                      type="tel"
-                      value={profile.phone}
-                      onChange={(e) =>
-                        handleProfileChange("phone", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      위치
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.location}
-                      onChange={(e) =>
-                        handleProfileChange("location", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    자기소개
-                  </label>
-                  <textarea
-                    value={profile.bio}
-                    onChange={(e) => handleProfileChange("bio", e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
+                )}
               </div>
 
               <div className="flex justify-end">
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
-                  프로필 저장
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={profileSaving}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {profileSaving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      저장 중...
+                    </>
+                  ) : (
+                    "프로필 저장"
+                  )}
                 </button>
               </div>
             </div>
