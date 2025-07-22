@@ -46,6 +46,7 @@ export default function CoursesPage() {
   const [groupPage, setGroupPage] = useState(1);
   const [hasMoreGroups, setHasMoreGroups] = useState(true);
   const [groupSearchLoading, setGroupSearchLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // 시작일이 변경될 때 종료일 자동 조정
   const handleStartDateChange = (startDate: string) => {
@@ -255,10 +256,10 @@ export default function CoursesPage() {
                 {loading
                   ? "..."
                   : courses.filter(
-                      (c) =>
-                        getCourseStatus(c.startDate, c.endDate) ===
-                        "NOT_STARTED",
-                    ).length}
+                    (c) =>
+                      getCourseStatus(c.startDate, c.endDate) ===
+                      "NOT_STARTED",
+                  ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -276,10 +277,10 @@ export default function CoursesPage() {
                 {loading
                   ? "..."
                   : courses.filter(
-                      (c) =>
-                        getCourseStatus(c.startDate, c.endDate) ===
-                        "IN_PROGRESS",
-                    ).length}
+                    (c) =>
+                      getCourseStatus(c.startDate, c.endDate) ===
+                      "IN_PROGRESS",
+                  ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -297,9 +298,9 @@ export default function CoursesPage() {
                 {loading
                   ? "..."
                   : courses.filter(
-                      (c) =>
-                        getCourseStatus(c.startDate, c.endDate) === "COMPLETED",
-                    ).length}
+                    (c) =>
+                      getCourseStatus(c.startDate, c.endDate) === "COMPLETED",
+                  ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -314,7 +315,20 @@ export default function CoursesPage() {
       {/* 코스 목록 테이블 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">내 코스</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex-1 max-w-sm">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="과정명으로 검색..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              </div>
+            </div>
+          </div>
         </div>
         <div className="overflow-x-auto">
           {loading ? (
@@ -322,19 +336,25 @@ export default function CoursesPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
               <p className="mt-2 text-gray-600">코스 목록을 불러오는 중...</p>
             </div>
-          ) : courses.length === 0 ? (
+          ) : courses.filter((course) =>
+            course.name.toLowerCase().includes(searchTerm.toLowerCase())
+          ).length === 0 ? (
             <div className="text-center py-12">
               <AcademicCapIcon className="h-16 w-16 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                아직 코스가 없습니다
+                {searchTerm ? "검색 결과가 없습니다" : "아직 코스가 없습니다"}
               </h3>
-              <p className="text-gray-600 mb-4">첫 번째 코스를 만들어보세요!</p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center mx-auto"
-              >
-                <PlusIcon className="h-4 w-4 mr-2" />새 코스 만들기
-              </button>
+              <p className="text-gray-600 mb-4">
+                {searchTerm ? "다른 검색어를 시도해보세요" : "첫 번째 코스를 만들어보세요!"}
+              </p>
+              {!searchTerm && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center mx-auto"
+                >
+                  <PlusIcon className="h-4 w-4 mr-2" />새 코스 만들기
+                </button>
+              )}
             </div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">
@@ -355,70 +375,77 @@ export default function CoursesPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     상태
                   </th>
+                  <th className="relative px-6 py-3">
+                    <span className="sr-only">상세보기</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {courses.map((course) => (
-                  <tr
-                    key={course.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() =>
-                      (window.location.href = `/dashboard/courses/${course.id}`)
-                    }
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
-                          <AcademicCapIcon className="h-5 w-5 text-indigo-600" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {course.name}
+                {courses
+                  .filter((course) =>
+                    course.name.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((course) => (
+                    <tr
+                      key={course.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() =>
+                        (window.location.href = `/dashboard/courses/${course.id}`)
+                      }
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                            <AcademicCapIcon className="h-5 w-5 text-indigo-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {course.name}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <CalendarIcon className="h-4 w-4 mr-1" />
-                        {new Date(course.startDate).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <CalendarIcon className="h-4 w-4 mr-1" />
-                        {new Date(course.endDate).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        {course.groups.length > 0 ? (
-                          course.groups.map((group) => (
-                            <span
-                              key={group.id}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
-                            >
-                              {group.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center text-sm text-gray-900">
+                          <CalendarIcon className="h-4 w-4 mr-1" />
+                          {new Date(course.startDate).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center text-sm text-gray-900">
+                          <CalendarIcon className="h-4 w-4 mr-1" />
+                          {new Date(course.endDate).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1">
+                          {course.groups.length > 0 ? (
+                            course.groups.map((group) => (
+                              <span
+                                key={group.id}
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                              >
+                                {group.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-gray-500">
+                              참여 그룹 없음
                             </span>
-                          ))
-                        ) : (
-                          <span className="text-sm text-gray-500">
-                            참여 그룹 없음
-                          </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(
+                          getCourseStatus(course.startDate, course.endDate),
                         )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(
-                        getCourseStatus(course.startDate, course.endDate),
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           )}
-        </div>
+        </div >
       </div>
 
       {/* 코스 생성 모달 */}
@@ -533,11 +560,10 @@ export default function CoursesPage() {
                       {groups.map((group) => (
                         <div
                           key={group.id}
-                          className={`p-3 cursor-pointer hover:bg-gray-50 ${
-                            selectedGroups.some((g) => g.id === group.id)
-                              ? "bg-indigo-50"
-                              : ""
-                          }`}
+                          className={`p-3 cursor-pointer hover:bg-gray-50 ${selectedGroups.some((g) => g.id === group.id)
+                            ? "bg-indigo-50"
+                            : ""
+                            }`}
                           onClick={() => toggleGroupSelection(group)}
                         >
                           <div className="flex items-center justify-between">
