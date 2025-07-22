@@ -255,10 +255,10 @@ export default function CoursesPage() {
                 {loading
                   ? "..."
                   : courses.filter(
-                      (c) =>
-                        getCourseStatus(c.startDate, c.endDate) ===
-                        "NOT_STARTED",
-                    ).length}
+                    (c) =>
+                      getCourseStatus(c.startDate, c.endDate) ===
+                      "NOT_STARTED",
+                  ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -276,10 +276,10 @@ export default function CoursesPage() {
                 {loading
                   ? "..."
                   : courses.filter(
-                      (c) =>
-                        getCourseStatus(c.startDate, c.endDate) ===
-                        "IN_PROGRESS",
-                    ).length}
+                    (c) =>
+                      getCourseStatus(c.startDate, c.endDate) ===
+                      "IN_PROGRESS",
+                  ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -297,9 +297,9 @@ export default function CoursesPage() {
                 {loading
                   ? "..."
                   : courses.filter(
-                      (c) =>
-                        getCourseStatus(c.startDate, c.endDate) === "COMPLETED",
-                    ).length}
+                    (c) =>
+                      getCourseStatus(c.startDate, c.endDate) === "COMPLETED",
+                  ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -532,11 +532,10 @@ export default function CoursesPage() {
                       {groups.map((group) => (
                         <div
                           key={group.id}
-                          className={`p-3 cursor-pointer hover:bg-gray-50 ${
-                            selectedGroups.some((g) => g.id === group.id)
+                          className={`p-3 cursor-pointer hover:bg-gray-50 ${selectedGroups.some((g) => g.id === group.id)
                               ? "bg-indigo-50"
                               : ""
-                          }`}
+                            }`}
                           onClick={() => toggleGroupSelection(group)}
                         >
                           <div className="flex items-center justify-between">
@@ -580,17 +579,17 @@ export default function CoursesPage() {
 
               <div className="flex space-x-3 pt-4">
                 <button
-                  type="submit"
-                  className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-                >
-                  생성
-                </button>
-                <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
                   className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
                 >
                   취소
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                >
+                  생성
                 </button>
               </div>
             </form>
