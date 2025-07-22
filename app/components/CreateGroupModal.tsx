@@ -9,6 +9,7 @@ import {
 import ImageUploadInput from "@/components/ImageUploadInput";
 import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
+import { useFileUpload } from "@/hooks/useFileUpload";
 
 interface User {
   id: string;
@@ -55,6 +56,9 @@ export default function CreateGroupModal({
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [usersLoading, setUsersLoading] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+
+  const { deleteFile } = useFileUpload();
 
   // 사용자 목록 가져오기
   const fetchUsers = async () => {
@@ -136,6 +140,7 @@ export default function CreateGroupModal({
   const handleClose = () => {
     if (!loading) {
       setFormData({ name: "", description: "", isPublic: true, image: "" });
+      setUploadedImages([]);
       setSelectedUsers([]);
       setSearchTerm("");
       onClose();
@@ -144,6 +149,18 @@ export default function CreateGroupModal({
 
   const handleImageUpload = (url: string) => {
     setFormData((prev) => ({ ...prev, image: url }));
+    setUploadedImages([url]); // maxFiles가 1이므로 항상 하나만 저장
+  };
+
+  const handleImageDelete = async (imageUrl: string) => {
+    try {
+      await deleteFile(imageUrl);
+      setUploadedImages([]);
+      setFormData((prev) => ({ ...prev, image: "" }));
+    } catch (error) {
+      console.error("이미지 삭제 실패:", error);
+      alert("이미지 삭제에 실패했습니다.");
+    }
   };
 
   const handleImageError = (error: string) => {
@@ -197,39 +214,19 @@ export default function CreateGroupModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               그룹 이미지 (선택 사항)
             </label>
-            {formData.image ? (
-              <div className="flex items-end gap-3">
-                <div className="relative w-24 h-24">
-                  <Image
-                    src={formData.image}
-                    alt="그룹 이미지"
-                    fill
-                    className="object-cover rounded-md"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, image: "" }))
-                  }
-                  className="bg-red-500 rounded-md px-2 py-1 text-sm text-white hover:bg-red-600 transition-colors"
-                >
-                  이미지 교체
-                </button>
-              </div>
-            ) : (
-              <ImageUploadInput
-                onUploadComplete={handleImageUpload}
-                onUploadError={handleImageError}
-                maxSize={5}
-                multiple={false}
-                aspectRatio={1}
-                placeholder="그룹 이미지를 업로드하세요"
-                disabled={loading}
-                hideAfterUpload={true}
-                folder="groups"
-              />
-            )}
+            <ImageUploadInput
+              onUploadComplete={handleImageUpload}
+              onImageDelete={handleImageDelete}
+              onUploadError={handleImageError}
+              uploadedImages={uploadedImages}
+              maxSize={1}
+              multiple={false}
+              aspectRatio={1}
+              placeholder="그룹 이미지를 업로드하세요"
+              disabled={loading}
+              folder="groups"
+              maxFiles={1}
+            />
           </div>
 
           <div className="flex items-center">

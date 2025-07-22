@@ -18,6 +18,7 @@ import {
   BuildingOfficeIcon,
   Cog6ToothIcon,
   AcademicCapIcon,
+  FlagIcon,
 } from "@heroicons/react/24/outline";
 
 interface DashboardLayoutProps {
@@ -63,6 +64,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       icon: UserIcon,
     },
     { name: "프로젝트", href: "/dashboard/courses", icon: AcademicCapIcon },
+    { name: "미션", href: "/dashboard/missions", icon: FlagIcon },
     {
       name: "소속 기관",
       href: "/dashboard/organizations",
