@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/utils/auth";
-import { GroupMemberRole } from "@prisma/client";
+import { GroupMemberRole, Prisma } from "@prisma/client";
 
 // 그룹 목록 조회
 export async function GET(request: NextRequest) {
@@ -14,17 +14,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const groups = await prisma.group.findMany({
-      orderBy: {
-        name: "asc",
-      },
-      include: {
-        memberships: true,
-      },
-    });
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.GroupWhereInput = search
+      ? {
+          name: { contains: search, mode: "insensitive" as Prisma.QueryMode },
+        }
+      : {};
+
+    const [groups, total] = await Promise.all([
+      prisma.group.findMany({
+        where,
+        orderBy: {
+          name: "asc",
+        },
+        include: {
+          memberships: true,
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.group.count({ where }),
+    ]);
 
     return NextResponse.json({
       groups,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasMore: page * limit < total,
+      },
     });
   } catch (error) {
     console.error("그룹 목록 조회 오류:", error);

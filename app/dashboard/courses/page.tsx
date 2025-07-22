@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, AcademicCapIcon, CalendarIcon, UserGroupIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  AcademicCapIcon,
+  CalendarIcon,
+  UserGroupIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 
 interface Course {
   id: string;
@@ -15,6 +24,11 @@ interface Course {
   }>;
 }
 
+interface Group {
+  id: number;
+  name: string;
+}
+
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,17 +40,24 @@ export default function CoursesPage() {
     startDate: "",
     endDate: "",
   });
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<Group[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+  const [groupSearchTerm, setGroupSearchTerm] = useState("");
+  const [groupPage, setGroupPage] = useState(1);
+  const [hasMoreGroups, setHasMoreGroups] = useState(true);
+  const [groupSearchLoading, setGroupSearchLoading] = useState(false);
 
   // 시작일이 변경될 때 종료일 자동 조정
   const handleStartDateChange = (startDate: string) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const newData = { ...prev, startDate };
 
       // 종료일이 시작일보다 이전이면 종료일을 시작일 다음날로 설정
       if (newData.endDate && newData.endDate <= startDate) {
         const nextDay = new Date(startDate);
         nextDay.setDate(nextDay.getDate() + 1);
-        newData.endDate = nextDay.toISOString().split('T')[0];
+        newData.endDate = nextDay.toISOString().split("T")[0];
       }
 
       return newData;
@@ -44,7 +65,10 @@ export default function CoursesPage() {
   };
 
   // 날짜 기반으로 코스 상태 계산
-  const getCourseStatus = (startDate: string, endDate: string): "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" => {
+  const getCourseStatus = (
+    startDate: string,
+    endDate: string,
+  ): "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" => {
     const now = new Date();
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -60,6 +84,7 @@ export default function CoursesPage() {
 
   useEffect(() => {
     fetchCourses();
+    fetchGroups();
   }, []);
 
   const fetchCourses = async () => {
@@ -76,6 +101,65 @@ export default function CoursesPage() {
     }
   };
 
+  const fetchGroups = async (page = 1, search = "", append = false) => {
+    try {
+      if (page === 1) {
+        setGroupsLoading(true);
+      } else {
+        setGroupSearchLoading(true);
+      }
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "20",
+        ...(search && { search }),
+      });
+
+      const response = await fetch(`/api/groups?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+
+        if (append) {
+          setGroups((prev) => [...prev, ...data.groups]);
+        } else {
+          setGroups(data.groups || []);
+        }
+
+        setHasMoreGroups(data.pagination?.hasMore || false);
+        setGroupPage(page);
+      }
+    } catch (error) {
+      console.error("그룹 목록 조회 실패:", error);
+    } finally {
+      setGroupsLoading(false);
+      setGroupSearchLoading(false);
+    }
+  };
+
+  const handleGroupSearch = async (searchTerm: string) => {
+    setGroupSearchTerm(searchTerm);
+    setGroupPage(1);
+    await fetchGroups(1, searchTerm, false);
+  };
+
+  const loadMoreGroups = async () => {
+    if (!hasMoreGroups || groupSearchLoading) return;
+    await fetchGroups(groupPage + 1, groupSearchTerm, true);
+  };
+
+  const toggleGroupSelection = (group: Group) => {
+    const isSelected = selectedGroups.some((g) => g.id === group.id);
+    if (isSelected) {
+      setSelectedGroups(selectedGroups.filter((g) => g.id !== group.id));
+    } else {
+      setSelectedGroups([...selectedGroups, group]);
+    }
+  };
+
+  const removeSelectedGroup = (groupId: number) => {
+    setSelectedGroups(selectedGroups.filter((g) => g.id !== groupId));
+  };
+
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -84,12 +168,16 @@ export default function CoursesPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          groupIds: selectedGroups.map((g) => g.id),
+        }),
       });
 
       if (response.ok) {
         setShowCreateModal(false);
         setFormData({ name: "", startDate: "", endDate: "" });
+        setSelectedGroups([]);
         fetchCourses();
       }
     } catch (error) {
@@ -155,7 +243,9 @@ export default function CoursesPage() {
     };
     const config = statusConfig[status as keyof typeof statusConfig];
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}
+      >
         {config.text}
       </span>
     );
@@ -180,7 +270,13 @@ export default function CoursesPage() {
           </p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            setShowCreateModal(true);
+            setSelectedGroups([]);
+            setGroupSearchTerm("");
+            setGroupPage(1);
+            fetchGroups(1, "", false);
+          }}
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center"
         >
           <PlusIcon className="h-4 w-4 mr-2" />새 코스 만들기
@@ -207,7 +303,13 @@ export default function CoursesPage() {
             <div>
               <p className="text-sm font-medium text-gray-600">시작전</p>
               <p className="text-2xl font-bold text-gray-900">
-                {loading ? "..." : courses.filter((c) => getCourseStatus(c.startDate, c.endDate) === "NOT_STARTED").length}
+                {loading
+                  ? "..."
+                  : courses.filter(
+                      (c) =>
+                        getCourseStatus(c.startDate, c.endDate) ===
+                        "NOT_STARTED",
+                    ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -222,7 +324,13 @@ export default function CoursesPage() {
             <div>
               <p className="text-sm font-medium text-gray-600">진행 중</p>
               <p className="text-2xl font-bold text-gray-900">
-                {loading ? "..." : courses.filter((c) => getCourseStatus(c.startDate, c.endDate) === "IN_PROGRESS").length}
+                {loading
+                  ? "..."
+                  : courses.filter(
+                      (c) =>
+                        getCourseStatus(c.startDate, c.endDate) ===
+                        "IN_PROGRESS",
+                    ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -237,7 +345,12 @@ export default function CoursesPage() {
             <div>
               <p className="text-sm font-medium text-gray-600">완료됨</p>
               <p className="text-2xl font-bold text-gray-900">
-                {loading ? "..." : courses.filter((c) => getCourseStatus(c.startDate, c.endDate) === "COMPLETED").length}
+                {loading
+                  ? "..."
+                  : courses.filter(
+                      (c) =>
+                        getCourseStatus(c.startDate, c.endDate) === "COMPLETED",
+                    ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -314,7 +427,9 @@ export default function CoursesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(getCourseStatus(course.startDate, course.endDate))}
+                      {getStatusBadge(
+                        getCourseStatus(course.startDate, course.endDate),
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
@@ -374,7 +489,9 @@ export default function CoursesPage() {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="코스명을 입력하세요"
                   required
@@ -401,11 +518,117 @@ export default function CoursesPage() {
                 <input
                   type="date"
                   value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, endDate: e.target.value })
+                  }
                   min={formData.startDate || undefined}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  참여 그룹 (선택사항)
+                </label>
+                {selectedGroups.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600 mb-2">선택된 그룹:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedGroups.map((group) => (
+                        <span
+                          key={group.id}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800"
+                        >
+                          {group.name}
+                          <button
+                            type="button"
+                            onClick={() => removeSelectedGroup(group.id)}
+                            className="ml-1 text-indigo-600 hover:text-indigo-800"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 검색 입력 */}
+                <div className="mb-3">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={groupSearchTerm}
+                      onChange={(e) => handleGroupSearch(e.target.value)}
+                      placeholder="그룹명으로 검색..."
+                      className="w-full px-3 py-2 pl-9 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    />
+                    <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+
+                {/* 그룹 목록 */}
+                <div className="h-48 overflow-y-auto border border-gray-300 rounded-md">
+                  {groupsLoading ? (
+                    <div className="p-3 text-center text-sm text-gray-500">
+                      그룹 목록을 불러오는 중...
+                    </div>
+                  ) : groups.length === 0 ? (
+                    <div className="p-3 text-center text-sm text-gray-500">
+                      {groupSearchTerm
+                        ? "검색 결과가 없습니다"
+                        : "사용 가능한 그룹이 없습니다"}
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-200">
+                      {groups.map((group) => (
+                        <div
+                          key={group.id}
+                          className={`p-3 cursor-pointer hover:bg-gray-50 ${
+                            selectedGroups.some((g) => g.id === group.id)
+                              ? "bg-indigo-50"
+                              : ""
+                          }`}
+                          onClick={() => toggleGroupSelection(group)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {group.name}
+                              </p>
+                            </div>
+                            {selectedGroups.some((g) => g.id === group.id) && (
+                              <div className="w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* 무한 스크롤 로딩 */}
+                      {groupSearchLoading && (
+                        <div className="p-3 text-center text-sm text-gray-500">
+                          더 불러오는 중...
+                        </div>
+                      )}
+
+                      {/* 더 보기 버튼 */}
+                      {hasMoreGroups && !groupSearchLoading && (
+                        <div className="p-3 text-center">
+                          <button
+                            type="button"
+                            onClick={loadMoreGroups}
+                            className="text-sm text-indigo-600 hover:text-indigo-800"
+                          >
+                            더 보기
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex space-x-3 pt-4">
@@ -444,7 +667,9 @@ export default function CoursesPage() {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="코스명을 입력하세요"
                   required
@@ -471,7 +696,9 @@ export default function CoursesPage() {
                 <input
                   type="date"
                   value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, endDate: e.target.value })
+                  }
                   min={formData.startDate || undefined}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
@@ -499,4 +726,4 @@ export default function CoursesPage() {
       )}
     </div>
   );
-} 
+}

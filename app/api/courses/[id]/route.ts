@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 // 코스 수정
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const { id } = params;
@@ -15,7 +15,7 @@ export async function PUT(
     if (!name || !startDate || !endDate) {
       return NextResponse.json(
         { error: "필수 필드가 누락되었습니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -26,7 +26,7 @@ export async function PUT(
     if (start >= end) {
       return NextResponse.json(
         { error: "종료일은 시작일보다 늦어야 합니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -44,7 +44,7 @@ export async function PUT(
     console.error("코스 수정 오류:", error);
     return NextResponse.json(
       { error: "코스를 수정할 수 없습니다." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -52,7 +52,7 @@ export async function PUT(
 // 코스 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const { id } = params;
@@ -72,7 +72,7 @@ export async function DELETE(
     console.error("코스 삭제 오류:", error);
     return NextResponse.json(
       { error: "코스를 삭제할 수 없습니다." },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

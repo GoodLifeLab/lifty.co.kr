@@ -33,7 +33,7 @@ export async function GET() {
     console.error("코스 목록 조회 오류:", error);
     return NextResponse.json(
       { error: "코스 목록을 조회할 수 없습니다." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -42,13 +42,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, startDate, endDate } = body;
+    const { name, startDate, endDate, groupIds } = body;
 
     // 필수 필드 검증
     if (!name || !startDate || !endDate) {
       return NextResponse.json(
         { error: "필수 필드가 누락되었습니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     if (start >= end) {
       return NextResponse.json(
         { error: "종료일은 시작일보다 늦어야 합니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,15 +68,41 @@ export async function POST(request: NextRequest) {
         name,
         startDate: start,
         endDate: end,
+        groups:
+          groupIds && groupIds.length > 0
+            ? {
+                create: groupIds.map((groupId: number) => ({
+                  groupId: groupId,
+                })),
+              }
+            : undefined,
+      },
+      include: {
+        groups: {
+          include: {
+            group: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    return NextResponse.json(course, { status: 201 });
+    // 그룹 정보를 평면화
+    const formattedCourse = {
+      ...course,
+      groups: course.groups.map((gc) => gc.group),
+    };
+
+    return NextResponse.json(formattedCourse, { status: 201 });
   } catch (error) {
     console.error("코스 생성 오류:", error);
     return NextResponse.json(
       { error: "코스를 생성할 수 없습니다." },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}
