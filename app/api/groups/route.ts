@@ -3,30 +3,33 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/utils/auth";
 import { GroupMemberRole } from "@prisma/client";
 
-// 그룹 목록 가져오기
-export async function GET() {
+// 그룹 목록 조회
+export async function GET(request: NextRequest) {
   try {
     const currentUser = await getCurrentUser();
-
     if (!currentUser) {
       return NextResponse.json(
-        { error: "인증이 필요합니다." },
+        { message: "인증이 필요합니다." },
         { status: 401 },
       );
     }
 
-    // 그룹 데이터를 클라이언트에 맞게 변환
     const groups = await prisma.group.findMany({
+      orderBy: {
+        name: "asc",
+      },
       include: {
         memberships: true,
       },
     });
 
-    return NextResponse.json({ groups });
+    return NextResponse.json({
+      groups,
+    });
   } catch (error) {
     console.error("그룹 목록 조회 오류:", error);
     return NextResponse.json(
-      { error: "그룹 목록을 가져오는 중 오류가 발생했습니다." },
+      { message: "그룹 목록을 불러오는데 실패했습니다." },
       { status: 500 },
     );
   }

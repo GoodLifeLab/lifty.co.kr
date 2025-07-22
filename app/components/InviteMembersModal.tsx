@@ -6,7 +6,20 @@ import {
   XMarkIcon,
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
-import { User } from "@prisma/client";
+interface User {
+  id: string;
+  email: string;
+  phone: string | null;
+  createdAt: string;
+  organizations: Array<{
+    organization: {
+      id: string;
+      name: string;
+      department: string;
+    };
+    role?: string;
+  }>;
+}
 
 interface InviteMembersModalProps {
   isOpen: boolean;
@@ -189,7 +202,7 @@ export default function InviteMembersModal({
             />
           </div>
 
-          {/* 사용자 목록 */}
+          {/* 사용자 목록 테이블 */}
           <div className="mt-2 max-h-48 overflow-y-auto border border-gray-200 rounded-md">
             {usersLoading ? (
               <div className="p-4 text-center text-gray-500">
@@ -203,42 +216,98 @@ export default function InviteMembersModal({
                   : "초대할 수 있는 사용자가 없습니다."}
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
-                {filteredUsers.map((user) => {
-                  const isSelected = selectedUsers.some(
-                    (u) => u.id === user.id,
-                  );
-                  return (
-                    <div
-                      key={user.id}
-                      className={`p-3 cursor-pointer hover:bg-gray-50 ${
-                        isSelected ? "bg-indigo-50" : ""
-                      }`}
-                      onClick={() => toggleUserSelection(user)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      선택
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      이메일
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      전화번호
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      소속기관
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      가입일
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredUsers.map((user) => {
+                    const isSelected = selectedUsers.some(
+                      (u) => u.id === user.id,
+                    );
+                    return (
+                      <tr
+                        key={user.id}
+                        className={`cursor-pointer hover:bg-gray-50 ${
+                          isSelected ? "bg-indigo-50" : ""
+                        }`}
+                        onClick={() => toggleUserSelection(user)}
+                      >
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <div className="flex items-center justify-center">
+                            {isSelected ? (
+                              <div className="w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              </div>
+                            ) : (
+                              <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
                             {user.email}
-                          </p>
-                          {user.phone && (
-                            <p className="text-xs text-gray-500">
-                              {user.phone}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center">
-                          {isSelected && (
-                            <div className="w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center">
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {user.phone || "-"}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {user.organizations &&
+                            user.organizations.length > 0 ? (
+                              <div className="space-y-1">
+                                {user.organizations.map((org) => (
+                                  <div
+                                    key={org.organization.id}
+                                    className="flex items-center"
+                                  >
+                                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                      {org.organization.name}
+                                    </span>
+                                    {org.role && (
+                                      <span className="ml-1 text-xs text-gray-500">
+                                        ({org.role})
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-xs">-</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {user.createdAt
+                              ? new Date(user.createdAt).toLocaleDateString()
+                              : "-"}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
 

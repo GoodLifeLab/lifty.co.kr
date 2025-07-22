@@ -149,12 +149,12 @@ export default function GroupsPage() {
         </div>
       </div>
 
-      {/* 그룹 목록 */}
+      {/* 그룹 목록 테이블 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">내 그룹</h3>
         </div>
-        <div className="p-6">
+        <div className="overflow-x-auto">
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
@@ -175,68 +175,101 @@ export default function GroupsPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {groups.map((group) => (
-                <div
-                  key={group.id}
-                  className="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => router.push(`/dashboard/groups/${group.id}`)}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    {group.image ? (
-                      <img
-                        src={group.image}
-                        alt={group.name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                        onError={(e) => {
-                          // 이미지 로드 실패 시 기본 아이콘으로 대체
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          target.nextElementSibling?.classList.remove("hidden");
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className={`w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center ${group.image ? "hidden" : ""}`}
-                    >
-                      <UserGroupIcon className="h-6 w-6 text-indigo-600" />
-                    </div>
-                    <div className="flex items-center space-x-2">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    그룹
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    설명
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    소속 인원 수
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    생성일
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    그룹 공개 여부
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {groups.map((group) => (
+                  <tr
+                    key={group.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => router.push(`/dashboard/groups/${group.id}`)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {group.image ? (
+                          <img
+                            src={group.image}
+                            alt={group.name}
+                            className="w-10 h-10 rounded-lg object-cover mr-3"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              target.nextElementSibling?.classList.remove(
+                                "hidden",
+                              );
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3 ${group.image ? "hidden" : ""}`}
+                        >
+                          <UserGroupIcon className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {group.name}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 max-w-xs truncate">
+                        {group.description || "설명이 없습니다."}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-900">
+                        <UserIcon className="h-4 w-4 mr-1" />
+                        {group.memberships
+                          ? group.memberships.length.toLocaleString()
+                          : 0}
+                        명
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-900">
+                        <CalendarIcon className="h-4 w-4 mr-1" />
+                        {new Date(group.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           group.isPublic
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {group.isPublic ? (
-                          <GlobeAltIcon className="h-3 w-3 inline mr-1" />
+                          <GlobeAltIcon className="h-3 w-3 mr-1" />
                         ) : (
-                          <LockClosedIcon className="h-3 w-3 inline mr-1" />
+                          <LockClosedIcon className="h-3 w-3 mr-1" />
                         )}
                         {group.isPublic ? "공개" : "비공개"}
                       </span>
-                    </div>
-                  </div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">
-                    {group.name}
-                  </h4>
-                  <p className="text-gray-600 text-sm mb-4">
-                    {group.description || "설명이 없습니다."}
-                  </p>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <span className="flex items-center">
-                      <UserIcon className="h-4 w-4 mr-1" />
-                      멤버 {group.memberships ? group.memberships.length : 0}명
-                    </span>
-                    <span className="flex items-center">
-                      <CalendarIcon className="h-4 w-4 mr-1" />
-                      {new Date(group.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </div>

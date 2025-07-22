@@ -7,15 +7,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { logout } from "../logout/action";
 import {
   HomeIcon,
-  FolderIcon,
   UserGroupIcon,
-  UsersIcon,
+  UserIcon,
   Bars3Icon,
   XMarkIcon,
   MagnifyingGlassIcon,
   BellIcon,
   ArrowRightOnRectangleIcon,
   TrashIcon,
+  BuildingOfficeIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 
 interface DashboardLayoutProps {
@@ -54,9 +55,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navigation = [
     { name: "대시보드", href: "/dashboard", icon: HomeIcon },
-    { name: "프로젝트", href: "/dashboard/projects", icon: FolderIcon },
     { name: "그룹", href: "/dashboard/groups", icon: UserGroupIcon },
-    { name: "팀", href: "/dashboard/team", icon: UsersIcon },
+    {
+      name: "사용자",
+      href: "/dashboard/users",
+      icon: UserIcon,
+    },
+    {
+      name: "소속 기관",
+      href: "/dashboard/organizations",
+      icon: BuildingOfficeIcon,
+    },
   ];
 
   return (
@@ -117,6 +126,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             <div className="mt-3 space-y-1">
+              <Link
+                href="/dashboard/settings"
+                className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                <Cog6ToothIcon className="mr-3 h-5 w-5" />
+                설정
+              </Link>
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"

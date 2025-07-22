@@ -1,18 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+
+interface UserOrganization {
+  id: string;
+  userId: string;
+  organizationId: string;
+  role: string;
+  joinedAt: string;
+  organization: {
+    id: string;
+    name: string;
+    department: string;
+    code: string;
+    emailDomain?: string;
+  };
+}
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
-  const [profile, setProfile] = useState({
-    name: "김철수",
-    email: "kim@example.com",
-    role: "프로젝트 매니저",
-    department: "개발팀",
-    bio: "프로젝트 관리와 팀 협업에 열정을 가진 개발자입니다.",
-    phone: "010-1234-5678",
-    location: "서울시 강남구",
+  const [userOrganizations, setUserOrganizations] = useState<
+    UserOrganization[]
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinMethod, setJoinMethod] = useState<"code" | "email">("code");
+  const [joinData, setJoinData] = useState({
+    code: "",
+    email: "",
   });
+  const [emailVerificationStep, setEmailVerificationStep] = useState<
+    "input" | "verify"
+  >("input");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [selectedOrganization, setSelectedOrganization] = useState<{
+    name: string;
+    department: string;
+  } | null>(null);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+
+  // 프로필 상태를 실제 사용자 정보로 초기화
+  const [profile, setProfile] = useState({
+    name: "",
+    email: "",
+    position: "",
+    phone: "",
+  });
+
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
 
   const [notifications, setNotifications] = useState({
     email: true,
@@ -30,6 +69,278 @@ export default function SettingsPage() {
     passwordExpiry: "90",
   });
 
+  // 사용자 정보 로드
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserOrganizations();
+      loadUserProfile();
+    }
+  }, [user]);
+
+  // 사용자 프로필 정보 로드
+  const loadUserProfile = async () => {
+    if (!user?.id) return;
+
+    try {
+      setProfileLoading(true);
+      const response = await fetch(`/api/users/${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        const userData = data.user;
+        if (userData) {
+          setProfile({
+            name: userData.name || "",
+            email: userData.email || "",
+            position: userData.position || "",
+            phone: userData.phone || "",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("사용자 프로필 로드 오류:", error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // 프로필 저장
+  const handleSaveProfile = async () => {
+    if (!user?.id) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      setProfileSaving(true);
+      const response = await fetch("/api/users", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          name: profile.name,
+          email: profile.email,
+          position: profile.position,
+          phone: profile.phone,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message);
+      } else {
+        const error = await response.json();
+        alert(error.message || "프로필 저장에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("프로필 저장 오류:", error);
+      alert("프로필 저장에 실패했습니다.");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const fetchUserOrganizations = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `/api/organizations/join?userId=${user?.id}`,
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setUserOrganizations(data);
+      }
+    } catch (error) {
+      console.error("기관 목록 조회 오류:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoinOrganization = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user?.id) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      if (joinMethod === "code") {
+        // 기관 코드로 연동
+        const requestData = {
+          userId: user.id,
+          code: joinData.code,
+        };
+
+        const response = await fetch("/api/organizations/join", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          alert(result.message);
+          setShowJoinModal(false);
+          setJoinData({ code: "", email: "" });
+          fetchUserOrganizations();
+        } else {
+          const error = await response.json();
+          alert(error.message);
+        }
+      } else {
+        // 이메일 인증 코드 전송
+        setIsSendingCode(true);
+        const response = await fetch("/api/organizations/verify-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: joinData.email,
+            userId: user.id,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setSelectedOrganization(result.organization);
+          setEmailVerificationStep("verify");
+          alert(result.message);
+        } else {
+          const error = await response.json();
+          alert(error.message);
+        }
+        setIsSendingCode(false);
+      }
+    } catch (error) {
+      console.error("기관 연동 오류:", error);
+      alert("기관 연동에 실패했습니다.");
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user?.id || !verificationCode) {
+      alert("인증 코드를 입력해주세요.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/organizations/verify-email", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: joinData.email,
+          code: verificationCode,
+          userId: user.id,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
+        setShowJoinModal(false);
+        setJoinData({ code: "", email: "" });
+        setVerificationCode("");
+        setEmailVerificationStep("input");
+        setSelectedOrganization(null);
+        fetchUserOrganizations();
+      } else {
+        const error = await response.json();
+        alert(error.message);
+      }
+    } catch (error) {
+      console.error("이메일 인증 오류:", error);
+      alert("이메일 인증에 실패했습니다.");
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!user?.id || !joinData.email) {
+      alert("이메일을 입력해주세요.");
+      return;
+    }
+
+    try {
+      setIsSendingCode(true);
+      const response = await fetch("/api/organizations/verify-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: joinData.email,
+          userId: user.id,
+        }),
+      });
+
+      if (response.ok) {
+        alert("인증 코드가 다시 전송되었습니다.");
+      } else {
+        const error = await response.json();
+        alert(error.message);
+      }
+    } catch (error) {
+      console.error("인증 코드 재전송 오류:", error);
+      alert("인증 코드 재전송에 실패했습니다.");
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const closeModal = () => {
+    setShowJoinModal(false);
+    setJoinData({ code: "", email: "" });
+    setVerificationCode("");
+    setEmailVerificationStep("input");
+    setSelectedOrganization(null);
+  };
+
+  const handleLeaveOrganization = async (organizationId: string) => {
+    if (!user?.id) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    if (!confirm("정말로 이 기관에서 연동을 해제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/organizations/leave", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          organizationId: organizationId,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
+        fetchUserOrganizations();
+      } else {
+        const error = await response.json();
+        alert(error.message);
+      }
+    } catch (error) {
+      console.error("기관 연동 해제 오류:", error);
+      alert("기관 연동 해제에 실패했습니다.");
+    }
+  };
+
   const handleProfileChange = (field: string, value: string) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
   };
@@ -44,6 +355,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: "profile", name: "프로필", icon: "👤" },
+    { id: "organizations", name: "기관 연동", icon: "🏢" },
     { id: "notifications", name: "알림", icon: "🔔" },
     { id: "security", name: "보안", icon: "🔒" },
     { id: "preferences", name: "환경설정", icon: "⚙️" },
@@ -86,102 +398,154 @@ export default function SettingsPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   프로필 정보
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      이름
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.name}
-                      onChange={(e) =>
-                        handleProfileChange("name", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
+                {profileLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">
+                      프로필 정보를 불러오는 중...
+                    </p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      이메일
-                    </label>
-                    <input
-                      type="email"
-                      value={profile.email}
-                      onChange={(e) =>
-                        handleProfileChange("email", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        이름
+                      </label>
+                      <input
+                        type="text"
+                        value={profile.name}
+                        onChange={(e) =>
+                          handleProfileChange("name", e.target.value)
+                        }
+                        placeholder="이름을 입력하세요"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        이메일
+                      </label>
+                      <input
+                        type="email"
+                        value={profile.email}
+                        onChange={(e) =>
+                          handleProfileChange("email", e.target.value)
+                        }
+                        placeholder="이메일을 입력하세요"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        직책
+                      </label>
+                      <input
+                        type="text"
+                        value={profile.position}
+                        onChange={(e) =>
+                          handleProfileChange("position", e.target.value)
+                        }
+                        placeholder="직책을 입력하세요"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        전화번호
+                      </label>
+                      <input
+                        type="tel"
+                        value={profile.phone}
+                        onChange={(e) =>
+                          handleProfileChange("phone", e.target.value)
+                        }
+                        placeholder="전화번호를 입력하세요"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      역할
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.role}
-                      onChange={(e) =>
-                        handleProfileChange("role", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      부서
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.department}
-                      onChange={(e) =>
-                        handleProfileChange("department", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      전화번호
-                    </label>
-                    <input
-                      type="tel"
-                      value={profile.phone}
-                      onChange={(e) =>
-                        handleProfileChange("phone", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      위치
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.location}
-                      onChange={(e) =>
-                        handleProfileChange("location", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    자기소개
-                  </label>
-                  <textarea
-                    value={profile.bio}
-                    onChange={(e) => handleProfileChange("bio", e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
+                )}
               </div>
 
               <div className="flex justify-end">
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
-                  프로필 저장
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={profileSaving}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {profileSaving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      저장 중...
+                    </>
+                  ) : (
+                    "프로필 저장"
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 기관 연동 */}
+          {activeTab === "organizations" && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  기관 연동
+                </h3>
+                <p className="text-gray-600">
+                  현재 연동된 기관 목록입니다. 추가하거나 기관에서 연동을 해제할
+                  수 있습니다.
+                </p>
+                {loading ? (
+                  <p>기관 목록을 불러오는 중입니다...</p>
+                ) : userOrganizations.length === 0 ? (
+                  <p>현재 연동된 기관이 없습니다.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {userOrganizations.map((org) => (
+                      <div
+                        key={org.id}
+                        className="flex items-center justify-between bg-gray-50 p-4 rounded-md"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {org.organization.name}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {org.organization.department}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            코드: {org.organization.code}
+                          </p>
+                          {org.organization.emailDomain && (
+                            <p className="text-sm text-gray-500">
+                              이메일 도메인: {org.organization.emailDomain}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() =>
+                              handleLeaveOrganization(org.organizationId)
+                            }
+                            className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition-colors"
+                          >
+                            연동 해제
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowJoinModal(true)}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                >
+                  기관 추가
                 </button>
               </div>
             </div>
@@ -524,6 +888,203 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      {/* 기관 추가 모달 */}
+      {showJoinModal && (
+        <div className="fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="relative p-8 w-full max-w-md max-h-full">
+            <div className="relative bg-white rounded-lg shadow">
+              <div className="flex justify-between items-start p-4 rounded-t border-b">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  기관 연동
+                </h3>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* 이메일 인증 단계 */}
+              {emailVerificationStep === "verify" && (
+                <form onSubmit={handleVerifyEmail} className="p-6 space-y-6">
+                  <div>
+                    <div className="mb-4 p-3 bg-blue-50 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        <strong>{selectedOrganization?.name}</strong> (
+                        {selectedOrganization?.department})
+                      </p>
+                      <p className="text-sm text-blue-600 mt-1">
+                        {joinData.email}로 인증 코드를 전송했습니다.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        인증 코드 *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        placeholder="6자리 코드 입력"
+                        maxLength={6}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        10분 이내에 인증 코드를 입력해주세요.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+                    <button
+                      type="button"
+                      onClick={() => setEmailVerificationStep("input")}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    >
+                      뒤로가기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResendCode}
+                      disabled={isSendingCode}
+                      className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-md hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                    >
+                      {isSendingCode ? "전송 중..." : "재전송"}
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      인증하기
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* 초기 입력 단계 */}
+              {emailVerificationStep === "input" && (
+                <form
+                  onSubmit={handleJoinOrganization}
+                  className="p-6 space-y-6"
+                >
+                  <div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      기관 코드 또는 이메일 도메인을 통해 기관에 연동할 수
+                      있습니다.
+                    </p>
+
+                    {/* 연동 방법 선택 */}
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-4">
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="join-method"
+                            checked={joinMethod === "code"}
+                            onChange={() => setJoinMethod("code")}
+                            className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm font-medium text-gray-700">
+                            기관 코드로 연동
+                          </span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="join-method"
+                            checked={joinMethod === "email"}
+                            onChange={() => setJoinMethod("email")}
+                            className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm font-medium text-gray-700">
+                            이메일 도메인으로 연동
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* 입력 필드 */}
+                    <div className="space-y-4">
+                      {joinMethod === "code" ? (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            기관 코드 *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={joinData.code}
+                            onChange={(e) =>
+                              setJoinData({
+                                ...joinData,
+                                code: e.target.value.toUpperCase(),
+                              })
+                            }
+                            placeholder="예: A1B2C3D4"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            기관에서 제공받은 8자리 코드를 입력하세요.
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            이메일 주소 *
+                          </label>
+                          <input
+                            type="email"
+                            required
+                            value={joinData.email}
+                            onChange={(e) =>
+                              setJoinData({
+                                ...joinData,
+                                email: e.target.value,
+                              })
+                            }
+                            placeholder="예: user@company.com"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">
+                            기관에서 등록한 이메일 도메인을 사용하는 이메일을
+                            입력하세요.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSendingCode}
+                      className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                    >
+                      {isSendingCode
+                        ? "전송 중..."
+                        : joinMethod === "email"
+                          ? "인증 코드 전송"
+                          : "연동하기"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
