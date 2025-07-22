@@ -57,12 +57,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigation = [
     { name: "대시보드", href: "/dashboard", icon: HomeIcon },
     { name: "그룹", href: "/dashboard/groups", icon: UserGroupIcon },
-    { name: "코스", href: "/dashboard/courses", icon: AcademicCapIcon },
     {
       name: "사용자",
       href: "/dashboard/users",
       icon: UserIcon,
     },
+    { name: "프로젝트", href: "/dashboard/courses", icon: AcademicCapIcon },
     {
       name: "소속 기관",
       href: "/dashboard/organizations",

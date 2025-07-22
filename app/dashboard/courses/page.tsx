@@ -180,7 +180,7 @@ export default function CoursesPage() {
         fetchCourses();
       }
     } catch (error) {
-      console.error("코스 생성 실패:", error);
+      console.error("프로젝트 생성 실패:", error);
     }
   };
 
@@ -213,9 +213,9 @@ export default function CoursesPage() {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">코스 관리</h1>
+          <h1 className="text-2xl font-bold text-gray-900">프로젝트 관리</h1>
           <p className="text-gray-600">
-            교육 코스를 생성하고 관리할 수 있습니다
+            프로젝트를 생성하고 관리할 수 있습니다
           </p>
         </div>
         <button
@@ -228,7 +228,7 @@ export default function CoursesPage() {
           }}
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center"
         >
-          <PlusIcon className="h-4 w-4 mr-2" />새 코스 만들기
+          <PlusIcon className="h-4 w-4 mr-2" />새 프로젝트 만들기
         </button>
       </div>
 
@@ -237,7 +237,7 @@ export default function CoursesPage() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">총 코스</p>
+              <p className="text-sm font-medium text-gray-600">총 프로젝트</p>
               <p className="text-2xl font-bold text-gray-900">
                 {loading ? "..." : courses.length}
               </p>
@@ -255,10 +255,10 @@ export default function CoursesPage() {
                 {loading
                   ? "..."
                   : courses.filter(
-                    (c) =>
-                      getCourseStatus(c.startDate, c.endDate) ===
-                      "NOT_STARTED",
-                  ).length}
+                      (c) =>
+                        getCourseStatus(c.startDate, c.endDate) ===
+                        "NOT_STARTED",
+                    ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -276,10 +276,10 @@ export default function CoursesPage() {
                 {loading
                   ? "..."
                   : courses.filter(
-                    (c) =>
-                      getCourseStatus(c.startDate, c.endDate) ===
-                      "IN_PROGRESS",
-                  ).length}
+                      (c) =>
+                        getCourseStatus(c.startDate, c.endDate) ===
+                        "IN_PROGRESS",
+                    ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -297,9 +297,9 @@ export default function CoursesPage() {
                 {loading
                   ? "..."
                   : courses.filter(
-                    (c) =>
-                      getCourseStatus(c.startDate, c.endDate) === "COMPLETED",
-                  ).length}
+                      (c) =>
+                        getCourseStatus(c.startDate, c.endDate) === "COMPLETED",
+                    ).length}
               </p>
             </div>
             <div className="text-2xl">
@@ -425,13 +425,13 @@ export default function CoursesPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              새 코스 만들기
+              새 프로젝트 만들기
             </h3>
 
             <form onSubmit={handleCreateCourse} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  코스명 *
+                  프로젝트명 *
                 </label>
                 <input
                   type="text"
@@ -440,7 +440,7 @@ export default function CoursesPage() {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="코스명을 입력하세요"
+                  placeholder="프로젝트명을 입력하세요"
                   required
                 />
               </div>
@@ -532,10 +532,11 @@ export default function CoursesPage() {
                       {groups.map((group) => (
                         <div
                           key={group.id}
-                          className={`p-3 cursor-pointer hover:bg-gray-50 ${selectedGroups.some((g) => g.id === group.id)
+                          className={`p-3 cursor-pointer hover:bg-gray-50 ${
+                            selectedGroups.some((g) => g.id === group.id)
                               ? "bg-indigo-50"
                               : ""
-                            }`}
+                          }`}
                           onClick={() => toggleGroupSelection(group)}
                         >
                           <div className="flex items-center justify-between">

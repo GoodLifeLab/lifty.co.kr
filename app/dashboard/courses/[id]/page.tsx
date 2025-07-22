@@ -78,7 +78,7 @@ export default function CourseDetailPage({
         router.push("/dashboard/courses");
       }
     } catch (error) {
-      console.error("코스 조회 실패:", error);
+      console.error("프로젝트 조회 실패:", error);
       router.push("/dashboard/courses");
     } finally {
       setLoading(false);
@@ -194,7 +194,7 @@ export default function CourseDetailPage({
         fetchCourse();
       }
     } catch (error) {
-      console.error("코스 수정 실패:", error);
+      console.error("프로젝트 수정 실패:", error);
     }
   };
 
@@ -208,7 +208,7 @@ export default function CourseDetailPage({
         router.push("/dashboard/courses");
       }
     } catch (error) {
-      console.error("코스 삭제 실패:", error);
+      console.error("프로젝트 삭제 실패:", error);
     }
   };
 
@@ -223,12 +223,12 @@ export default function CourseDetailPage({
   if (!course) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">코스를 찾을 수 없습니다.</p>
+        <p className="text-gray-600">프로젝트를 찾을 수 없습니다.</p>
         <Link
           href="/dashboard/courses"
           className="mt-4 inline-block text-indigo-600 hover:text-indigo-800"
         >
-          코스 목록으로 돌아가기
+          프로젝트 목록으로 돌아가기
         </Link>
       </div>
     );
@@ -247,7 +247,7 @@ export default function CourseDetailPage({
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{course.name}</h1>
-            <p className="text-gray-600">코스 상세 정보</p>
+            <p className="text-gray-600">프로젝트 상세 정보</p>
           </div>
         </div>
         <div className="flex space-x-3">
@@ -268,9 +268,11 @@ export default function CourseDetailPage({
         </div>
       </div>
 
-      {/* 코스 정보 카드 */}
+      {/* 프로젝트 정보 카드 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">코스 정보</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">
+          프로젝트 정보
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -344,13 +346,13 @@ export default function CourseDetailPage({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              코스 수정
+              프로젝트 수정
             </h3>
 
             <form onSubmit={handleEditCourse} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  코스명 *
+                  프로젝트명 *
                 </label>
                 <input
                   type="text"
@@ -359,7 +361,7 @@ export default function CourseDetailPage({
                     setFormData({ ...formData, name: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="코스명을 입력하세요"
+                  placeholder="프로젝트명을 입력하세요"
                   required
                 />
               </div>
@@ -451,10 +453,11 @@ export default function CourseDetailPage({
                       {groups.map((group) => (
                         <div
                           key={group.id}
-                          className={`p-3 cursor-pointer hover:bg-gray-50 ${selectedGroups.some((g) => g.id === group.id)
-                            ? "bg-indigo-50"
-                            : ""
-                            }`}
+                          className={`p-3 cursor-pointer hover:bg-gray-50 ${
+                            selectedGroups.some((g) => g.id === group.id)
+                              ? "bg-indigo-50"
+                              : ""
+                          }`}
                           onClick={() => toggleGroupSelection(group)}
                         >
                           <div className="flex items-center justify-between">
@@ -521,10 +524,11 @@ export default function CourseDetailPage({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              코스 삭제
+              프로젝트 삭제
             </h3>
             <p className="text-sm text-gray-600 mb-6">
-              정말로 이 코스를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+              정말로 이 프로젝트를 삭제하시겠습니까? 이 작업은 되돌릴 수
+              없습니다.
             </p>
             <div className="flex space-x-3">
               <button

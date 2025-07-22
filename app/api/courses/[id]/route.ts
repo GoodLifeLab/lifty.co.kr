@@ -37,7 +37,7 @@ export async function GET(
 
     if (!course) {
       return NextResponse.json(
-        { message: "코스를 찾을 수 없습니다." },
+        { message: "프로젝트를 찾을 수 없습니다." },
         { status: 404 },
       );
     }
@@ -50,7 +50,7 @@ export async function GET(
 
     return NextResponse.json(formattedCourse);
   } catch (error) {
-    console.error("코스 조회 오류:", error);
+    console.error("프로젝트 조회 오류:", error);
     return NextResponse.json(
       { message: "서버 오류가 발생했습니다." },
       { status: 500 },
@@ -110,10 +110,10 @@ export async function PUT(
         groups:
           groupIds && groupIds.length > 0
             ? {
-              create: groupIds.map((groupId: number) => ({
-                groupId: groupId,
-              })),
-            }
+                create: groupIds.map((groupId: number) => ({
+                  groupId: groupId,
+                })),
+              }
             : undefined,
       },
       include: {
@@ -139,7 +139,7 @@ export async function PUT(
 
     return NextResponse.json(formattedCourse);
   } catch (error) {
-    console.error("코스 수정 오류:", error);
+    console.error("프로젝트 수정 오류:", error);
     return NextResponse.json(
       { message: "서버 오류가 발생했습니다." },
       { status: 500 },
@@ -168,9 +168,9 @@ export async function DELETE(
       where: { id },
     });
 
-    return NextResponse.json({ message: "코스가 삭제되었습니다." });
+    return NextResponse.json({ message: "프로젝트가 삭제되었습니다." });
   } catch (error) {
-    console.error("코스 삭제 오류:", error);
+    console.error("프로젝트 삭제 오류:", error);
     return NextResponse.json(
       { message: "서버 오류가 발생했습니다." },
       { status: 500 },
