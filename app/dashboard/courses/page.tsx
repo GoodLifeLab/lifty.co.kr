@@ -341,19 +341,19 @@ export default function CoursesPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    코스명
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    상태
+                    과정명
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     시작일
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    종료일
+                    마감일
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    할당된 그룹
+                    참여그룹
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    상태
                   </th>
                   <th className="relative px-6 py-3">
                     <span className="sr-only">상세보기</span>
@@ -382,11 +382,6 @@ export default function CoursesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(
-                        getCourseStatus(course.startDate, course.endDate),
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
                         <CalendarIcon className="h-4 w-4 mr-1" />
                         {new Date(course.startDate).toLocaleDateString()}
@@ -399,10 +394,27 @@ export default function CoursesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <UserGroupIcon className="h-4 w-4 mr-1" />
-                        {course.groups.length}개 그룹
+                      <div className="flex flex-wrap gap-1">
+                        {course.groups.length > 0 ? (
+                          course.groups.map((group) => (
+                            <span
+                              key={group.id}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                            >
+                              {group.name}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-sm text-gray-500">
+                            참여 그룹 없음
+                          </span>
+                        )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(
+                        getCourseStatus(course.startDate, course.endDate),
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
