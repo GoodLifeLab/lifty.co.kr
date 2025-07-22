@@ -17,12 +17,7 @@ enum GroupMemberRole {
   ADMIN
 }
 
-// 코스 상태 enum
-enum CourseStatus {
-  NOT_STARTED // 시작전
-  IN_PROGRESS // 진행 중
-  COMPLETED // 완료됨
-}
+
 
 model User {
   id            String    @id @default(cuid())
@@ -105,12 +100,11 @@ model GroupMember {
 
 // 코스 모델
 model Course {
-  id        String       @id @default(cuid())
-  name      String // 코스 이름
-  createdAt DateTime     @default(now()) @map("created_at")
-  startDate DateTime     @map("start_date") // 시작일
-  endDate   DateTime     @map("end_date") // 종료일
-  status    CourseStatus @default(NOT_STARTED) // 상태
+  id        String   @id @default(cuid())
+  name      String   // 코스 이름
+  createdAt DateTime @default(now()) @map("created_at")
+  startDate DateTime @map("start_date") // 시작일
+  endDate   DateTime @map("end_date")   // 종료일
 
   // 그룹 관계
   groups GroupCourse[]
