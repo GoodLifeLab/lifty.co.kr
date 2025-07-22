@@ -282,13 +282,13 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     }
   };
 
-  // 사용자 삭제
+  // 사용자 비활성화
   const handleDeleteUser = async () => {
     if (!user) return;
 
     if (
       !confirm(
-        `정말로 ${user.name || user.email} 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
+        `정말로 ${user.name || user.email} 사용자를 비활성화하시겠습니까? 비활성화된 사용자는 로그인할 수 없습니다.`,
       )
     ) {
       return;
@@ -306,11 +306,11 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         router.push("/dashboard/users");
       } else {
         const error = await response.json();
-        alert(error.message || "사용자 삭제에 실패했습니다.");
+        alert(error.message || "사용자 비활성화에 실패했습니다.");
       }
     } catch (error) {
-      console.error("사용자 삭제 오류:", error);
-      alert("사용자 삭제에 실패했습니다.");
+      console.error("사용자 비활성화 오류:", error);
+      alert("사용자 비활성화에 실패했습니다.");
     } finally {
       setDeleting(false);
     }
@@ -533,10 +533,10 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   {deleting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
-                      삭제 중...
+                      비활성화 중...
                     </>
                   ) : (
-                    "사용자 삭제"
+                    "사용자 비활성화"
                   )}
                 </button>
               </div>

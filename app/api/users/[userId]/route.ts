@@ -19,9 +19,12 @@ export async function GET(
 
     const { userId } = params;
 
-    // 사용자 정보 조회
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    // 사용자 정보 조회 (비활성화된 사용자 제외)
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        disabled: false, // 비활성화된 사용자 제외
+      },
       include: {
         organizations: {
           include: {

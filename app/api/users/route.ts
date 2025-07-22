@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // 검색 조건 구성
-    const where: any = {};
+    const where: any = {
+      disabled: false, // 비활성화된 사용자 제외
+    };
 
     if (search) {
       where.OR = [
@@ -172,7 +174,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// 사용자 삭제
+// 사용자 비활성화
 export async function DELETE(request: NextRequest) {
   try {
     const currentUser = await getCurrentUser();
@@ -208,23 +210,99 @@ export async function DELETE(request: NextRequest) {
     // 현재 로그인한 사용자와 같은 사용자인지 확인
     if (existingUser.email === currentUser.email) {
       return NextResponse.json(
-        { message: "자신의 계정은 삭제할 수 없습니다." },
+        { message: "자신의 계정은 비활성화할 수 없습니다." },
         { status: 400 },
       );
     }
 
-    // 사용자 삭제 (관련 데이터도 함께 삭제)
-    await prisma.user.delete({
+    // 이미 비활성화된 사용자인지 확인
+    if (existingUser.disabled) {
+      return NextResponse.json(
+        { message: "이미 비활성화된 사용자입니다." },
+        { status: 400 },
+      );
+    }
+
+    // 사용자 비활성화
+    await prisma.user.update({
       where: { id: userId },
+      data: {
+        disabled: true,
+        disabledAt: new Date(),
+        updatedAt: new Date(),
+      },
     });
 
     return NextResponse.json({
-      message: "사용자가 삭제되었습니다.",
+      message: "사용자가 비활성화되었습니다.",
     });
   } catch (error) {
-    console.error("사용자 삭제 오류:", error);
+    console.error("사용자 비활성화 오류:", error);
     return NextResponse.json(
-      { message: "사용자 삭제에 실패했습니다." },
+      { message: "사용자 비활성화에 실패했습니다." },
+      { status: 500 },
+    );
+  }
+}
+
+// 사용자 복구 (비활성화 해제)
+export async function PATCH(request: NextRequest) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json(
+        { message: "인증이 필요합니다." },
+        { status: 401 },
+      );
+    }
+
+    const body = await request.json();
+    const { userId } = body;
+
+    if (!userId) {
+      return NextResponse.json(
+        { message: "사용자 ID가 필요합니다." },
+        { status: 400 },
+      );
+    }
+
+    // 사용자 존재 확인
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json(
+        { message: "사용자를 찾을 수 없습니다." },
+        { status: 404 },
+      );
+    }
+
+    // 이미 활성화된 사용자인지 확인
+    if (!existingUser.disabled) {
+      return NextResponse.json(
+        { message: "이미 활성화된 사용자입니다." },
+        { status: 400 },
+      );
+    }
+
+    // 사용자 복구 (비활성화 해제)
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        disabled: false,
+        disabledAt: null,
+        updatedAt: new Date(),
+      },
+    });
+
+    return NextResponse.json({
+      message: "사용자가 복구되었습니다.",
+    });
+  } catch (error) {
+    console.error("사용자 복구 오류:", error);
+    return NextResponse.json(
+      { message: "사용자 복구에 실패했습니다." },
       { status: 500 },
     );
   }
