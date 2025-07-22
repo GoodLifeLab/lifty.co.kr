@@ -355,9 +355,6 @@ export default function CoursesPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     상태
                   </th>
-                  <th className="relative px-6 py-3">
-                    <span className="sr-only">상세보기</span>
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -415,14 +412,6 @@ export default function CoursesPage() {
                       {getStatusBadge(
                         getCourseStatus(course.startDate, course.endDate),
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link
-                        href={`/dashboard/courses/${course.id}`}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        <EyeIcon className="h-4 w-4" />
-                      </Link>
                     </td>
                   </tr>
                 ))}
