@@ -17,8 +17,6 @@ enum GroupMemberRole {
   ADMIN
 }
 
-
-
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -101,10 +99,10 @@ model GroupMember {
 // 코스 모델
 model Course {
   id        String   @id @default(cuid())
-  name      String   // 코스 이름
+  name      String // 코스 이름
   createdAt DateTime @default(now()) @map("created_at")
   startDate DateTime @map("start_date") // 시작일
-  endDate   DateTime @map("end_date")   // 종료일
+  endDate   DateTime @map("end_date") // 종료일
 
   // 그룹 관계
   groups GroupCourse[]
