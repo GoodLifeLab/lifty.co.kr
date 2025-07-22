@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  PlusIcon,
-  AcademicCapIcon,
-} from "@heroicons/react/24/outline";
+import { PlusIcon, AcademicCapIcon } from "@heroicons/react/24/outline";
 import { usePagination } from "@/hooks/usePagination";
 import Pagination from "@/components/Pagination";
 import { calculateCourseStats } from "@/utils/courseUtils";
@@ -71,7 +68,7 @@ export default function CoursesPage() {
     name: string;
     startDate: string;
     endDate: string;
-    groupIds: number[]
+    groupIds: number[];
   }) => {
     try {
       await CourseService.createCourse(data);

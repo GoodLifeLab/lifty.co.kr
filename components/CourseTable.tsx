@@ -32,7 +32,7 @@ export default function CourseTable({
   courses,
   loading,
   onCreateNew,
-  showCreateButton = false
+  showCreateButton = false,
 }: CourseTableProps) {
   if (loading) {
     return (
@@ -154,4 +154,4 @@ export default function CourseTable({
       </tbody>
     </table>
   );
-} 
+}

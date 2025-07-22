@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 
 interface PaginationData<T> {
   courses?: T[];
+  users?: T[];
   data?: T[];
   pagination: {
     page: number;
@@ -70,7 +71,8 @@ export function usePagination<T>(
         const result: PaginationData<T> = await response.json();
 
         // API 응답 구조에 따라 데이터 추출
-        const responseData = result.courses || result.data || [];
+        const responseData =
+          result.courses || result.users || result.data || [];
 
         if (append) {
           setData((prev) => [...prev, ...responseData]);

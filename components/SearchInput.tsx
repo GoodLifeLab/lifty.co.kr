@@ -53,4 +53,4 @@ export default function SearchInput({
       </button>
     </div>
   );
-} 
+}

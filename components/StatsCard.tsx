@@ -7,7 +7,12 @@ interface StatsCardProps {
   loading?: boolean;
 }
 
-export default function StatsCard({ title, value, icon, loading = false }: StatsCardProps) {
+export default function StatsCard({
+  title,
+  value,
+  icon,
+  loading = false,
+}: StatsCardProps) {
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
       <div className="flex items-center justify-between">
@@ -17,10 +22,8 @@ export default function StatsCard({ title, value, icon, loading = false }: Stats
             {loading ? "..." : value}
           </p>
         </div>
-        <div className="text-2xl">
-          {icon}
-        </div>
+        <div className="text-2xl">{icon}</div>
       </div>
     </div>
   );
-} 
+}

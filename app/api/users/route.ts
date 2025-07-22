@@ -73,13 +73,17 @@ export async function GET(request: NextRequest) {
     // 전체 사용자 수 조회
     const totalUsers = await prisma.user.count({ where });
 
+    const totalPages = Math.ceil(totalUsers / limit);
+    const hasMore = page * limit < totalUsers;
+
     return NextResponse.json({
       users,
       pagination: {
         page,
         limit,
         total: totalUsers,
-        totalPages: Math.ceil(totalUsers / limit),
+        totalPages,
+        hasMore,
       },
     });
   } catch (error) {

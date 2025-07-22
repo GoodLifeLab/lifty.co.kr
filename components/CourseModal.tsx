@@ -16,7 +16,12 @@ interface Course {
 interface CourseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; startDate: string; endDate: string; groupIds: number[] }) => void;
+  onSubmit: (data: {
+    name: string;
+    startDate: string;
+    endDate: string;
+    groupIds: number[];
+  }) => void;
   initialData?: Course | null;
   loading?: boolean;
 }
@@ -199,17 +204,20 @@ export default function CourseModal({
                 </div>
               ) : groups.length === 0 ? (
                 <div className="p-3 text-center text-sm text-gray-500">
-                  {groupSearchTerm ? "검색 결과가 없습니다" : "사용 가능한 그룹이 없습니다"}
+                  {groupSearchTerm
+                    ? "검색 결과가 없습니다"
+                    : "사용 가능한 그룹이 없습니다"}
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200">
                   {groups.map((group) => (
                     <div
                       key={group.id}
-                      className={`p-3 cursor-pointer hover:bg-gray-50 ${selectedGroups.some((g) => g.id === group.id)
+                      className={`p-3 cursor-pointer hover:bg-gray-50 ${
+                        selectedGroups.some((g) => g.id === group.id)
                           ? "bg-indigo-50"
                           : ""
-                        }`}
+                      }`}
                       onClick={() => toggleGroupSelection(group)}
                     >
                       <div className="flex items-center justify-between">
@@ -269,4 +277,4 @@ export default function CourseModal({
       </div>
     </div>
   );
-} 
+}
