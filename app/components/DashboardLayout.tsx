@@ -17,6 +17,7 @@ import {
   TrashIcon,
   BuildingOfficeIcon,
   Cog6ToothIcon,
+  AcademicCapIcon,
 } from "@heroicons/react/24/outline";
 
 interface DashboardLayoutProps {
@@ -56,6 +57,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigation = [
     { name: "대시보드", href: "/dashboard", icon: HomeIcon },
     { name: "그룹", href: "/dashboard/groups", icon: UserGroupIcon },
+    { name: "코스", href: "/dashboard/courses", icon: AcademicCapIcon },
     {
       name: "사용자",
       href: "/dashboard/users",
@@ -80,9 +82,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* 사이드바 */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex-shrink-0 h-screen ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex-shrink-0 h-screen ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex flex-col h-full w-full">
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 flex-shrink-0">
