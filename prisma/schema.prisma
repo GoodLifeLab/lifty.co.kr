@@ -33,8 +33,10 @@ model User {
   profileImage  String?
 
   // 관계
-  organizations    UserOrganization[]
-  groupMemberships GroupMember[]
+  organizations      UserOrganization[]
+  groupMemberships   GroupMember[]
+  missionProgress    UserMissionProgress[]
+  subMissionProgress UserSubMissionProgress[]
 
   @@map("users")
 }
@@ -107,6 +109,9 @@ model Course {
   // 그룹 관계
   groups GroupCourse[]
 
+  // 미션 관계
+  missions Mission[]
+
   @@map("courses")
 }
 
@@ -161,4 +166,82 @@ model UserOrganization {
   // 복합 유니크 제약조건
   @@unique([userId, organizationId])
   @@map("user_organizations")
+}
+
+// 미션 모델
+model Mission {
+  id          String   @id @default(cuid())
+  title       String // 제목
+  dueDate     DateTime @map("due_date") // 수행일자
+  image       String? // 이미지 URL
+  shortDesc   String   @map("short_desc") // 간략 설명
+  detailDesc  String   @map("detail_desc") // 상세 설명
+  placeholder String? // placeholder 텍스트
+  courseId    String // 과정 ID
+  isPublic    Boolean  @default(false) @map("is_public") // 공개 여부
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 관계
+  course       Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  subMissions  SubMission[]
+  userProgress UserMissionProgress[]
+
+  @@map("missions")
+}
+
+// 하위 미션 모델
+model SubMission {
+  id        String   @id @default(cuid())
+  text      String // 하위 미션 텍스트
+  missionId String // 상위 미션 ID
+  order     Int // 순서
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 관계
+  mission      Mission                  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  userProgress UserSubMissionProgress[]
+
+  @@map("sub_missions")
+}
+
+// 사용자 미션 진행 상황
+model UserMissionProgress {
+  id        String   @id @default(cuid())
+  userId    String // 사용자 ID
+  missionId String // 미션 ID
+  contents  String? // 텍스트 입력 내용
+  images    String[] // 업로드된 이미지 URL 배열
+  isPublic  Boolean  @default(false) @map("is_public") // 공개 여부
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 관계
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  // 복합 유니크 제약조건
+  @@unique([userId, missionId])
+  @@map("user_mission_progress")
+}
+
+// 사용자 하위 미션 체크 상황
+model UserSubMissionProgress {
+  id           String    @id @default(cuid())
+  userId       String // 사용자 ID
+  subMissionId String // 하위 미션 ID
+  isChecked    Boolean   @default(false) @map("is_checked") // 체크 여부
+  checkedAt    DateTime? @map("checked_at") // 체크 일시
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // 관계
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subMission SubMission @relation(fields: [subMissionId], references: [id], onDelete: Cascade)
+
+  // 복합 유니크 제약조건
+  @@unique([userId, subMissionId])
+  @@map("user_sub_mission_progress")
 }
