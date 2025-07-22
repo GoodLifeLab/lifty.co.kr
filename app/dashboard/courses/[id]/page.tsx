@@ -22,12 +22,14 @@ interface Course {
   groups: Array<{
     id: number;
     name: string;
+    image?: string | null;
   }>;
 }
 
 interface Group {
   id: number;
   name: string;
+  image?: string | null;
 }
 
 export default function CourseDetailPage({
@@ -312,11 +314,21 @@ export default function CourseDetailPage({
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
-                    <UserGroupIcon className="h-4 w-4 text-indigo-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
+                  {group.image ? (
+                    <div className="w-8 h-8 rounded-lg overflow-hidden mr-3 flex-shrink-0">
+                      <img
+                        src={group.image}
+                        alt={group.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                      <UserGroupIcon className="h-4 w-4 text-indigo-600" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 truncate">
                       {group.name}
                     </p>
                   </div>
@@ -440,8 +452,8 @@ export default function CourseDetailPage({
                         <div
                           key={group.id}
                           className={`p-3 cursor-pointer hover:bg-gray-50 ${selectedGroups.some((g) => g.id === group.id)
-                              ? "bg-indigo-50"
-                              : ""
+                            ? "bg-indigo-50"
+                            : ""
                             }`}
                           onClick={() => toggleGroupSelection(group)}
                         >
