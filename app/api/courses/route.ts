@@ -2,9 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // 코스 목록 조회
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+
+    const skip = (page - 1) * limit;
+
+    // 검색 조건
+    const where = search
+      ? {
+          name: { contains: search, mode: "insensitive" as any },
+        }
+      : {};
+
+    // 전체 개수 조회
+    const total = await prisma.course.count({ where });
+
+    // 페이지네이션된 데이터 조회
     const courses = await prisma.course.findMany({
+      where,
       include: {
         groups: {
           include: {
@@ -20,6 +39,8 @@ export async function GET() {
       orderBy: {
         createdAt: "desc",
       },
+      skip,
+      take: limit,
     });
 
     // 그룹 정보를 평면화
@@ -28,7 +49,19 @@ export async function GET() {
       groups: course.groups.map((gc) => gc.group),
     }));
 
-    return NextResponse.json(formattedCourses);
+    // 페이지네이션 정보
+    const pagination = {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasMore: page * limit < total,
+    };
+
+    return NextResponse.json({
+      courses: formattedCourses,
+      pagination,
+    });
   } catch (error) {
     console.error("코스 목록 조회 오류:", error);
     return NextResponse.json(
