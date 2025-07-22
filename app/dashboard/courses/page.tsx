@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   PlusIcon,
   PencilIcon,
@@ -33,8 +34,6 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     startDate: "",
@@ -183,56 +182,6 @@ export default function CoursesPage() {
     } catch (error) {
       console.error("코스 생성 실패:", error);
     }
-  };
-
-  const handleEditCourse = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedCourse) return;
-
-    try {
-      const response = await fetch(`/api/courses/${selectedCourse.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        setShowEditModal(false);
-        setSelectedCourse(null);
-        setFormData({ name: "", startDate: "", endDate: "" });
-        fetchCourses();
-      }
-    } catch (error) {
-      console.error("코스 수정 실패:", error);
-    }
-  };
-
-  const handleDeleteCourse = async (courseId: string) => {
-    if (!confirm("정말로 이 코스를 삭제하시겠습니까?")) return;
-
-    try {
-      const response = await fetch(`/api/courses/${courseId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        fetchCourses();
-      }
-    } catch (error) {
-      console.error("코스 삭제 실패:", error);
-    }
-  };
-
-  const openEditModal = (course: Course) => {
-    setSelectedCourse(course);
-    setFormData({
-      name: course.name,
-      startDate: course.startDate.split("T")[0],
-      endDate: course.endDate.split("T")[0],
-    });
-    setShowEditModal(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -407,13 +356,19 @@ export default function CoursesPage() {
                     할당된 그룹
                   </th>
                   <th className="relative px-6 py-3">
-                    <span className="sr-only">작업</span>
+                    <span className="sr-only">상세보기</span>
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {courses.map((course) => (
-                  <tr key={course.id} className="hover:bg-gray-50">
+                  <tr
+                    key={course.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() =>
+                      (window.location.href = `/dashboard/courses/${course.id}`)
+                    }
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
@@ -450,20 +405,12 @@ export default function CoursesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => openEditModal(course)}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCourse(course.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </div>
+                      <Link
+                        href={`/dashboard/courses/${course.id}`}
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -641,80 +588,6 @@ export default function CoursesPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  취소
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 코스 수정 모달 */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              코스 수정
-            </h3>
-
-            <form onSubmit={handleEditCourse} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  코스명 *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="코스명을 입력하세요"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  시작일 *
-                </label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => handleStartDateChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  종료일 *
-                </label>
-                <input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
-                  }
-                  min={formData.startDate || undefined}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-                >
-                  수정
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
                   className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
                 >
                   취소
