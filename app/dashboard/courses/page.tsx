@@ -14,6 +14,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { usePagination } from "@/hooks/usePagination";
 import Pagination from "@/components/Pagination";
+import StatusBadge from "@/components/StatusBadge";
+import { getCourseStatus, calculateCourseStats } from "@/utils/courseUtils";
+import { useGroupSelection } from "@/hooks/useGroupSelection";
 
 interface Course {
   id: string;
@@ -39,13 +42,24 @@ export default function CoursesPage() {
     startDate: "",
     endDate: "",
   });
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [selectedGroups, setSelectedGroups] = useState<Group[]>([]);
-  const [groupsLoading, setGroupsLoading] = useState(false);
-  const [groupSearchTerm, setGroupSearchTerm] = useState("");
-  const [groupPage, setGroupPage] = useState(1);
-  const [hasMoreGroups, setHasMoreGroups] = useState(true);
-  const [groupSearchLoading, setGroupSearchLoading] = useState(false);
+
+  // 그룹 선택 훅 사용
+  const {
+    groups,
+    selectedGroups,
+    groupsLoading,
+    groupSearchLoading,
+    groupSearchTerm,
+    groupPage,
+    hasMoreGroups,
+    setSelectedGroups,
+    setGroupSearchTerm,
+    toggleGroupSelection,
+    removeSelectedGroup,
+    handleGroupSearch,
+    loadMoreGroups,
+    fetchGroups,
+  } = useGroupSelection();
 
   // 페이지네이션 훅 사용
   const {
@@ -79,25 +93,7 @@ export default function CoursesPage() {
       if (response.ok) {
         const data = await response.json();
         const allCourses = data.courses || [];
-
-        const now = new Date();
-        const stats = {
-          total: allCourses.length,
-          notStarted: allCourses.filter((course: Course) => {
-            const start = new Date(course.startDate);
-            return now < start;
-          }).length,
-          inProgress: allCourses.filter((course: Course) => {
-            const start = new Date(course.startDate);
-            const end = new Date(course.endDate);
-            return now >= start && now <= end;
-          }).length,
-          completed: allCourses.filter((course: Course) => {
-            const end = new Date(course.endDate);
-            return now > end;
-          }).length,
-        };
-
+        const stats = calculateCourseStats(allCourses);
         setTotalStats(stats);
       }
     } catch (error) {
@@ -121,87 +117,9 @@ export default function CoursesPage() {
     });
   };
 
-  // 날짜 기반으로 코스 상태 계산
-  const getCourseStatus = (
-    startDate: string,
-    endDate: string,
-  ): "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    if (now < start) {
-      return "NOT_STARTED";
-    } else if (now >= start && now <= end) {
-      return "IN_PROGRESS";
-    } else {
-      return "COMPLETED";
-    }
-  };
-
   useEffect(() => {
-    fetchGroups();
     fetchTotalStats();
   }, []);
-
-  const fetchGroups = async (page = 1, search = "", append = false) => {
-    try {
-      if (page === 1) {
-        setGroupsLoading(true);
-      } else {
-        setGroupSearchLoading(true);
-      }
-
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: "20",
-        ...(search && { search }),
-      });
-
-      const response = await fetch(`/api/groups?${params}`);
-      if (response.ok) {
-        const data = await response.json();
-
-        if (append) {
-          setGroups((prev) => [...prev, ...data.groups]);
-        } else {
-          setGroups(data.groups || []);
-        }
-
-        setHasMoreGroups(data.pagination?.hasMore || false);
-        setGroupPage(page);
-      }
-    } catch (error) {
-      console.error("그룹 목록 조회 실패:", error);
-    } finally {
-      setGroupsLoading(false);
-      setGroupSearchLoading(false);
-    }
-  };
-
-  const handleGroupSearch = async (searchTerm: string) => {
-    setGroupSearchTerm(searchTerm);
-    setGroupPage(1);
-    await fetchGroups(1, searchTerm, false);
-  };
-
-  const loadMoreGroups = async () => {
-    if (!hasMoreGroups || groupSearchLoading) return;
-    await fetchGroups(groupPage + 1, groupSearchTerm, true);
-  };
-
-  const toggleGroupSelection = (group: Group) => {
-    const isSelected = selectedGroups.some((g) => g.id === group.id);
-    if (isSelected) {
-      setSelectedGroups(selectedGroups.filter((g) => g.id !== group.id));
-    } else {
-      setSelectedGroups([...selectedGroups, group]);
-    }
-  };
-
-  const removeSelectedGroup = (groupId: number) => {
-    setSelectedGroups(selectedGroups.filter((g) => g.id !== groupId));
-  };
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,22 +146,6 @@ export default function CoursesPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      NOT_STARTED: { text: "시작전", color: "bg-gray-100 text-gray-800" },
-      IN_PROGRESS: { text: "진행 중", color: "bg-blue-100 text-blue-800" },
-      COMPLETED: { text: "완료됨", color: "bg-green-100 text-green-800" },
-    };
-    const config = statusConfig[status as keyof typeof statusConfig];
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}
-      >
-        {config.text}
-      </span>
-    );
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -267,8 +169,6 @@ export default function CoursesPage() {
             setShowCreateModal(true);
             setSelectedGroups([]);
             setGroupSearchTerm("");
-            setGroupPage(1);
-            fetchGroups(1, "", false);
           }}
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center"
         >
@@ -475,9 +375,12 @@ export default function CoursesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(
-                        getCourseStatus(course.startDate, course.endDate),
-                      )}
+                      <StatusBadge
+                        status={getCourseStatus(
+                          course.startDate,
+                          course.endDate,
+                        )}
+                      />
                     </td>
                   </tr>
                 ))}
