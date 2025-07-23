@@ -72,22 +72,8 @@ export default function MissionTable({
             onClick={() => router.push(`/dashboard/missions/${mission.id}`)}
           >
             <td className="px-6 py-4 whitespace-nowrap">
-              <div className="flex items-center">
-                {mission.image && (
-                  <img
-                    src={mission.image}
-                    alt={mission.title}
-                    className="h-10 w-10 rounded-lg object-cover mr-4"
-                  />
-                )}
-                <div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {mission.title}
-                  </div>
-                  <div className="text-sm text-gray-500 truncate max-w-xs">
-                    {mission.shortDesc}
-                  </div>
-                </div>
+              <div className="text-sm font-medium text-gray-900">
+                {mission.title}
               </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
