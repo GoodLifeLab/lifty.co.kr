@@ -11,6 +11,7 @@ import {
 import MissionModal from "@/components/MissionModal";
 import { Mission, CreateMissionData } from "@/types/Mission";
 import { missionService } from "@/services/missionService";
+import RichTextViewer from "@/components/RichTextViewer";
 
 interface MissionDetailPageProps {
   params: Promise<{
@@ -216,8 +217,8 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                   <dt className="text-sm font-medium text-gray-500">
                     상세 설명
                   </dt>
-                  <dd className="text-sm text-gray-900 mt-1 whitespace-pre-wrap">
-                    {mission.detailDesc}
+                  <dd className="text-sm text-gray-900 mt-1">
+                    <RichTextViewer content={mission.detailDesc} />
                   </dd>
                 </div>
               </div>

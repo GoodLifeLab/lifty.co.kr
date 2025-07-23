@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Mission, SubMission, CreateMissionData } from "@/types/Mission";
 import ImageUploadInput from "./ImageUploadInput";
+import RichTextEditor from "./RichTextEditor";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
 interface MissionModalProps {
@@ -280,13 +281,11 @@ export default function MissionModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 상세 설명 *
               </label>
-              <textarea
-                name="detailDesc"
+              <RichTextEditor
                 value={formData.detailDesc}
-                onChange={handleInputChange}
-                required
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, detailDesc: value }))
+                }
                 placeholder="미션에 대한 상세한 설명을 입력하세요"
               />
             </div>
