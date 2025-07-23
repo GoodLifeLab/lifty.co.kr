@@ -169,18 +169,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
         </button>
 
         <div
-          className={`absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-2 z-50 transition-all duration-200 min-w-[200px] ${isPaletteOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+          className={`absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-2 z-50 transition-all duration-200 min-w-[130px] ${isPaletteOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
         >
-          <div className="grid grid-cols-6 gap-1">
+          <div className="grid grid-cols-4 gap-1">
             {[
               "#000000",
               "#FFFFFF",
               "#FF0000",
-              "#00FF00",
               "#0000FF",
-              "#FFFF00",
-              "#FF00FF",
-              "#00FFFF",
               "#FFA500",
               "#800080",
               "#008000",
@@ -190,11 +186,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
               "#C0C0C0",
               "#FFD700",
               "#FF6347",
-              "#32CD32",
               "#4169E1",
-              "#FF1493",
-              "#00CED1",
-              "#FF4500",
               "#9370DB",
               "#20B2AA",
             ].map((color) => (
@@ -221,7 +213,6 @@ const MenuBar = ({ editor }: { editor: any }) => {
       <button
         onClick={(e) => {
           e.preventDefault();
-          console.log("Bullet list clicked");
           editor.chain().focus().toggleBulletList().run();
         }}
         className={`p-2 rounded hover:bg-gray-100 ${
@@ -234,7 +225,6 @@ const MenuBar = ({ editor }: { editor: any }) => {
       <button
         onClick={(e) => {
           e.preventDefault();
-          console.log("Ordered list clicked");
           editor.chain().focus().toggleOrderedList().run();
         }}
         className={`p-2 rounded hover:bg-gray-100 ${
@@ -254,13 +244,6 @@ const MenuBar = ({ editor }: { editor: any }) => {
       <button
         onClick={(e) => {
           e.preventDefault();
-          console.log("Blockquote clicked");
-          console.log("Editor state:", editor.state);
-          console.log(
-            "Can toggle blockquote:",
-            editor.can().chain().focus().toggleBlockquote().run(),
-          );
-          console.log("Is blockquote active:", editor.isActive("blockquote"));
 
           if (editor.isActive("blockquote")) {
             editor.chain().focus().liftBlockquote().run();
