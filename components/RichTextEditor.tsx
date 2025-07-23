@@ -1,17 +1,22 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
+import Underline from "@tiptap/extension-underline";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import Link from "@tiptap/extension-link";
 import {
   BoldIcon,
   ItalicIcon,
   ListBulletIcon,
   ChatBubbleLeftRightIcon,
-  ArrowPathIcon,
   ArrowUturnLeftIcon,
   ArrowUturnRightIcon,
+  LinkIcon,
 } from "@heroicons/react/24/outline";
 
 interface RichTextEditorProps {
@@ -23,6 +28,45 @@ interface RichTextEditorProps {
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+
+  // 팔레트 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest(".color-palette-container")) {
+        setIsPaletteOpen(false);
+      }
+    };
+
+    if (isPaletteOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isPaletteOpen]);
+
+  const setLink = () => {
+    if (linkUrl) {
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({ href: linkUrl })
+        .run();
+      setLinkUrl("");
+      setIsLinkModalOpen(false);
+    }
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+  };
+
   if (!editor) {
     return null;
   }
@@ -31,7 +75,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
     <div className="border-b border-gray-200 px-2 py-1 flex flex-wrap gap-1 items-center">
       {/* 텍스트 스타일 */}
       <button
-        onClick={() => editor.chain().focus().toggleBold().run()}
+        onClick={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleBold().run();
+        }}
         disabled={!editor.can().chain().focus().toggleBold().run()}
         className={`p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed ${
           editor.isActive("bold") ? "bg-gray-200" : ""
@@ -41,7 +88,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
         <BoldIcon className="h-4 w-4" />
       </button>
       <button
-        onClick={() => editor.chain().focus().toggleItalic().run()}
+        onClick={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleItalic().run();
+        }}
         disabled={!editor.can().chain().focus().toggleItalic().run()}
         className={`p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed ${
           editor.isActive("italic") ? "bg-gray-200" : ""
@@ -50,13 +100,126 @@ const MenuBar = ({ editor }: { editor: any }) => {
       >
         <ItalicIcon className="h-4 w-4" />
       </button>
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleUnderline().run();
+        }}
+        disabled={!editor.can().chain().focus().toggleUnderline().run()}
+        className={`p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed ${
+          editor.isActive("underline") ? "bg-gray-200" : ""
+        }`}
+        title="밑줄"
+      >
+        <span className="text-sm font-bold underline">U</span>
+      </button>
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          if (editor.isActive("link")) {
+            removeLink();
+          } else {
+            setIsLinkModalOpen(true);
+          }
+        }}
+        className={`p-2 rounded hover:bg-gray-100 ${editor.isActive("link") ? "bg-gray-200" : ""}`}
+        title="링크"
+      >
+        <LinkIcon className="h-4 w-4" />
+      </button>
+
+      {/* 구분선 */}
+      <div className="w-px h-6 bg-gray-300 mx-1" />
+
+      {/* 글씨 색상 */}
+      <div className="relative">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            const colorPicker = e.currentTarget
+              .nextElementSibling as HTMLInputElement;
+            colorPicker.click();
+          }}
+          className="p-2 rounded hover:bg-gray-100 flex items-center justify-center"
+          title="글씨 색상"
+        >
+          <div className="w-4 h-4 bg-black rounded border border-gray-300"></div>
+        </button>
+        <input
+          type="color"
+          onChange={(e) => {
+            editor.chain().focus().setColor(e.target.value).run();
+          }}
+          className="absolute opacity-0 pointer-events-none"
+        />
+      </div>
+
+      {/* 색상 팔레트 */}
+      <div className="relative color-palette-container">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            setIsPaletteOpen(!isPaletteOpen);
+          }}
+          className="p-2 rounded hover:bg-gray-100 flex items-center justify-center"
+          title="색상 팔레트"
+        >
+          <div className="w-4 h-4 bg-gradient-to-r from-red-500 via-blue-500 to-green-500 rounded border border-gray-300"></div>
+        </button>
+
+        <div
+          className={`absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-2 z-50 transition-all duration-200 min-w-[200px] ${isPaletteOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+        >
+          <div className="grid grid-cols-6 gap-1">
+            {[
+              "#000000",
+              "#FFFFFF",
+              "#FF0000",
+              "#00FF00",
+              "#0000FF",
+              "#FFFF00",
+              "#FF00FF",
+              "#00FFFF",
+              "#FFA500",
+              "#800080",
+              "#008000",
+              "#FFC0CB",
+              "#A52A2A",
+              "#808080",
+              "#C0C0C0",
+              "#FFD700",
+              "#FF6347",
+              "#32CD32",
+              "#4169E1",
+              "#FF1493",
+              "#00CED1",
+              "#FF4500",
+              "#9370DB",
+              "#20B2AA",
+            ].map((color) => (
+              <button
+                key={color}
+                onClick={(e) => {
+                  e.preventDefault();
+                  editor.chain().focus().setColor(color).run();
+                  setIsPaletteOpen(false);
+                }}
+                className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform"
+                style={{ backgroundColor: color }}
+                title={`색상: ${color}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* 구분선 */}
       <div className="w-px h-6 bg-gray-300 mx-1" />
 
       {/* 목록 */}
       <button
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
           console.log("Bullet list clicked");
           editor.chain().focus().toggleBulletList().run();
         }}
@@ -68,7 +231,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
         <ListBulletIcon className="h-4 w-4" />
       </button>
       <button
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
           console.log("Ordered list clicked");
           editor.chain().focus().toggleOrderedList().run();
         }}
@@ -87,7 +251,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
       {/* 인용 */}
       <button
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        onClick={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleBlockquote().run();
+        }}
         className={`p-2 rounded hover:bg-gray-100 ${
           editor.isActive("blockquote") ? "bg-gray-200" : ""
         }`}
@@ -101,7 +268,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
       {/* 실행 취소/다시 실행 */}
       <button
-        onClick={() => editor.chain().focus().undo().run()}
+        onClick={(e) => {
+          e.preventDefault();
+          editor.chain().focus().undo().run();
+        }}
         disabled={!editor.can().chain().focus().undo().run()}
         className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         title="실행 취소"
@@ -109,13 +279,56 @@ const MenuBar = ({ editor }: { editor: any }) => {
         <ArrowUturnLeftIcon className="h-4 w-4" />
       </button>
       <button
-        onClick={() => editor.chain().focus().redo().run()}
+        onClick={(e) => {
+          e.preventDefault();
+          editor.chain().focus().redo().run();
+        }}
         disabled={!editor.can().chain().focus().redo().run()}
         className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         title="다시 실행"
       >
         <ArrowUturnRightIcon className="h-4 w-4" />
       </button>
+
+      {/* 링크 모달 */}
+      {isLinkModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              링크 추가
+            </h3>
+            <input
+              type="url"
+              placeholder="https://example.com"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  setLink();
+                }
+              }}
+            />
+            <div className="flex justify-end space-x-2 mt-4">
+              <button
+                onClick={() => {
+                  setIsLinkModalOpen(false);
+                  setLinkUrl("");
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                취소
+              </button>
+              <button
+                onClick={setLink}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              >
+                추가
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -135,6 +348,15 @@ export default function RichTextEditor({
       }),
       TextAlign.configure({
         types: ["heading", "paragraph"],
+      }),
+      Underline,
+      TextStyle,
+      Color,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: "text-gray-700 hover:text-gray-900",
+        },
       }),
     ],
     content: value,
