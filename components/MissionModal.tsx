@@ -282,6 +282,7 @@ export default function MissionModal({
                 상세 설명 *
               </label>
               <RichTextEditor
+                key={`${mission?.id || "new"}-${isOpen}`}
                 value={formData.detailDesc}
                 onChange={(value) =>
                   setFormData((prev) => ({ ...prev, detailDesc: value }))

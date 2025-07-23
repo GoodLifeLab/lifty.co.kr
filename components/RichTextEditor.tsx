@@ -9,6 +9,7 @@ import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import Link from "@tiptap/extension-link";
+import Blockquote from "@tiptap/extension-blockquote";
 import {
   BoldIcon,
   ItalicIcon,
@@ -253,7 +254,19 @@ const MenuBar = ({ editor }: { editor: any }) => {
       <button
         onClick={(e) => {
           e.preventDefault();
-          editor.chain().focus().toggleBlockquote().run();
+          console.log("Blockquote clicked");
+          console.log("Editor state:", editor.state);
+          console.log(
+            "Can toggle blockquote:",
+            editor.can().chain().focus().toggleBlockquote().run(),
+          );
+          console.log("Is blockquote active:", editor.isActive("blockquote"));
+
+          if (editor.isActive("blockquote")) {
+            editor.chain().focus().liftBlockquote().run();
+          } else {
+            editor.chain().focus().setBlockquote().run();
+          }
         }}
         className={`p-2 rounded hover:bg-gray-100 ${
           editor.isActive("blockquote") ? "bg-gray-200" : ""
@@ -342,7 +355,9 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        blockquote: false, // StarterKit의 blockquote 비활성화
+      }),
       Placeholder.configure({
         placeholder,
       }),
@@ -352,6 +367,11 @@ export default function RichTextEditor({
       Underline,
       TextStyle,
       Color,
+      Blockquote.configure({
+        HTMLAttributes: {
+          class: "border-l-4 border-gray-800 pl-4 my-4",
+        },
+      }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -366,6 +386,13 @@ export default function RichTextEditor({
       onChange(editor.getHTML());
     },
   });
+
+  // value prop이 변경될 때 에디터 내용 업데이트
+  useEffect(() => {
+    if (editor && editor.getHTML() !== value) {
+      editor.commands.setContent(value);
+    }
+  }, [editor, value]);
 
   return (
     <div
