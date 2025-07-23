@@ -34,30 +34,6 @@ export default function MissionsPage() {
     setIsModalOpen(true);
   };
 
-  const handleEditMission = (mission: Mission) => {
-    setSelectedMission(mission);
-    setIsModalOpen(true);
-  };
-
-  const handleDeleteMission = async (missionId: string) => {
-    if (!confirm("정말로 이 미션을 삭제하시겠습니까?")) {
-      return;
-    }
-
-    try {
-      await missionService.deleteMission(missionId);
-      setMissions(missions.filter((mission) => mission.id !== missionId));
-      alert("미션이 삭제되었습니다.");
-    } catch (error) {
-      console.error("미션 삭제 오류:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "미션 삭제 중 오류가 발생했습니다.",
-      );
-    }
-  };
-
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedMission(null);
@@ -161,8 +137,6 @@ export default function MissionsPage() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <MissionTable
           missions={missions}
-          onEdit={handleEditMission}
-          onDelete={handleDeleteMission}
           onCreateNew={handleCreateMission}
           showCreateButton={true}
         />

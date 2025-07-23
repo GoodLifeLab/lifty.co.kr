@@ -1,28 +1,21 @@
 "use client";
 
-import {
-  PencilIcon,
-  TrashIcon,
-  FlagIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
+import { FlagIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Mission } from "@/types/Mission";
+import { useRouter } from "next/navigation";
 
 interface MissionTableProps {
   missions: Mission[];
-  onEdit: (mission: Mission) => void;
-  onDelete: (missionId: string) => void;
   onCreateNew?: () => void;
   showCreateButton?: boolean;
 }
 
 export default function MissionTable({
   missions,
-  onEdit,
-  onDelete,
   onCreateNew,
   showCreateButton = false,
 }: MissionTableProps) {
+  const router = useRouter();
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("ko-KR");
   };
@@ -69,14 +62,15 @@ export default function MissionTable({
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             생성일
           </th>
-          <th className="relative px-6 py-3">
-            <span className="sr-only">작업</span>
-          </th>
         </tr>
       </thead>
       <tbody className="bg-white divide-y divide-gray-200">
         {missions.map((mission) => (
-          <tr key={mission.id} className="hover:bg-gray-50">
+          <tr
+            key={mission.id}
+            className="hover:bg-gray-50 cursor-pointer"
+            onClick={() => router.push(`/dashboard/missions/${mission.id}`)}
+          >
             <td className="px-6 py-4 whitespace-nowrap">
               <div className="flex items-center">
                 {mission.image && (
@@ -118,28 +112,6 @@ export default function MissionTable({
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               {formatDate(mission.createdAt)}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <div className="flex justify-end space-x-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(mission);
-                  }}
-                  className="text-indigo-600 hover:text-indigo-900"
-                >
-                  <PencilIcon className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(mission.id);
-                  }}
-                  className="text-red-600 hover:text-red-900"
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </button>
-              </div>
             </td>
           </tr>
         ))}
