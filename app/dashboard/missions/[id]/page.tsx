@@ -12,6 +12,7 @@ import MissionModal from "@/components/MissionModal";
 import { Mission, CreateMissionData } from "@/types/Mission";
 import { missionService } from "@/services/missionService";
 import RichTextViewer from "@/components/RichTextViewer";
+import MissionParticipantsList from "@/components/MissionParticipantsList";
 
 interface MissionDetailPageProps {
   params: Promise<{
@@ -273,6 +274,9 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
           </div>
         </div>
       </div>
+
+      {/* 미션 참여자 목록 */}
+      <MissionParticipantsList missionId={id} />
 
       {/* 수정 모달 */}
       <MissionModal
