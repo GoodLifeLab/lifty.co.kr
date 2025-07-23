@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/utils/auth";
 // 특정 사용자 정보 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } },
+  { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -17,7 +17,7 @@ export async function GET(
       );
     }
 
-    const { userId } = params;
+    const { userId } = await params;
 
     // 사용자 정보 조회 (비활성화된 사용자 제외)
     const user = await prisma.user.findFirst({

@@ -190,11 +190,10 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                   </dt>
                   <dd className="text-sm">
                     <span
-                      className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                        mission.isPublic
+                      className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${mission.isPublic
                           ? "bg-green-100 text-green-800"
                           : "bg-gray-100 text-gray-800"
-                      }`}
+                        }`}
                     >
                       {mission.isPublic ? "공개" : "비공개"}
                     </span>
@@ -253,7 +252,7 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                 <div className="space-y-2">
                   {mission.subMissions.map((subMission, index) => (
                     <div
-                      key={subMission.id}
+                      key={index}
                       className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
                     >
                       <div className="flex-shrink-0 w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-sm font-medium">
@@ -261,7 +260,7 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                       </div>
                       <div className="flex-1">
                         <p className="text-sm text-gray-900">
-                          {subMission.text}
+                          {subMission}
                         </p>
                       </div>
                     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { Mission, SubMission, CreateMissionData } from "@/types/Mission";
+import { Mission, CreateMissionData } from "@/types/Mission";
 import ImageUploadInput from "./ImageUploadInput";
 import RichTextEditor from "./RichTextEditor";
 import { useFileUpload } from "@/hooks/useFileUpload";
@@ -33,9 +33,7 @@ export default function MissionModal({
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
-  const [subMissions, setSubMissions] = useState<
-    Omit<SubMission, "id" | "missionId" | "createdAt" | "updatedAt">[]
-  >([]);
+  const [subMissions, setSubMissions] = useState<string[]>([]);
   const [courses, setCourses] = useState<Array<{ id: string; name: string }>>(
     [],
   );
@@ -60,12 +58,7 @@ export default function MissionModal({
           isPublic: mission.isPublic,
         });
         setUploadedImages(mission.image ? [mission.image] : []);
-        setSubMissions(
-          mission.subMissions?.map((sub) => ({
-            text: sub.text,
-            order: sub.order,
-          })) || [],
-        );
+        setSubMissions(mission.subMissions || []);
       } else {
         resetForm();
       }
@@ -129,21 +122,17 @@ export default function MissionModal({
   };
 
   const addSubMission = () => {
-    setSubMissions((prev) => [...prev, { text: "", order: prev.length + 1 }]);
+    setSubMissions((prev) => [...prev, ""]);
   };
 
   const updateSubMission = (index: number, text: string) => {
     setSubMissions((prev) =>
-      prev.map((sub, i) => (i === index ? { ...sub, text } : sub)),
+      prev.map((sub, i) => (i === index ? text : sub)),
     );
   };
 
   const removeSubMission = (index: number) => {
-    setSubMissions((prev) =>
-      prev
-        .filter((_, i) => i !== index)
-        .map((sub, i) => ({ ...sub, order: i + 1 })),
-    );
+    setSubMissions((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,7 +143,7 @@ export default function MissionModal({
       const missionData = {
         ...formData,
         dueDate: new Date(formData.dueDate),
-        subMissions: subMissions.filter((sub) => sub.text.trim() !== ""),
+        subMissions: subMissions.filter((sub) => sub.trim() !== ""),
       };
 
       await onSave(missionData);
@@ -325,7 +314,7 @@ export default function MissionModal({
                   <div key={index} className="flex items-center space-x-2">
                     <input
                       type="text"
-                      value={subMission.text}
+                      value={subMission}
                       onChange={(e) => updateSubMission(index, e.target.value)}
                       placeholder={`하위 미션 ${index + 1}`}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 // 코스 상세 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -16,7 +16,7 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const course = await prisma.course.findUnique({
       where: { id },
@@ -61,7 +61,7 @@ export async function GET(
 // 코스 수정
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -72,7 +72,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { name, startDate, endDate, groupIds } = body;
 
@@ -110,10 +110,10 @@ export async function PUT(
         groups:
           groupIds && groupIds.length > 0
             ? {
-                create: groupIds.map((groupId: number) => ({
-                  groupId: groupId,
-                })),
-              }
+              create: groupIds.map((groupId: number) => ({
+                groupId: groupId,
+              })),
+            }
             : undefined,
       },
       include: {
@@ -150,7 +150,7 @@ export async function PUT(
 // 코스 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -161,7 +161,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // 코스 삭제 (관련 그룹 관계는 cascade로 자동 삭제됨)
     await prisma.course.delete({
