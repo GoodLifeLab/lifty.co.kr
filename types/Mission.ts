@@ -48,12 +48,13 @@ export interface MissionParticipant {
     id: string;
     name: string;
   };
-  status: "pending" | "in_progress" | "completed" | "overdue";
-  startedAt?: Date;
-  completedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  hasStarted: boolean; // 미션을 시작했는지 여부
+  progress: {
+    id: string;
+    status: "pending" | "completed" | "overdue";
+    createdAt: Date;
+    contentsDate?: Date;
+    checkedAt?: Date;
+  };
 }
 
 // Prisma에서 생성되는 UserMissionProgress 타입 사용

@@ -126,9 +126,7 @@ export default function MissionModal({
   };
 
   const updateSubMission = (index: number, text: string) => {
-    setSubMissions((prev) =>
-      prev.map((sub, i) => (i === index ? text : sub)),
-    );
+    setSubMissions((prev) => prev.map((sub, i) => (i === index ? text : sub)));
   };
 
   const removeSubMission = (index: number) => {

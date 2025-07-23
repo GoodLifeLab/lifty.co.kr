@@ -38,11 +38,6 @@ const statusConfig = {
     color: "bg-gray-100 text-gray-800",
     icon: ClockIcon,
   },
-  in_progress: {
-    label: "진행중",
-    color: "bg-blue-100 text-blue-800",
-    icon: ClockIcon,
-  },
   completed: {
     label: "완료",
     color: "bg-green-100 text-green-800",
@@ -181,10 +176,13 @@ export default function MissionParticipantsList({
                 그룹
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                수행일자
+                완료일자
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                답변 보기
+                글 작성 일자
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                내용
               </th>
             </tr>
           </thead>
@@ -199,32 +197,16 @@ export default function MissionParticipantsList({
             ) : (
               data.participants.map((participant) => {
                 const status =
-                  statusConfig[participant.status as keyof typeof statusConfig];
+                  statusConfig[
+                    participant.progress.status as keyof typeof statusConfig
+                  ];
 
                 return (
                   <tr key={participant.id} className="hover:bg-gray-50">
                     {/* 이름 */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
-                          {participant.user.profileImage ? (
-                            <img
-                              src={participant.user.profileImage}
-                              alt={participant.user.name}
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <UserIcon className="h-5 w-5 text-indigo-600" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {participant.user.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {participant.user.email}
-                          </div>
-                        </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {participant.user.name}
                       </div>
                     </td>
 
@@ -232,21 +214,8 @@ export default function MissionParticipantsList({
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {participant.user.organizations &&
                       participant.user.organizations.length > 0 ? (
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {
-                              participant.user.organizations[0].organization
-                                .name
-                            }
-                          </div>
-                          <div className="text-gray-500">
-                            {
-                              participant.user.organizations[0].organization
-                                .department
-                            }
-                            {participant.user.position &&
-                              ` • ${participant.user.position}`}
-                          </div>
+                        <div className="font-medium text-gray-900">
+                          {participant.user.organizations[0].organization.name}
                         </div>
                       ) : (
                         <span className="text-gray-500">-</span>
@@ -260,10 +229,17 @@ export default function MissionParticipantsList({
 
                     {/* 수행일자 */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {participant.startedAt ? (
-                        formatDate(participant.startedAt)
-                      ) : participant.completedAt ? (
-                        formatDate(participant.completedAt)
+                      {participant.progress.createdAt ? (
+                        formatDate(participant.progress.createdAt)
+                      ) : (
+                        <span className="text-gray-500">-</span>
+                      )}
+                    </td>
+
+                    {/* 글 작성 일자 */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {participant.progress.contentsDate ? (
+                        formatDate(participant.progress.contentsDate)
                       ) : (
                         <span className="text-gray-500">-</span>
                       )}
@@ -271,7 +247,7 @@ export default function MissionParticipantsList({
 
                     {/* 답변 보기 */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {participant.hasStarted ? (
+                      {participant.progress.status === "completed" ? (
                         <button
                           onClick={() => handleViewAnswer(participant)}
                           className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

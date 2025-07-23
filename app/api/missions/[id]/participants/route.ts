@@ -94,19 +94,18 @@ export async function GET(
       const participant = {
         id: userId,
         missionId: id,
-        progressId: userProgress?.id || null,
-        status,
-        startedAt: userProgress?.createdAt || null,
-        completedAt:
-          status === "completed" ? userProgress?.updatedAt || null : null,
         user: {
           ...groupUser.user,
           organizations: groupUser.user.organizations,
         },
         group: groupUser.group,
-        createdAt: userProgress?.createdAt || groupUser.createdAt,
-        updatedAt: userProgress?.updatedAt || groupUser.updatedAt,
-        hasStarted: !!userProgress,
+        progress: {
+          id: userProgress?.id || null,
+          status,
+          createdAt: userProgress?.createdAt || null,
+          contentsDate: userProgress?.contentsDate || null,
+          checkedAt: userProgress?.checkedAt || null,
+        },
       };
 
       // 같은 사용자가 여러 그룹에 속해있을 경우, 첫 번째 그룹 정보만 유지
@@ -130,7 +129,7 @@ export async function GET(
     };
 
     allParticipants.forEach((participant) => {
-      stats[participant.status as keyof typeof stats]++;
+      stats[participant.progress.status as keyof typeof stats]++;
     });
 
     return NextResponse.json({
