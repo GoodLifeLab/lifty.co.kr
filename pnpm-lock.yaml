@@ -25,10 +25,22 @@ importers:
       "@supabase/supabase-js":
         specifier: ^2.50.0
         version: 2.50.0
+      "@tiptap/extension-color":
+        specifier: ^3.0.7
+        version: 3.0.7(@tiptap/extension-text-style@3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7)))
+      "@tiptap/extension-link":
+        specifier: ^3.0.7
+        version: 3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7))(@tiptap/pm@3.0.7)
       "@tiptap/extension-placeholder":
         specifier: ^3.0.7
         version: 3.0.7(@tiptap/extensions@3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7))(@tiptap/pm@3.0.7))
       "@tiptap/extension-text-align":
+        specifier: ^3.0.7
+        version: 3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7))
+      "@tiptap/extension-text-style":
+        specifier: ^3.0.7
+        version: 3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7))
+      "@tiptap/extension-underline":
         specifier: ^3.0.7
         version: 3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7))
       "@tiptap/pm":
@@ -2210,6 +2222,14 @@ packages:
     peerDependencies:
       "@tiptap/core": ^3.0.7
 
+  "@tiptap/extension-color@3.0.7":
+    resolution:
+      {
+        integrity: sha512-75N0g6y4tga3rHNKplwHkF20n9fKhVrp3c7Gtk8nehckUMB2QuMf5Tr3fa3hVdSbgqxcP+dkOIUMoH1zKyjggA==,
+      }
+    peerDependencies:
+      "@tiptap/extension-text-style": ^3.0.7
+
   "@tiptap/extension-document@3.0.7":
     resolution:
       {
@@ -2347,6 +2367,14 @@ packages:
     resolution:
       {
         integrity: sha512-3XywI2+dvb5IIO5NnZqyoXrRnikGyCIN7wWymTI7eqD213Ovs19/sfbW5kXLPsBYiNBb12nbG6pmPhr21mPvoA==,
+      }
+    peerDependencies:
+      "@tiptap/core": ^3.0.7
+
+  "@tiptap/extension-text-style@3.0.7":
+    resolution:
+      {
+        integrity: sha512-naJ1XxlbFJ1qlpA+i54lQYKuhWP1dnkUslM86OT0TZt0zJBeu7LIrqSOVGmMB++lF/btnQLMnYkYSSnkLgIw3A==,
       }
     peerDependencies:
       "@tiptap/core": ^3.0.7
@@ -8952,6 +8980,10 @@ snapshots:
     dependencies:
       "@tiptap/core": 3.0.7(@tiptap/pm@3.0.7)
 
+  "@tiptap/extension-color@3.0.7(@tiptap/extension-text-style@3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7)))":
+    dependencies:
+      "@tiptap/extension-text-style": 3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7))
+
   "@tiptap/extension-document@3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7))":
     dependencies:
       "@tiptap/core": 3.0.7(@tiptap/pm@3.0.7)
@@ -9024,6 +9056,10 @@ snapshots:
       "@tiptap/core": 3.0.7(@tiptap/pm@3.0.7)
 
   "@tiptap/extension-text-align@3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7))":
+    dependencies:
+      "@tiptap/core": 3.0.7(@tiptap/pm@3.0.7)
+
+  "@tiptap/extension-text-style@3.0.7(@tiptap/core@3.0.7(@tiptap/pm@3.0.7))":
     dependencies:
       "@tiptap/core": 3.0.7(@tiptap/pm@3.0.7)
 
