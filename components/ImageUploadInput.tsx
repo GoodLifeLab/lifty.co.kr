@@ -5,6 +5,7 @@ import {
   PhotoIcon,
   ExclamationTriangleIcon,
   ArrowUpTrayIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
@@ -21,6 +22,8 @@ interface ImageUploadInputProps {
   maxFiles?: number;
   hideAfterUpload?: boolean; // 업로드 완료 후 입력 필드 숨김
   folder?: string; // S3 폴더 경로
+  uploadedImages?: string[]; // 업로드된 이미지 URL 배열
+  onImageDelete?: (url: string) => void; // 이미지 삭제 콜백
 }
 
 export default function ImageUploadInput({
@@ -36,6 +39,8 @@ export default function ImageUploadInput({
   maxFiles = 5,
   hideAfterUpload = false,
   folder = "uploads",
+  uploadedImages = [],
+  onImageDelete,
 }: ImageUploadInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -117,10 +122,56 @@ export default function ImageUploadInput({
     [handleImageSelect],
   );
 
+  // 업로드된 이미지가 maxFiles보다 적을 때만 입력 필드 표시
+  const shouldShowInput = uploadedImages.length < maxFiles;
+
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* 드래그 앤 드롭 영역 - 업로드 완료 후 숨김 */}
-      {(!hideAfterUpload || !isUploaded) && (
+      {/* 이미지 미리보기 */}
+      {uploadedImages.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium text-gray-700">
+            업로드된 이미지 ({uploadedImages.length}/{maxFiles})
+          </h4>
+          <div className="max-h-64 overflow-y-auto space-y-2">
+            {uploadedImages.map((imageUrl, index) => (
+              <div
+                key={index}
+                className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg"
+              >
+                <div className="flex-shrink-0">
+                  <img
+                    src={imageUrl}
+                    alt={`업로드된 이미지 ${index + 1}`}
+                    className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-600 truncate">
+                    이미지 {index + 1}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {new URL(imageUrl).pathname.split("/").pop()}
+                  </p>
+                </div>
+                {onImageDelete && (
+                  <button
+                    type="button"
+                    onClick={() => onImageDelete(imageUrl)}
+                    className="flex-shrink-0 p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                    title="이미지 삭제"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 드래그 앤 드롭 영역 - maxFiles보다 적을 때만 표시 */}
+      {shouldShowInput && (!hideAfterUpload || !isUploaded) && (
         <div
           className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
             isDragOver
@@ -152,6 +203,9 @@ export default function ImageUploadInput({
               권장 비율: {aspectRatio}:1
             </p>
           )}
+          <p className="mt-1 text-xs text-gray-500">
+            {uploadedImages.length}/{maxFiles}개 업로드됨
+          </p>
 
           {error && (
             <div className="mt-2 flex items-center justify-center text-red-600 text-sm">
@@ -159,6 +213,15 @@ export default function ImageUploadInput({
               {error}
             </div>
           )}
+        </div>
+      )}
+
+      {/* maxFiles에 도달했을 때 메시지 */}
+      {!shouldShowInput && (
+        <div className="text-center py-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            최대 {maxFiles}개의 이미지가 업로드되었습니다.
+          </p>
         </div>
       )}
 

@@ -18,6 +18,7 @@ interface UseFileUploadOptions {
 interface UseFileUploadReturn {
   uploadFile: (file: File) => Promise<string>;
   uploadMultipleFiles: (files: File[]) => Promise<string[]>;
+  deleteFile: (url: string) => Promise<void>;
   isUploading: boolean;
   progress: UploadProgress | null;
   error: string | null;
@@ -172,6 +173,46 @@ export const useFileUpload = (
     [uploadFile, onError],
   );
 
+  const deleteFile = useCallback(
+    async (url: string): Promise<void> => {
+      try {
+        setIsUploading(true);
+        setError(null);
+
+        // URL에서 파일 경로 추출
+        const urlObj = new URL(url);
+        const filePath = urlObj.pathname.substring(1); // 앞의 '/' 제거
+
+        const response = await fetch("/api/upload/delete", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filePath: filePath,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "파일 삭제에 실패했습니다.");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "파일 삭제 중 오류가 발생했습니다.";
+        console.error("파일 삭제 오류:", err);
+        setError(errorMessage);
+        onError?.(errorMessage);
+        throw err;
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [onError],
+  );
+
   const reset = useCallback(() => {
     setIsUploading(false);
     setProgress(null);
@@ -181,6 +222,7 @@ export const useFileUpload = (
   return {
     uploadFile,
     uploadMultipleFiles,
+    deleteFile,
     isUploading,
     progress,
     error,

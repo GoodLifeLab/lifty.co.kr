@@ -5,6 +5,7 @@ import { XMarkIcon, CogIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Group } from "@prisma/client";
 import ImageUploadInput from "@/components/ImageUploadInput";
 import Image from "next/image";
+import { useFileUpload } from "@/hooks/useFileUpload";
 interface GroupSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -35,6 +36,9 @@ export default function GroupSettingsModal({
   const [isPublic, setIsPublic] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+
+  const { deleteFile } = useFileUpload();
 
   // 그룹 정보로 폼 초기화
   useEffect(() => {
@@ -42,6 +46,7 @@ export default function GroupSettingsModal({
       setName(group.name || "");
       setDescription(group.description || "");
       setImage(group.image || "");
+      setUploadedImages(group.image ? [group.image] : []);
       setIsPublic(group.isPublic || false);
       setErrors({});
       setDeleteConfirmText("");
@@ -107,6 +112,7 @@ export default function GroupSettingsModal({
         setName(group.name || "");
         setDescription(group.description || "");
         setImage(group.image || "");
+        setUploadedImages(group.image ? [group.image] : []);
         setIsPublic(group.isPublic || false);
       }
       setErrors({});
@@ -117,6 +123,18 @@ export default function GroupSettingsModal({
 
   const handleImageUpload = (url: string) => {
     setImage(url);
+    setUploadedImages([url]); // maxFiles가 1이므로 항상 하나만 저장
+  };
+
+  const handleImageDelete = async (imageUrl: string) => {
+    try {
+      await deleteFile(imageUrl);
+      setUploadedImages([]);
+      setImage("");
+    } catch (error) {
+      console.error("이미지 삭제 실패:", error);
+      alert("이미지 삭제에 실패했습니다.");
+    }
   };
 
   const handleImageError = (error: string) => {
@@ -205,37 +223,19 @@ export default function GroupSettingsModal({
             >
               그룹 이미지 (선택사항)
             </label>
-            {image ? (
-              <div className="flex items-end gap-3">
-                <div className="relative w-24 h-24">
-                  <Image
-                    src={image}
-                    alt="그룹 이미지"
-                    fill
-                    className="object-cover rounded-md"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setImage("")}
-                  className="bg-red-500 rounded-md px-2 py-1 text-sm text-white hover:bg-red-600 transition-colors"
-                >
-                  이미지 교체
-                </button>
-              </div>
-            ) : (
-              <ImageUploadInput
-                onUploadComplete={handleImageUpload}
-                onUploadError={handleImageError}
-                maxSize={5}
-                multiple={false}
-                aspectRatio={1}
-                placeholder="그룹 이미지를 업로드하세요"
-                disabled={loading || deleting}
-                hideAfterUpload={true}
-                folder="groups"
-              />
-            )}
+            <ImageUploadInput
+              onUploadComplete={handleImageUpload}
+              onImageDelete={handleImageDelete}
+              onUploadError={handleImageError}
+              uploadedImages={uploadedImages}
+              maxSize={1}
+              multiple={false}
+              aspectRatio={1}
+              placeholder="그룹 이미지를 업로드하세요"
+              disabled={loading || deleting}
+              folder="groups"
+              maxFiles={1}
+            />
             <p className="mt-1 text-xs text-gray-500">
               현재 이미지가 설정되어 있으면 새 이미지로 교체됩니다.
             </p>
