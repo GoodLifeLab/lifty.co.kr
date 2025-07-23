@@ -9,6 +9,7 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+    const status = searchParams.get("status");
     const { id } = await params;
 
     const skip = (page - 1) * limit;
@@ -81,13 +82,13 @@ export async function GET(
       const userId = groupUser.userId;
       const userProgress = groupUser.user.missionProgress[0];
 
-      let status = "pending";
+      let participantStatus = "pending";
       if (userProgress) {
         // 기한 초과 체크
         const now = new Date();
         const dueDate = new Date(mission.dueDate);
-        if (status !== "completed" && now > dueDate) {
-          status = "overdue";
+        if (participantStatus !== "completed" && now > dueDate) {
+          participantStatus = "overdue";
         }
       }
 
@@ -101,7 +102,7 @@ export async function GET(
         group: groupUser.group,
         progress: {
           id: userProgress?.id || null,
-          status,
+          status: participantStatus,
           createdAt: userProgress?.createdAt || null,
           contentsDate: userProgress?.contentsDate || null,
           checkedAt: userProgress?.checkedAt || null,
@@ -114,13 +115,9 @@ export async function GET(
       }
     });
 
-    const allParticipants = Array.from(userMap.values());
+    let allParticipants = Array.from(userMap.values());
 
-    // 페이지네이션 적용
-    const total = allParticipants.length;
-    const paginatedParticipants = allParticipants.slice(skip, skip + limit);
-
-    // 상태별 통계 계산
+    // 상태별 통계 계산 (필터링 전 전체 데이터 기준)
     const stats = {
       pending: 0,
       in_progress: 0,
@@ -131,6 +128,17 @@ export async function GET(
     allParticipants.forEach((participant) => {
       stats[participant.progress.status as keyof typeof stats]++;
     });
+
+    // 4. 상태 필터링 적용
+    if (status && status !== "") {
+      allParticipants = allParticipants.filter(
+        (participant) => participant.progress.status === status,
+      );
+    }
+
+    // 페이지네이션 적용
+    const total = allParticipants.length;
+    const paginatedParticipants = allParticipants.slice(skip, skip + limit);
 
     return NextResponse.json({
       participants: paginatedParticipants,

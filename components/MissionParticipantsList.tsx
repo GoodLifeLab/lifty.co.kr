@@ -35,7 +35,7 @@ interface ParticipantsData {
 const statusConfig = {
   pending: {
     label: "대기중",
-    color: "bg-gray-100 text-gray-800",
+    color: "bg-gray-300 text-gray-800",
     icon: ClockIcon,
   },
   completed: {
@@ -189,18 +189,13 @@ export default function MissionParticipantsList({
           <tbody className="bg-white divide-y divide-gray-200">
             {data.participants.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center">
+                <td colSpan={6} className="px-6 py-8 text-center">
                   <UserIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                   <p className="text-gray-500">아직 참여자가 없습니다.</p>
                 </td>
               </tr>
             ) : (
               data.participants.map((participant) => {
-                const status =
-                  statusConfig[
-                    participant.progress.status as keyof typeof statusConfig
-                  ];
-
                 return (
                   <tr key={participant.id} className="hover:bg-gray-50">
                     {/* 이름 */}
