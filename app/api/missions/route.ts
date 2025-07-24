@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // GET: 미션 목록 조회
 export async function GET(request: NextRequest) {
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     const courseId = searchParams.get("courseId");
     const isPublic = searchParams.get("isPublic");
 
-    const where: any = {};
+    const where: Prisma.MissionWhereInput = {};
 
     if (courseId) {
       where.courseId = courseId;
@@ -25,11 +26,6 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-          },
-        },
-        subMissions: {
-          orderBy: {
-            order: "asc",
           },
         },
       },
@@ -95,6 +91,7 @@ export async function POST(request: NextRequest) {
         placeholder,
         courseId,
         isPublic: isPublic || false,
+        subMissions: subMissions,
       },
       include: {
         course: {
@@ -106,36 +103,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 하위 미션 생성
-    if (subMissions.length > 0) {
-      await prisma.subMission.createMany({
-        data: subMissions.map((sub: any, index: number) => ({
-          text: sub.text,
-          missionId: mission.id,
-          order: index + 1,
-        })),
-      });
-    }
-
-    // 생성된 미션을 하위 미션과 함께 반환
-    const createdMission = await prisma.mission.findUnique({
-      where: { id: mission.id },
-      include: {
-        course: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        subMissions: {
-          orderBy: {
-            order: "asc",
-          },
-        },
-      },
-    });
-
-    return NextResponse.json(createdMission, { status: 201 });
+    return NextResponse.json(mission, { status: 201 });
   } catch (error) {
     console.error("미션 생성 오류:", error);
     return NextResponse.json(

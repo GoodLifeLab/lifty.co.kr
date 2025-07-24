@@ -253,16 +253,14 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                 <div className="space-y-2">
                   {mission.subMissions.map((subMission, index) => (
                     <div
-                      key={subMission.id}
+                      key={index}
                       className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
                     >
                       <div className="flex-shrink-0 w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-sm font-medium">
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-gray-900">
-                          {subMission.text}
-                        </p>
+                        <p className="text-sm text-gray-900">{subMission}</p>
                       </div>
                     </div>
                   ))}

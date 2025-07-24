@@ -1,32 +1,19 @@
-export interface Mission {
-  id: string;
-  title: string;
-  shortDesc: string;
-  detailDesc: string;
-  placeholder?: string;
-  dueDate: Date;
-  image?: string;
-  isPublic: boolean;
-  courseId: string;
-  course?: {
-    id: string;
-    name: string;
+import { Prisma } from "@prisma/client";
+
+// Prisma에서 생성되는 타입 사용
+export type Mission = Prisma.MissionGetPayload<{
+  include: {
+    course: {
+      select: {
+        id: true;
+        name: true;
+      };
+    };
   };
-  subMissions?: SubMission[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+}>;
 
-export interface SubMission {
-  id: string;
-  missionId: string;
-  text: string;
-  order: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface CreateMissionData {
+// 미션 생성용 타입
+export type CreateMissionData = {
   title: string;
   shortDesc: string;
   detailDesc: string;
@@ -35,13 +22,10 @@ export interface CreateMissionData {
   image?: string;
   isPublic: boolean;
   courseId: string;
-  subMissions: Omit<
-    SubMission,
-    "id" | "missionId" | "createdAt" | "updatedAt"
-  >[];
-}
+  subMissions: string[];
+};
 
-// 미션 참여자 수행 관련 타입 (기존 UserMissionProgress 기반)
+// 미션 참여자 수행 관련 타입
 export interface MissionParticipant {
   id: string;
   userId: string;
@@ -64,54 +48,25 @@ export interface MissionParticipant {
     id: string;
     name: string;
   };
-  status: "pending" | "in_progress" | "completed" | "overdue";
-  startedAt?: Date;
-  completedAt?: Date;
-  subMissionProgress: SubMissionProgress[];
-  createdAt: Date;
-  updatedAt: Date;
-  hasStarted: boolean; // 미션을 시작했는지 여부
-}
-
-export interface SubMissionProgress {
-  id: string;
-  userId: string;
-  subMissionId: string;
-  isChecked: boolean;
-  checkedAt?: Date;
-  subMission: {
+  progress: {
     id: string;
-    text: string;
-    order: number;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface UserMissionProgress {
-  id: string;
-  userId: string;
-  missionId: string;
-  contents?: string;
-  images: string[];
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  mission?: Mission;
-  user?: {
-    id: string;
-    name?: string;
-    email: string;
+    status: "pending" | "completed" | "overdue";
+    createdAt: Date;
+    contentsDate?: Date;
+    checkedAt?: Date;
   };
 }
 
-export interface UserSubMissionProgress {
-  id: string;
-  userId: string;
-  subMissionId: string;
-  isChecked: boolean;
-  checkedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  subMission?: SubMission;
-}
+// Prisma에서 생성되는 UserMissionProgress 타입 사용
+export type UserMissionProgress = Prisma.UserMissionProgressGetPayload<{
+  include: {
+    mission: true;
+    user: {
+      select: {
+        id: true;
+        name: true;
+        email: true;
+      };
+    };
+  };
+}>;

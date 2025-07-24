@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // GET: 특정 미션 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
+
     const mission = await prisma.mission.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         course: {
           select: {
             id: true,
             name: true,
-          },
-        },
-        subMissions: {
-          orderBy: {
-            order: "asc",
           },
         },
       },
@@ -44,9 +42,10 @@ export async function GET(
 // PUT: 미션 수정
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const {
       title,
@@ -62,7 +61,7 @@ export async function PUT(
 
     // 미션 존재 여부 확인
     const existingMission = await prisma.mission.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingMission) {
@@ -88,7 +87,7 @@ export async function PUT(
 
     // 미션 업데이트
     const updatedMission = await prisma.mission.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         title,
         dueDate: dueDate ? new Date(dueDate) : undefined,
@@ -98,6 +97,7 @@ export async function PUT(
         placeholder,
         courseId,
         isPublic,
+        subMissions: subMissions,
       },
       include: {
         course: {
@@ -109,41 +109,7 @@ export async function PUT(
       },
     });
 
-    // 기존 하위 미션 삭제
-    await prisma.subMission.deleteMany({
-      where: { missionId: params.id },
-    });
-
-    // 새로운 하위 미션 생성
-    if (subMissions.length > 0) {
-      await prisma.subMission.createMany({
-        data: subMissions.map((sub: any, index: number) => ({
-          text: sub.text,
-          missionId: params.id,
-          order: index + 1,
-        })),
-      });
-    }
-
-    // 업데이트된 미션을 하위 미션과 함께 반환
-    const finalMission = await prisma.mission.findUnique({
-      where: { id: params.id },
-      include: {
-        course: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        subMissions: {
-          orderBy: {
-            order: "asc",
-          },
-        },
-      },
-    });
-
-    return NextResponse.json(finalMission);
+    return NextResponse.json(updatedMission);
   } catch (error) {
     console.error("미션 수정 오류:", error);
     return NextResponse.json(
@@ -156,12 +122,14 @@ export async function PUT(
 // DELETE: 미션 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
+
     // 미션 존재 여부 확인
     const existingMission = await prisma.mission.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingMission) {
@@ -171,9 +139,9 @@ export async function DELETE(
       );
     }
 
-    // 미션 삭제 (하위 미션과 사용자 진행 상황은 CASCADE로 자동 삭제됨)
+    // 미션 삭제 (사용자 진행 상황은 CASCADE로 자동 삭제됨)
     await prisma.mission.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "미션이 삭제되었습니다." });

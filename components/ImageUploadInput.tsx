@@ -216,15 +216,6 @@ export default function ImageUploadInput({
         </div>
       )}
 
-      {/* maxFiles에 도달했을 때 메시지 */}
-      {!shouldShowInput && (
-        <div className="text-center py-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            최대 {maxFiles}개의 이미지가 업로드되었습니다.
-          </p>
-        </div>
-      )}
-
       {/* 업로드 중 상태 표시 */}
       {isUploading && (
         <div className="text-center py-2">
