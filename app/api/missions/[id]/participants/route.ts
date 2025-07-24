@@ -30,8 +30,8 @@ export async function GET(
       );
     }
 
-    // 2. where 조건 구성
-    const whereCondition: any = {
+    // 2. 기본 where 조건
+    const baseWhere = {
       group: {
         courses: {
           some: {
@@ -41,37 +41,99 @@ export async function GET(
       },
     };
 
-    // 검색 조건 추가
+    // 3. 검색 조건 추가
+    let whereCondition: any = { ...baseWhere };
     if (search && search.trim() !== "") {
-      whereCondition.OR = [
-        {
-          user: {
-            OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { email: { contains: search, mode: "insensitive" } },
-              {
-                organizations: {
-                  some: {
-                    organization: {
-                      name: { contains: search, mode: "insensitive" },
+      whereCondition = {
+        ...baseWhere,
+        OR: [
+          {
+            user: {
+              OR: [
+                { name: { contains: search, mode: "insensitive" } },
+                { email: { contains: search, mode: "insensitive" } },
+                {
+                  organizations: {
+                    some: {
+                      organization: {
+                        name: { contains: search, mode: "insensitive" },
+                      },
                     },
                   },
                 },
-              },
-            ],
+              ],
+            },
           },
-        },
-        {
-          group: {
-            name: { contains: search, mode: "insensitive" },
+          {
+            group: {
+              name: { contains: search, mode: "insensitive" },
+            },
           },
-        },
-      ];
+        ],
+      };
     }
 
-    // 3. 그룹 멤버 조회 (쿼리 레벨 필터링)
+    // 4. 전체 개수 조회
+    const totalCount = await prisma.groupMember.findMany({
+      where: whereCondition,
+      select: {
+        userId: true,
+      },
+      distinct: ["userId"],
+    });
+
+    // 5. 상태 조건 추가
+    if (status && status !== "") {
+      if (status === "pending") {
+        whereCondition = {
+          ...whereCondition,
+          user: {
+            ...whereCondition.user,
+            missionProgress: {
+              none: {
+                missionId: id,
+              },
+            },
+          },
+        };
+      } else if (status === "completed") {
+        whereCondition = {
+          ...whereCondition,
+          user: {
+            ...whereCondition.user,
+            missionProgress: {
+              some: {
+                missionId: id,
+                contentsDate: {
+                  lte: mission.dueDate, // 종료일 이전에 작성된 것
+                },
+              },
+            },
+          },
+        };
+      } else if (status === "overdue") {
+        whereCondition = {
+          ...whereCondition,
+          user: {
+            ...whereCondition.user,
+            missionProgress: {
+              some: {
+                missionId: id,
+                contentsDate: {
+                  gt: mission.dueDate, // 종료일 이후에 작성된 것
+                },
+              },
+            },
+          },
+        };
+      }
+    }
+
+    // 6. 페이지네이션된 데이터 조회
     const groupUsers = await prisma.groupMember.findMany({
       where: whereCondition,
+      skip,
+      take: limit,
       include: {
         user: {
           select: {
@@ -105,12 +167,11 @@ export async function GET(
           },
         },
       },
+      distinct: ["userId"],
     });
 
-    // 4. 각 사용자의 미션 진행 상황 조회 (중복 제거)
-    const userMap = new Map();
-
-    groupUsers.forEach((groupUser) => {
+    // 7. 각 사용자의 미션 진행 상황 조회
+    const participants = groupUsers.map((groupUser) => {
       const userId = groupUser.userId;
       const userProgress = groupUser.user.missionProgress[0];
 
@@ -124,7 +185,7 @@ export async function GET(
         }
       }
 
-      const participant = {
+      return {
         id: userId,
         missionId: id,
         user: {
@@ -140,63 +201,92 @@ export async function GET(
           checkedAt: userProgress?.checkedAt || null,
         },
       };
-
-      // 같은 사용자가 여러 그룹에 속해있을 경우, 첫 번째 그룹 정보만 유지
-      if (!userMap.has(userId)) {
-        userMap.set(userId, participant);
-      }
     });
 
-    let allParticipants = Array.from(userMap.values());
-
-    const stats = {
-      pending: 0,
-      in_progress: 0,
-      completed: 0,
-      overdue: 0,
+    // 8. 전체 통계 조회 (검색/필터링과 관계없이)
+    const baseStatsWhere = {
+      group: {
+        courses: {
+          some: {
+            courseId: mission.courseId,
+          },
+        },
+      },
     };
 
-    const totalUserMap = new Map();
-    groupUsers.forEach((groupUser) => {
-      const userId = groupUser.userId;
-      const userProgress = groupUser.user.missionProgress[0];
-
-      let participantStatus = "pending";
-      if (userProgress) {
-        const now = new Date();
-        const dueDate = new Date(mission.dueDate);
-        if (participantStatus !== "completed" && now > dueDate) {
-          participantStatus = "overdue";
-        }
-      }
-
-      if (!totalUserMap.has(userId)) {
-        totalUserMap.set(userId, { status: participantStatus });
-      }
+    // pending: 미션 진행 기록이 없는 사용자 (중복 제거)
+    const pendingUsers = await prisma.groupMember.findMany({
+      where: {
+        ...baseStatsWhere,
+        user: {
+          missionProgress: {
+            none: {
+              missionId: id,
+            },
+          },
+        },
+      },
+      select: {
+        userId: true,
+      },
+      distinct: ["userId"],
     });
 
-    totalUserMap.forEach((user) => {
-      stats[user.status as keyof typeof stats]++;
+    // completed: 종료일 이전에 완료한 사용자 (중복 제거)
+    const completedUsers = await prisma.groupMember.findMany({
+      where: {
+        ...baseStatsWhere,
+        user: {
+          missionProgress: {
+            some: {
+              missionId: id,
+              contentsDate: {
+                lte: mission.dueDate,
+              },
+            },
+          },
+        },
+      },
+      select: {
+        userId: true,
+      },
+      distinct: ["userId"],
     });
 
-    // 5. 상태 필터링 (쿼리에서 처리할 수 없는 부분만 JavaScript에서)
-    if (status && status !== "") {
-      allParticipants = allParticipants.filter(
-        (participant) => participant.progress.status === status,
-      );
-    }
+    // overdue: 종료일 이후에 완료한 사용자 (중복 제거)
+    const overdueUsers = await prisma.groupMember.findMany({
+      where: {
+        ...baseStatsWhere,
+        user: {
+          missionProgress: {
+            some: {
+              missionId: id,
+              contentsDate: {
+                gt: mission.dueDate,
+              },
+            },
+          },
+        },
+      },
+      select: {
+        userId: true,
+      },
+      distinct: ["userId"],
+    });
 
-    // 페이지네이션 적용
-    const total = allParticipants.length;
-    const paginatedParticipants = allParticipants.slice(skip, skip + limit);
+    const stats = {
+      pending: pendingUsers.length,
+      completed: completedUsers.length,
+      overdue: overdueUsers.length,
+    };
 
     return NextResponse.json({
-      participants: paginatedParticipants,
+      participants,
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        total: totalCount.length,
+        totalPages: Math.ceil(totalCount.length / limit),
       },
       stats,
     });

@@ -36,7 +36,7 @@ interface ParticipantsData {
 const statusConfig = {
   pending: {
     label: "대기중",
-    color: "bg-gray-100 text-gray-800",
+    color: "bg-gray-300 text-gray-800",
     icon: ClockIcon,
   },
   completed: {
