@@ -10,6 +10,7 @@ export async function GET(
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const status = searchParams.get("status");
+    const search = searchParams.get("search");
     const { id } = await params;
 
     const skip = (page - 1) * limit;
@@ -29,17 +30,48 @@ export async function GET(
       );
     }
 
-    // 2. 해당 과정과 연결된 그룹의 모든 사용자 조회
-    const groupUsers = await prisma.groupMember.findMany({
-      where: {
-        group: {
-          courses: {
-            some: {
-              courseId: mission.courseId,
-            },
+    // 2. where 조건 구성
+    const whereCondition: any = {
+      group: {
+        courses: {
+          some: {
+            courseId: mission.courseId,
           },
         },
       },
+    };
+
+    // 검색 조건 추가
+    if (search && search.trim() !== "") {
+      whereCondition.OR = [
+        {
+          user: {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+              {
+                organizations: {
+                  some: {
+                    organization: {
+                      name: { contains: search, mode: "insensitive" },
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+        {
+          group: {
+            name: { contains: search, mode: "insensitive" },
+          },
+        },
+      ];
+    }
+
+    // 3. 그룹 멤버 조회 (쿼리 레벨 필터링)
+    const groupUsers = await prisma.groupMember.findMany({
+      where: whereCondition,
       include: {
         user: {
           select: {
@@ -75,7 +107,7 @@ export async function GET(
       },
     });
 
-    // 3. 각 사용자의 미션 진행 상황 조회 (중복 제거)
+    // 4. 각 사용자의 미션 진행 상황 조회 (중복 제거)
     const userMap = new Map();
 
     groupUsers.forEach((groupUser) => {
@@ -117,7 +149,6 @@ export async function GET(
 
     let allParticipants = Array.from(userMap.values());
 
-    // 상태별 통계 계산 (필터링 전 전체 데이터 기준)
     const stats = {
       pending: 0,
       in_progress: 0,
@@ -125,11 +156,30 @@ export async function GET(
       overdue: 0,
     };
 
-    allParticipants.forEach((participant) => {
-      stats[participant.progress.status as keyof typeof stats]++;
+    const totalUserMap = new Map();
+    groupUsers.forEach((groupUser) => {
+      const userId = groupUser.userId;
+      const userProgress = groupUser.user.missionProgress[0];
+
+      let participantStatus = "pending";
+      if (userProgress) {
+        const now = new Date();
+        const dueDate = new Date(mission.dueDate);
+        if (participantStatus !== "completed" && now > dueDate) {
+          participantStatus = "overdue";
+        }
+      }
+
+      if (!totalUserMap.has(userId)) {
+        totalUserMap.set(userId, { status: participantStatus });
+      }
     });
 
-    // 4. 상태 필터링 적용
+    totalUserMap.forEach((user) => {
+      stats[user.status as keyof typeof stats]++;
+    });
+
+    // 5. 상태 필터링 (쿼리에서 처리할 수 없는 부분만 JavaScript에서)
     if (status && status !== "") {
       allParticipants = allParticipants.filter(
         (participant) => participant.progress.status === status,

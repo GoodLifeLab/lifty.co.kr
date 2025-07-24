@@ -10,6 +10,7 @@ import {
   EyeIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
 interface MissionParticipantsListProps {
@@ -35,7 +36,7 @@ interface ParticipantsData {
 const statusConfig = {
   pending: {
     label: "대기중",
-    color: "bg-gray-300 text-gray-800",
+    color: "bg-gray-100 text-gray-800",
     icon: ClockIcon,
   },
   completed: {
@@ -57,10 +58,12 @@ export default function MissionParticipantsList({
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     fetchParticipants();
-  }, [missionId, currentPage, selectedStatus]);
+  }, [missionId, currentPage, selectedStatus, searchQuery]);
 
   const fetchParticipants = async () => {
     try {
@@ -69,6 +72,7 @@ export default function MissionParticipantsList({
         page: currentPage.toString(),
         limit: "10",
         ...(selectedStatus && { status: selectedStatus }),
+        ...(searchQuery && { search: searchQuery }),
       });
 
       const response = await fetch(
@@ -92,6 +96,22 @@ export default function MissionParticipantsList({
   const handleViewAnswer = (participant: MissionParticipant) => {
     // TODO: 답변 보기 모달 또는 페이지로 이동
     console.log("답변 보기:", participant);
+  };
+
+  const handleSearch = () => {
+    setSearchQuery(searchTerm);
+    setCurrentPage(1); // 검색 시 첫 페이지로 이동
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const handleStatusChange = (status: string) => {
+    setSelectedStatus(status);
+    setCurrentPage(1); // 상태 변경 시 첫 페이지로 이동
   };
 
   if (isLoading) {
@@ -123,41 +143,66 @@ export default function MissionParticipantsList({
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       {/* 헤더 */}
       <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-900">
             미션 참여자 ({data.pagination.total}명)
           </h3>
 
-          {/* 상태 필터 */}
-          <div className="flex space-x-2">
+          {/* 검색 */}
+          <div className="flex-1 max-w-md ml-4">
+            <div className="flex space-x-2">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="이름, 이메일, 소속으로 검색..."
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+              </div>
+              <button
+                onClick={handleSearch}
+                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                검색
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 상태 필터 */}
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleStatusChange("")}
+            className={`px-3 py-1 text-sm rounded-full ${
+              selectedStatus === ""
+                ? "bg-indigo-100 text-indigo-800"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            전체
+          </button>
+          {Object.entries(statusConfig).map(([key, config]) => (
             <button
-              onClick={() => setSelectedStatus("")}
-              className={`px-3 py-1 text-sm rounded-full ${
-                selectedStatus === ""
-                  ? "bg-indigo-100 text-indigo-800"
+              key={key}
+              onClick={() => handleStatusChange(key)}
+              className={`px-3 py-1 text-sm rounded-full flex items-center space-x-1 ${
+                selectedStatus === key
+                  ? config.color
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              전체
+              <config.icon className="h-4 w-4" />
+              <span>{config.label}</span>
+              <span className="ml-1">
+                ({data.stats[key as keyof typeof data.stats]})
+              </span>
             </button>
-            {Object.entries(statusConfig).map(([key, config]) => (
-              <button
-                key={key}
-                onClick={() => setSelectedStatus(key)}
-                className={`px-3 py-1 text-sm rounded-full flex items-center space-x-1 ${
-                  selectedStatus === key
-                    ? config.color
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                <config.icon className="h-4 w-4" />
-                <span>{config.label}</span>
-                <span className="ml-1">
-                  ({data.stats[key as keyof typeof data.stats]})
-                </span>
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
 
@@ -191,11 +236,20 @@ export default function MissionParticipantsList({
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center">
                   <UserIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-500">아직 참여자가 없습니다.</p>
+                  <p className="text-gray-500">
+                    {searchQuery || selectedStatus
+                      ? "검색 결과가 없습니다."
+                      : "아직 참여자가 없습니다."}
+                  </p>
                 </td>
               </tr>
             ) : (
               data.participants.map((participant) => {
+                const status =
+                  statusConfig[
+                    participant.progress.status as keyof typeof statusConfig
+                  ];
+
                 return (
                   <tr key={participant.id} className="hover:bg-gray-50">
                     {/* 이름 */}
