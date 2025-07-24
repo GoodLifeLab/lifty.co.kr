@@ -265,34 +265,6 @@ export default function MissionModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                상세 설명 *
-              </label>
-              <RichTextEditor
-                key={`${mission?.id || "new"}-${isOpen}`}
-                value={formData.detailDesc}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, detailDesc: value }))
-                }
-                placeholder="미션에 대한 상세한 설명을 입력하세요"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Placeholder
-              </label>
-              <input
-                type="text"
-                name="placeholder"
-                value={formData.placeholder}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="사용자에게 보여줄 힌트 텍스트"
-              />
-            </div>
-
-            <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">
                   하위 미션
@@ -327,6 +299,34 @@ export default function MissionModal({
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Placeholder
+              </label>
+              <input
+                type="text"
+                name="placeholder"
+                value={formData.placeholder}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="사용자에게 보여줄 힌트 텍스트"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                상세 설명 *
+              </label>
+              <RichTextEditor
+                key={`${mission?.id || "new"}-${isOpen}`}
+                value={formData.detailDesc}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, detailDesc: value }))
+                }
+                placeholder="미션에 대한 상세한 설명을 입력하세요"
+              />
             </div>
           </div>
 
