@@ -486,7 +486,13 @@ export default function CoachDetailPage() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {paginatedUsers.map((user) => (
-                            <tr key={user.id}>
+                            <tr
+                              key={user.id}
+                              onClick={() => {
+                                router.push(`/dashboard/users/${user.id}`);
+                              }}
+                              className="cursor-pointer"
+                            >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
                                   {user.name || "이름 없음"}
