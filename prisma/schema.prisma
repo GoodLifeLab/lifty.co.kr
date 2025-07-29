@@ -11,6 +11,13 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// 관리자 역할 enum
+enum AdminRole {
+  USER
+  COACH
+  SUPER_ADMIN
+}
+
 // 그룹 멤버 역할 enum
 enum GroupMemberRole {
   MEMBER
@@ -25,6 +32,7 @@ model User {
   emailVerified Boolean   @default(false) @map("email_verified")
   disabled      Boolean   @default(false)
   disabledAt    DateTime? @map("disabled_at")
+  role          AdminRole @default(USER)
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   lastLoginAt   DateTime? @default(now()) @map("last_login_at")
