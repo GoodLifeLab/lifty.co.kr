@@ -11,6 +11,7 @@ interface Coach {
   id: string;
   email: string;
   name?: string;
+  phone?: string;
   position?: string;
   role: "COACH" | "SUPER_ADMIN";
   createdAt: string;
@@ -211,6 +212,16 @@ export default function CoachesPage() {
                       required
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       defaultValue={editingCoach?.name || ""}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      전화번호
+                    </label>
+                    <input
+                      type="tel"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      defaultValue={editingCoach?.phone || ""}
                     />
                   </div>
                   <div>

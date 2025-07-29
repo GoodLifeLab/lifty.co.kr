@@ -8,6 +8,7 @@ interface Coach {
   id: string;
   email: string;
   name?: string;
+  phone?: string;
   position?: string;
   role: "COACH" | "SUPER_ADMIN";
   createdAt: string;
@@ -197,11 +198,10 @@ export default function CoachDetailPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              coach.disabled
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "bg-red-600 hover:bg-red-700 text-white"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${coach.disabled
+              ? "bg-green-600 hover:bg-green-700 text-white"
+              : "bg-red-600 hover:bg-red-700 text-white"
+              }`}
           >
             {coach.disabled ? "활성화" : "비활성화"}
           </button>
@@ -257,11 +257,10 @@ export default function CoachDetailPage() {
             <div>
               <h4 className="text-sm font-medium text-gray-500 mb-2">상태</h4>
               <span
-                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  coach.disabled
-                    ? "bg-red-100 text-red-800"
-                    : "bg-green-100 text-green-800"
-                }`}
+                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${coach.disabled
+                  ? "bg-red-100 text-red-800"
+                  : "bg-green-100 text-green-800"
+                  }`}
               >
                 {coach.disabled ? "비활성화" : "활성"}
               </span>
@@ -361,6 +360,16 @@ export default function CoachDetailPage() {
                       required
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       defaultValue={coach.name || ""}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      전화번호
+                    </label>
+                    <input
+                      type="tel"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      defaultValue={coach.phone || ""}
                     />
                   </div>
                   <div>

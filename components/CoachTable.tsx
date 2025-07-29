@@ -6,6 +6,7 @@ interface Coach {
   id: string;
   email: string;
   name?: string;
+  phone?: string;
   position?: string;
   role: "COACH" | "SUPER_ADMIN";
   createdAt: string;
@@ -159,37 +160,16 @@ export default function CoachTable({
               이메일
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              역할
+              담당 그룹
             </th>
             <th
               className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-              onClick={() => handleSort("position")}
+              onClick={() => handleSort("phone")}
             >
-              직책
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              소속 조직
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              그룹 수
-            </th>
-            <th
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-              onClick={() => handleSort("lastLoginAt")}
-            >
-              최근 로그인
-            </th>
-            <th
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-              onClick={() => handleSort("createdAt")}
-            >
-              가입일
+              전화번호
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               상태
-            </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              작업
             </th>
           </tr>
         </thead>
@@ -197,93 +177,32 @@ export default function CoachTable({
           {coaches.map((coach) => (
             <tr
               key={coach.id}
-              className={`hover:bg-gray-50 ${
-                onCoachClick ? "cursor-pointer" : ""
-              }`}
+              className={`hover:bg-gray-50 ${onCoachClick ? "cursor-pointer" : ""
+                }`}
               onClick={() => onCoachClick?.(coach.id)}
             >
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10">
-                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">
-                        {coach.name?.charAt(0) ||
-                          coach.email.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {coach.name || "이름 없음"}
-                    </div>
-                  </div>
+                <div className="text-sm font-medium text-gray-900">
+                  {coach.name || "이름 없음"}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-900">{coach.email}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                  코치
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-900">
-                  {coach.position || "-"}
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">
-                  {coach.organizations.length > 0
-                    ? coach.organizations
-                        .map((org) => org.organization.name)
-                        .join(", ")
+                  {coach.groupMemberships.length > 0
+                    ? coach.groupMemberships.map(membership => membership.group.name).join(", ")
                     : "-"}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-900">
-                  {coach._count.groupMemberships}
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">
-                  {coach.lastLoginAt ? formatDateTime(coach.lastLoginAt) : "-"}
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">
-                  {formatDate(coach.createdAt)}
+                  {coach.phone || "-"}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <StatusBadge isActive={!coach.disabled} />
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditCoach?.(coach);
-                    }}
-                    className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-                  >
-                    편집
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleStatus?.(coach.id, !coach.disabled);
-                    }}
-                    className={`text-sm font-medium ${
-                      coach.disabled
-                        ? "text-green-600 hover:text-green-900"
-                        : "text-red-600 hover:text-red-900"
-                    }`}
-                  >
-                    {coach.disabled ? "활성화" : "비활성화"}
-                  </button>
-                </div>
               </td>
             </tr>
           ))}

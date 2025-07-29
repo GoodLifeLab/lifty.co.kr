@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
           id: true,
           email: true,
           name: true,
+          phone: true,
           position: true,
           role: true,
           createdAt: true,
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, name, position } = body;
+    const { email, name, phone, position } = body;
 
     // 필수 필드 검증
     if (!email || !name) {
@@ -174,6 +175,7 @@ export async function POST(request: NextRequest) {
       data: {
         email,
         name,
+        phone,
         position,
         role: "COACH", // 항상 COACH로 설정
         password: hashedPassword,
@@ -183,6 +185,7 @@ export async function POST(request: NextRequest) {
         id: true,
         email: true,
         name: true,
+        phone: true,
         position: true,
         role: true,
         createdAt: true,
