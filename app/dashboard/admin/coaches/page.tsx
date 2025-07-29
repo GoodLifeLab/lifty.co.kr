@@ -44,7 +44,6 @@ export default function CoachesPage() {
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingCoach, setEditingCoach] = useState<Coach | null>(null);
   const [userSearchTerm, setUserSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -75,12 +74,6 @@ export default function CoachesPage() {
   // 코치 상세 페이지로 이동
   const handleCoachClick = (coachId: string) => {
     router.push(`/dashboard/admin/coaches/${coachId}`);
-  };
-
-  // 코치 편집
-  const handleEditCoach = (coach: Coach) => {
-    setEditingCoach(coach);
-    setShowCreateModal(true);
   };
 
   // 사용자 검색
@@ -132,7 +125,6 @@ export default function CoachesPage() {
         setShowCreateModal(false);
         setSelectedUser(null);
         setUserSearchTerm("");
-        setEditingCoach(null);
         refresh();
       } else {
         const error = await response.json();
@@ -224,7 +216,6 @@ export default function CoachesPage() {
           coaches={coaches}
           loading={loading}
           onCoachClick={handleCoachClick}
-          onEditCoach={handleEditCoach}
           onToggleStatus={handleToggleStatus}
         />
 
@@ -240,147 +231,76 @@ export default function CoachesPage() {
         )}
       </div>
 
-      {/* 코치 생성/편집 모달 */}
+      {/* 코치 생성 모달 */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {editingCoach ? "코치 편집" : "사용자를 코치로 추가"}
+                사용자를 코치로 추가
               </h3>
 
-              {!editingCoach ? (
-                // 사용자 검색 및 선택
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      사용자 검색
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="이름 또는 이메일로 검색..."
-                        value={userSearchTerm}
-                        onChange={(e) => {
-                          setUserSearchTerm(e.target.value);
-                          searchUsers(e.target.value);
-                        }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      />
-                      {searchLoading && (
-                        <div className="absolute right-3 top-2">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 검색 결과 */}
-                    {searchResults.length > 0 && (
-                      <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
-                        {searchResults.map((user) => (
-                          <div
-                            key={user.id}
-                            onClick={() => handleUserSelect(user)}
-                            className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                          >
-                            <div className="text-sm font-medium text-gray-900">
-                              {user.name || "이름 없음"}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {user.email}
-                            </div>
-                          </div>
-                        ))}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    사용자 검색
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="이름 또는 이메일로 검색..."
+                      value={userSearchTerm}
+                      onChange={(e) => {
+                        setUserSearchTerm(e.target.value);
+                        searchUsers(e.target.value);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    {searchLoading && (
+                      <div className="absolute right-3 top-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
                       </div>
                     )}
                   </div>
 
-                  {selectedUser && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                      <div className="text-sm font-medium text-green-800">
-                        선택된 사용자
-                      </div>
-                      <div className="text-sm text-green-700">
-                        {selectedUser.name || "이름 없음"} ({selectedUser.email}
-                        )
-                      </div>
+                  {/* 검색 결과 */}
+                  {searchResults.length > 0 && (
+                    <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-md">
+                      {searchResults.map((user) => (
+                        <div
+                          key={user.id}
+                          onClick={() => handleUserSelect(user)}
+                          className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="text-sm font-medium text-gray-900">
+                            {user.name || "이름 없음"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {user.email}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
-              ) : (
-                // 기존 코치 편집 (기존 폼 유지)
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    // 폼 제출 로직 구현
-                    setShowCreateModal(false);
-                    setEditingCoach(null);
-                  }}
-                >
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        이메일
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        defaultValue={editingCoach?.email || ""}
-                      />
+
+                {selectedUser && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                    <div className="text-sm font-medium text-green-800">
+                      선택된 사용자
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        이름
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        defaultValue={editingCoach?.name || ""}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        전화번호
-                      </label>
-                      <input
-                        type="tel"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        defaultValue={editingCoach?.phone || ""}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        직책
-                      </label>
-                      <input
-                        type="text"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        defaultValue={editingCoach?.position || ""}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        역할
-                      </label>
-                      <input
-                        type="text"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500"
-                        value="코치"
-                        disabled
-                      />
+                    <div className="text-sm text-green-700">
+                      {selectedUser.name || "이름 없음"} ({selectedUser.email})
                     </div>
                   </div>
-                </form>
-              )}
+                )}
+              </div>
 
               <div className="mt-6 flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false);
-                    setEditingCoach(null);
                     setSelectedUser(null);
                     setUserSearchTerm("");
                   }}
@@ -388,23 +308,14 @@ export default function CoachesPage() {
                 >
                   취소
                 </button>
-                {!editingCoach ? (
-                  <button
-                    type="button"
-                    onClick={handleAddCoach}
-                    disabled={!selectedUser}
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    코치로 추가
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
-                  >
-                    수정
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleAddCoach}
+                  disabled={!selectedUser}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  코치로 추가
+                </button>
               </div>
             </div>
           </div>

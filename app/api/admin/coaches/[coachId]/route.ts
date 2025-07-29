@@ -159,13 +159,13 @@ export async function PATCH(
 
     const { coachId } = params;
     const body = await request.json();
-    const { name, position, role, disabled } = body;
+    const { name, email, phone, disabled } = body;
 
     // 업데이트할 데이터 구성
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
-    if (position !== undefined) updateData.position = position;
-    if (role !== undefined) updateData.role = role;
+    if (email !== undefined) updateData.email = email;
+    if (phone !== undefined) updateData.phone = phone;
     if (disabled !== undefined) {
       updateData.disabled = disabled;
       updateData.disabledAt = disabled ? new Date() : null;
@@ -182,6 +182,7 @@ export async function PATCH(
         id: true,
         email: true,
         name: true,
+        phone: true,
         position: true,
         role: true,
         disabled: true,

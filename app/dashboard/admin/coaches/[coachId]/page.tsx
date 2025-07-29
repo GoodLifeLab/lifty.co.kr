@@ -593,10 +593,40 @@ export default function CoachDetailPage() {
                 코치 정보 편집
               </h3>
               <form
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  // 폼 제출 로직 구현
-                  setShowEditModal(false);
+                  const formData = new FormData(e.currentTarget);
+                  const name = formData.get("name") as string;
+                  const email = formData.get("email") as string;
+                  const phone = formData.get("phone") as string;
+
+                  try {
+                    const response = await fetch(
+                      `/api/admin/coaches/${coach?.id}`,
+                      {
+                        method: "PATCH",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          name,
+                          email,
+                          phone,
+                        }),
+                      },
+                    );
+
+                    if (response.ok) {
+                      setShowEditModal(false);
+                      fetchCoachData(); // 데이터 새로고침
+                    } else {
+                      const error = await response.json();
+                      alert(error.error || "코치 정보 수정 실패");
+                    }
+                  } catch (error) {
+                    console.error("코치 정보 수정 오류:", error);
+                    alert("코치 정보 수정 중 오류가 발생했습니다.");
+                  }
                 }}
               >
                 <div className="space-y-4">
@@ -606,9 +636,22 @@ export default function CoachDetailPage() {
                     </label>
                     <input
                       type="text"
+                      name="name"
                       required
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      defaultValue={coach.name || ""}
+                      defaultValue={coach?.name || ""}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      이메일
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      defaultValue={coach?.email || ""}
                     />
                   </div>
                   <div>
@@ -617,29 +660,9 @@ export default function CoachDetailPage() {
                     </label>
                     <input
                       type="tel"
+                      name="phone"
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      defaultValue={coach.phone || ""}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      직책
-                    </label>
-                    <input
-                      type="text"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      defaultValue={coach.position || ""}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      역할
-                    </label>
-                    <input
-                      type="text"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500"
-                      value="코치"
-                      disabled
+                      defaultValue={coach?.phone || ""}
                     />
                   </div>
                 </div>
