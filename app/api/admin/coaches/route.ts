@@ -107,9 +107,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: coaches,
       pagination: {
-        currentPage: page,
+        page,
         totalPages,
-        totalItems: totalCount,
+        total: totalCount,
         hasMore: page < totalPages,
       },
     });
