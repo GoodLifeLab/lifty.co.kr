@@ -60,6 +60,18 @@ export async function GET(
                 id: true,
                 name: true,
                 description: true,
+                courses: {
+                  include: {
+                    course: {
+                      select: {
+                        id: true,
+                        name: true,
+                        startDate: true,
+                        endDate: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },

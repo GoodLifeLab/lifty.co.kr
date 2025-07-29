@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
+import { PlusIcon } from "@heroicons/react/24/outline";
 
 interface Coach {
   id: string;
@@ -28,6 +29,14 @@ interface Coach {
       id: number;
       name: string;
       description?: string;
+      courses: Array<{
+        course: {
+          id: string;
+          name: string;
+          startDate: string;
+          endDate: string;
+        };
+      }>;
     };
     role: string;
   }>;
@@ -198,10 +207,11 @@ export default function CoachDetailPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${coach.disabled
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-red-600 hover:bg-red-700 text-white"
-              }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${
+              coach.disabled
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-red-600 hover:bg-red-700 text-white"
+            }`}
           >
             {coach.disabled ? "활성화" : "비활성화"}
           </button>
@@ -223,23 +233,22 @@ export default function CoachDetailPage() {
               </div>
             </div>
             <div className="ml-6">
-              <h3 className="text-xl font-semibold text-gray-900">
-                {coach.name || "이름 없음"}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {coach.name || "이름 없음"}
+                </h3>
+                <span
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(coach.role)}`}
+                >
+                  {getRoleLabel(coach.role)}
+                </span>
+              </div>
               <p className="text-gray-600">{coach.email}</p>
-              <span
-                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-2 ${getRoleColor(coach.role)}`}
-              >
-                {getRoleLabel(coach.role)}
-              </span>
+              <p className="text-gray-600">{coach.phone || "전화번호 없음"}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-2">직책</h4>
-              <p className="text-gray-900">{coach.position || "-"}</p>
-            </div>
             <div>
               <h4 className="text-sm font-medium text-gray-500 mb-2">가입일</h4>
               <p className="text-gray-900">{formatDate(coach.createdAt)}</p>
@@ -254,84 +263,77 @@ export default function CoachDetailPage() {
                   : "로그인 기록 없음"}
               </p>
             </div>
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-2">상태</h4>
-              <span
-                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${coach.disabled
-                  ? "bg-red-100 text-red-800"
-                  : "bg-green-100 text-green-800"
-                  }`}
-              >
-                {coach.disabled ? "비활성화" : "활성"}
-              </span>
-            </div>
           </div>
-        </div>
-      </div>
 
-      {/* 소속 조직 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">소속 조직</h2>
-        </div>
-        <div className="p-6">
-          {coach.organizations.length > 0 ? (
-            <div className="space-y-4">
-              {coach.organizations.map((org) => (
-                <div
-                  key={org.organization.id}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <h3 className="font-medium text-gray-900">
-                      {org.organization.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {org.organization.department}
-                    </p>
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {org.role || "멤버"}
-                  </span>
-                </div>
-              ))}
+          {/* 담당 그룹 */}
+          <div className="mt-6">
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="text-sm font-medium text-gray-700">담당 그룹</h4>
+              <button className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded">
+                <PlusIcon className="h-4 w-4" />
+              </button>
             </div>
-          ) : (
-            <p className="text-gray-500">소속된 조직이 없습니다.</p>
-          )}
-        </div>
-      </div>
+            {coach.groupMemberships.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {coach.groupMemberships.map((membership) => (
+                  <span
+                    key={membership.group.id}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >
+                    {membership.group.name}
+                    <span className="ml-1 text-green-600">
+                      ({membership.role})
+                    </span>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">담당 그룹이 없습니다.</p>
+            )}
+          </div>
 
-      {/* 소속 그룹 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">소속 그룹</h2>
-        </div>
-        <div className="p-6">
-          {coach.groupMemberships.length > 0 ? (
-            <div className="space-y-4">
-              {coach.groupMemberships.map((membership) => (
-                <div
-                  key={membership.group.id}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <h3 className="font-medium text-gray-900">
-                      {membership.group.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {membership.group.description}
-                    </p>
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {membership.role}
-                  </span>
-                </div>
-              ))}
+          {/* 담당 과정 */}
+          <div className="mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="text-sm font-medium text-gray-700">담당 과정</h4>
+              <button className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded">
+                <PlusIcon className="h-4 w-4" />
+              </button>
             </div>
-          ) : (
-            <p className="text-gray-500">소속된 그룹이 없습니다.</p>
-          )}
+            {(() => {
+              // 모든 그룹의 과정을 수집하고 중복 제거
+              const allCourses = coach.groupMemberships.flatMap((membership) =>
+                membership.group.courses.map(
+                  (groupCourse) => groupCourse.course,
+                ),
+              );
+
+              // 중복 제거 (id 기준)
+              const uniqueCourses = allCourses.filter(
+                (course, index, self) =>
+                  index === self.findIndex((c) => c.id === course.id),
+              );
+
+              if (uniqueCourses.length > 0) {
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    {uniqueCourses.map((course) => (
+                      <span
+                        key={course.id}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        {course.name}
+                      </span>
+                    ))}
+                  </div>
+                );
+              } else {
+                return (
+                  <p className="text-xs text-gray-500">담당 과정이 없습니다.</p>
+                );
+              }
+            })()}
+          </div>
         </div>
       </div>
 

@@ -177,8 +177,9 @@ export default function CoachTable({
           {coaches.map((coach) => (
             <tr
               key={coach.id}
-              className={`hover:bg-gray-50 ${onCoachClick ? "cursor-pointer" : ""
-                }`}
+              className={`hover:bg-gray-50 ${
+                onCoachClick ? "cursor-pointer" : ""
+              }`}
               onClick={() => onCoachClick?.(coach.id)}
             >
               <td className="px-6 py-4 whitespace-nowrap">
@@ -192,7 +193,9 @@ export default function CoachTable({
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-900">
                   {coach.groupMemberships.length > 0
-                    ? coach.groupMemberships.map(membership => membership.group.name).join(", ")
+                    ? coach.groupMemberships
+                        .map((membership) => membership.group.name)
+                        .join(", ")
                     : "-"}
                 </div>
               </td>
