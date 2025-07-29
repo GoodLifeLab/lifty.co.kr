@@ -37,6 +37,27 @@ interface Coach {
           endDate: string;
         };
       }>;
+      memberships: Array<{
+        user: {
+          id: string;
+          name?: string;
+          email: string;
+          phone?: string;
+          organizations: Array<{
+            organization: {
+              id: string;
+              name: string;
+              department: string;
+            };
+          }>;
+          groupMemberships: Array<{
+            group: {
+              id: number;
+              name: string;
+            };
+          }>;
+        };
+      }>;
     };
     role: string;
   }>;
@@ -330,6 +351,145 @@ export default function CoachDetailPage() {
               } else {
                 return (
                   <p className="text-xs text-gray-500">담당 과정이 없습니다.</p>
+                );
+              }
+            })()}
+          </div>
+        </div>
+      </div>
+
+      {/* 소속 학생 목록 카드 */}
+      <div className="mt-6">
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
+              소속 학생 목록
+            </h3>
+          </div>
+          <div className="overflow-hidden">
+            {(() => {
+              // 모든 그룹의 과정을 수집하고 중복 제거
+              const allCourses = coach.groupMemberships.flatMap((membership) =>
+                membership.group.courses.map(
+                  (groupCourse) => groupCourse.course,
+                ),
+              );
+
+              // 중복 제거 (id 기준)
+              const uniqueCourses = allCourses.filter(
+                (course, index, self) =>
+                  index === self.findIndex((c) => c.id === course.id),
+              );
+
+              if (uniqueCourses.length > 0) {
+                // 모든 그룹의 사용자를 수집하고 중복 제거
+                const allUsers = coach.groupMemberships.flatMap((membership) =>
+                  membership.group.memberships.map((member) => member.user),
+                );
+
+                // 중복 제거 (사용자 ID 기준)
+                const uniqueUsers = allUsers.filter(
+                  (user, index, self) =>
+                    index === self.findIndex((u) => u.id === user.id),
+                );
+
+                if (uniqueUsers.length > 0) {
+                  return (
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            이름
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            이메일
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            전화번호
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            소속 기관
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            소속 그룹
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            참여 과정
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {uniqueUsers.map((user) => (
+                          <tr key={user.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {user.name || "이름 없음"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {user.email}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {user.phone || "-"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {user.organizations.length > 0
+                                  ? user.organizations
+                                      .map((org) => org.organization.name)
+                                      .join(", ")
+                                  : "-"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex flex-wrap gap-1">
+                                {user.groupMemberships.map((membership) => (
+                                  <span
+                                    key={membership.group.id}
+                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                                  >
+                                    {membership.group.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex flex-wrap gap-1">
+                                {uniqueCourses.map((course) => (
+                                  <span
+                                    key={course.id}
+                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                  >
+                                    {course.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                } else {
+                  return (
+                    <div className="px-6 py-8 text-center">
+                      <p className="text-sm text-gray-500">
+                        담당 과정에 참여하는 사용자가 없습니다.
+                      </p>
+                    </div>
+                  );
+                }
+              } else {
+                return (
+                  <div className="px-6 py-8 text-center">
+                    <p className="text-sm text-gray-500">
+                      담당 과정이 없어 사용자 정보를 표시할 수 없습니다.
+                    </p>
+                  </div>
                 );
               }
             })()}

@@ -72,6 +72,39 @@ export async function GET(
                     },
                   },
                 },
+                memberships: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                        organizations: {
+                          include: {
+                            organization: {
+                              select: {
+                                id: true,
+                                name: true,
+                                department: true,
+                              },
+                            },
+                          },
+                        },
+                        groupMemberships: {
+                          include: {
+                            group: {
+                              select: {
+                                id: true,
+                                name: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               },
             },
           },
