@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 interface User {
   id: string;
   email: string;
-  phone: string;
+  phone?: string;
   emailVerified: boolean;
+  role?: "USER" | "COACH" | "SUPER_ADMIN";
 }
 
 interface AuthState {

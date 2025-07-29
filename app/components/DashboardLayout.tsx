@@ -19,6 +19,7 @@ import {
   Cog6ToothIcon,
   AcademicCapIcon,
   FlagIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 
 interface DashboardLayoutProps {
@@ -70,6 +71,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/dashboard/organizations",
       icon: BuildingOfficeIcon,
     },
+    // 관리자만 볼 수 있는 메뉴들
+    ...(user?.role === "SUPER_ADMIN"
+      ? [
+          {
+            name: "코치 관리",
+            href: "/dashboard/admin/coaches",
+            icon: UserCircleIcon,
+          },
+        ]
+      : []),
   ];
 
   return (

@@ -1,8 +1,4 @@
-import {
-  verifyToken,
-  hashPassword,
-  comparePassword,
-} from "./jwt";
+import { verifyToken, hashPassword, comparePassword } from "./jwt";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { User } from "@prisma/client";
