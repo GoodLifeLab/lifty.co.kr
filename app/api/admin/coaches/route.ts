@@ -142,44 +142,40 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, name, phone, position } = body;
+    const { userId } = body;
 
     // 필수 필드 검증
-    if (!email || !name) {
+    if (!userId) {
       return NextResponse.json(
-        { error: "이메일과 이름은 필수입니다." },
+        { error: "사용자 ID는 필수입니다." },
         { status: 400 },
       );
     }
 
-    // 이메일 중복 확인
+    // 기존 사용자 확인
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { id: userId },
     });
 
-    if (existingUser) {
+    if (!existingUser) {
       return NextResponse.json(
-        { error: "이미 존재하는 이메일입니다." },
+        { error: "존재하지 않는 사용자입니다." },
+        { status: 404 },
+      );
+    }
+
+    if (existingUser.role !== "USER") {
+      return NextResponse.json(
+        { error: "일반 사용자만 코치로 변경할 수 있습니다." },
         { status: 400 },
       );
     }
 
-    // 임시 비밀번호 생성 (실제로는 이메일로 전송)
-    const tempPassword = Math.random().toString(36).slice(-8);
-    const hashedPassword = await import("@/utils/jwt").then((m) =>
-      m.hashPassword(tempPassword),
-    );
-
-    // 코치 생성
-    const coach = await prisma.user.create({
+    // 사용자를 코치로 변경
+    const coach = await prisma.user.update({
+      where: { id: userId },
       data: {
-        email,
-        name,
-        phone,
-        position,
-        role: "COACH", // 항상 COACH로 설정
-        password: hashedPassword,
-        emailVerified: true,
+        role: "COACH",
       },
       select: {
         id: true,
@@ -193,9 +189,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      message: "코치가 성공적으로 생성되었습니다.",
+      message: "사용자가 성공적으로 코치로 변경되었습니다.",
       data: coach,
-      tempPassword, // 실제로는 이메일로 전송해야 함
     });
   } catch (error) {
     console.error("코치 생성 오류:", error);

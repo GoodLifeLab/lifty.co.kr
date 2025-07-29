@@ -27,6 +27,12 @@ export async function GET(request: NextRequest) {
       disabled: false, // 비활성화된 사용자 제외
     };
 
+    // 코치 추가를 위한 검색인 경우 USER 역할만 검색
+    const isCoachSearch = searchParams.get("coachSearch") === "true";
+    if (isCoachSearch) {
+      where.role = "USER";
+    }
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
