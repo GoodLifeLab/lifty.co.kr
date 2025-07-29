@@ -105,7 +105,7 @@ export default function CoachesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">코치 관리</h1>
-          <p className="text-gray-600">시스템의 모든 코치를 관리합니다.</p>
+          <p className="text-gray-600">새로운 코치를 생성하고 관리합니다.</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
@@ -132,7 +132,7 @@ export default function CoachesPage() {
               htmlFor="role-filter"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              역할
+              상태
             </label>
             <select
               id="role-filter"
@@ -140,9 +140,9 @@ export default function CoachesPage() {
               onChange={(e) => setSelectedRole(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="all">모든 역할</option>
-              <option value="COACH">코치</option>
-              <option value="SUPER_ADMIN">슈퍼 관리자</option>
+              <option value="all">모든 상태</option>
+              <option value="active">활성</option>
+              <option value="disabled">비활성</option>
             </select>
           </div>
         </div>
@@ -312,13 +312,12 @@ export default function CoachesPage() {
                     <label className="block text-sm font-medium text-gray-700">
                       역할
                     </label>
-                    <select
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      defaultValue={editingCoach?.role || "COACH"}
-                    >
-                      <option value="COACH">코치</option>
-                      <option value="SUPER_ADMIN">슈퍼 관리자</option>
-                    </select>
+                    <input
+                      type="text"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500"
+                      value="코치"
+                      disabled
+                    />
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end space-x-3">

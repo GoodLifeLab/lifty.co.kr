@@ -31,9 +31,7 @@ export async function GET(request: NextRequest) {
 
     // 검색 조건 구성
     const where: any = {
-      role: {
-        in: ["COACH", "SUPER_ADMIN"],
-      },
+      role: "COACH", // 코치만 조회
     };
 
     if (search) {
@@ -45,7 +43,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (role && role !== "all") {
-      where.role = role;
+      // 상태 필터링 (활성/비활성)
+      if (role === "active") {
+        where.disabled = false;
+      } else if (role === "disabled") {
+        where.disabled = true;
+      }
     }
 
     // 코치 목록 조회
@@ -129,16 +132,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 관리자 권한 확인
+    // 슈퍼 관리자 권한 확인
     if (currentUser.role !== "SUPER_ADMIN") {
       return NextResponse.json(
-        { error: "관리자 권한이 필요합니다." },
+        { error: "슈퍼 관리자 권한이 필요합니다." },
         { status: 403 },
       );
     }
 
     const body = await request.json();
-    const { email, name, position, role = "COACH" } = body;
+    const { email, name, position } = body;
 
     // 필수 필드 검증
     if (!email || !name) {
@@ -172,7 +175,7 @@ export async function POST(request: NextRequest) {
         email,
         name,
         position,
-        role,
+        role: "COACH", // 항상 COACH로 설정
         password: hashedPassword,
         emailVerified: true,
       },

@@ -30,9 +30,7 @@ export async function GET(
     const coach = await prisma.user.findUnique({
       where: {
         id: coachId,
-        role: {
-          in: ["COACH", "SUPER_ADMIN"],
-        },
+        role: "COACH", // 코치만 조회
       },
       select: {
         id: true,
@@ -132,9 +130,7 @@ export async function PATCH(
     const coach = await prisma.user.update({
       where: {
         id: coachId,
-        role: {
-          in: ["COACH", "SUPER_ADMIN"],
-        },
+        role: "COACH", // 코치만 업데이트
       },
       data: updateData,
       select: {
@@ -198,9 +194,7 @@ export async function DELETE(
     await prisma.user.update({
       where: {
         id: coachId,
-        role: {
-          in: ["COACH", "SUPER_ADMIN"],
-        },
+        role: "COACH", // 코치만 삭제
       },
       data: {
         disabled: true,

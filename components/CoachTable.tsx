@@ -158,10 +158,7 @@ export default function CoachTable({
             >
               이메일
             </th>
-            <th
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-              onClick={() => handleSort("role")}
-            >
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               역할
             </th>
             <th
@@ -226,10 +223,8 @@ export default function CoachTable({
                 <div className="text-sm text-gray-900">{coach.email}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(coach.role)}`}
-                >
-                  {getRoleLabel(coach.role)}
+                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                  코치
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">

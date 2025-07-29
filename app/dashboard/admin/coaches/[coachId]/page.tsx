@@ -377,13 +377,12 @@ export default function CoachDetailPage() {
                     <label className="block text-sm font-medium text-gray-700">
                       역할
                     </label>
-                    <select
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      defaultValue={coach.role}
-                    >
-                      <option value="COACH">코치</option>
-                      <option value="SUPER_ADMIN">슈퍼 관리자</option>
-                    </select>
+                    <input
+                      type="text"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500"
+                      value="코치"
+                      disabled
+                    />
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end space-x-3">
