@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 관리자 권한 확인
-    if (currentUser.role !== "SUPER_ADMIN") {
+    if (currentUser.role === "USER") {
       return NextResponse.json(
         { error: "관리자 권한이 필요합니다." },
         { status: 403 },
