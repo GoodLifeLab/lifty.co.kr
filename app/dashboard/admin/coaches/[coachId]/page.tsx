@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import Pagination from "@/components/Pagination";
 import { User, AdminRole } from "@prisma/client";
 
@@ -165,6 +165,34 @@ export default function CoachDetailPage() {
     } catch (error) {
       console.error("코치 제거 오류:", error);
       alert("코치 제거 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleRemoveFromGroup = async (groupId: number, groupName: string) => {
+    if (!coach) return;
+
+    if (!confirm(`정말로 "${groupName}" 그룹에서 제거하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/groups/${groupId}/members/${coach.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (response.ok) {
+        fetchCoachData(); // 데이터 새로고침
+        alert("그룹에서 제거되었습니다.");
+      } else {
+        const error = await response.json();
+        alert(error.error || "그룹에서 제거 실패");
+      }
+    } catch (error) {
+      console.error("그룹에서 제거 오류:", error);
+      alert("그룹에서 제거 중 오류가 발생했습니다.");
     }
   };
 
@@ -374,12 +402,25 @@ export default function CoachDetailPage() {
                 {coach.groupMemberships.map((membership) => (
                   <span
                     key={membership.group.id}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 group"
                   >
                     {membership.group.name}
                     <span className="ml-1 text-green-600">
                       ({membership.role})
                     </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveFromGroup(
+                          membership.group.id,
+                          membership.group.name,
+                        );
+                      }}
+                      className="ml-2 p-0.5 text-green-600 hover:text-green-800 hover:bg-green-200 rounded-full transition-colors"
+                      title={`${membership.group.name} 그룹에서 제거`}
+                    >
+                      <XMarkIcon className="h-3 w-3" />
+                    </button>
                   </span>
                 ))}
               </div>
