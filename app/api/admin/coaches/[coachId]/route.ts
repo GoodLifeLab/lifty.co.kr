@@ -33,11 +33,6 @@ export async function GET(
         role: "COACH", // 코치만 조회
       },
       include: {
-        organizations: {
-          include: {
-            organization: true,
-          },
-        },
         groupMemberships: {
           include: {
             group: {
@@ -54,7 +49,6 @@ export async function GET(
         _count: {
           select: {
             groupMemberships: true,
-            organizations: true,
           },
         },
       },
@@ -98,7 +92,15 @@ export async function GET(
             },
           },
           include: {
-            group: true,
+            group: {
+              include: {
+                courses: {
+                  include: {
+                    course: true,
+                  },
+                },
+              },
+            },
           },
         },
       },

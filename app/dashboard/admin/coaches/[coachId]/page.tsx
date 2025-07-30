@@ -10,10 +10,6 @@ import { User, AdminRole, Group, Course, Organization } from "@prisma/client";
 
 // API 응답 타입 (간결한 버전)
 type CoachWithDetails = User & {
-  organizations: Array<{
-    organization: Pick<Organization, "id" | "name" | "department">;
-    role?: string;
-  }>;
   groupMemberships: Array<{
     group: Group & {
       courses: Array<{
@@ -28,13 +24,16 @@ type CoachWithDetails = User & {
         organization: Pick<Organization, "id" | "name" | "department">;
       }>;
       groupMemberships: Array<{
-        group: Pick<Group, "id" | "name">;
+        group: Group & {
+          courses: Array<{
+            course: Pick<Course, "id" | "name" | "startDate" | "endDate">;
+          }>;
+        };
       }>;
     }
   >;
   _count: {
     groupMemberships: number;
-    organizations: number;
   };
 };
 
@@ -472,24 +471,12 @@ export default function CoachDetailPage() {
           </div>
           <div className="overflow-hidden">
             {(() => {
-              // 모든 그룹의 과정을 수집하고 중복 제거
-              const allCourses = coach.groupMemberships.flatMap((membership) =>
-                membership.group.courses.map(
-                  (groupCourse) => groupCourse.course,
-                ),
-              );
-
               // 중복 제거 (id 기준)
-              const uniqueCourses = allCourses.filter(
-                (course, index, self) =>
-                  index === self.findIndex((c) => c.id === course.id),
-              );
+              const uniqueCourses = coach.uniqueUsers || [];
 
               if (uniqueCourses.length > 0) {
-                const users = coach.uniqueUsers || [];
-
                 // 검색 필터링
-                const filteredUsers = users.filter((user) => {
+                const filteredUsers = uniqueCourses.filter((user) => {
                   const searchLower = searchTerm.toLowerCase();
                   return (
                     (user.name &&
@@ -609,14 +596,16 @@ export default function CoachDetailPage() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex flex-wrap gap-1">
-                                  {uniqueCourses.map((course) => (
-                                    <span
-                                      key={course.id}
-                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                                    >
-                                      {course.name}
-                                    </span>
-                                  ))}
+                                  {user.groupMemberships.map((membership) =>
+                                    membership.group.courses.map((course) => (
+                                      <span
+                                        key={membership.group.id}
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                      >
+                                        {course.course.name}
+                                      </span>
+                                    )),
+                                  )}
                                 </div>
                               </td>
                             </tr>
