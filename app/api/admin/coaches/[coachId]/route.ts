@@ -61,58 +61,7 @@ export async function GET(
       );
     }
 
-    // 코치가 속한 모든 그룹에서 중복 없이 사용자 목록 가져오기
-    const groupIds = coach.groupMemberships.map(
-      (membership) => membership.group.id,
-    );
-
-    const uniqueUsers = await prisma.user.findMany({
-      where: {
-        groupMemberships: {
-          some: {
-            groupId: {
-              in: groupIds,
-            },
-          },
-        },
-        id: {
-          not: coachId, // 코치 본인 제외
-        },
-      },
-      include: {
-        organizations: {
-          include: {
-            organization: true,
-          },
-        },
-        groupMemberships: {
-          where: {
-            groupId: {
-              in: groupIds,
-            },
-          },
-          include: {
-            group: {
-              include: {
-                courses: {
-                  include: {
-                    course: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // 코치 데이터에 uniqueUsers 추가
-    const coachWithUsers = {
-      ...coach,
-      uniqueUsers,
-    };
-
-    return NextResponse.json({ data: coachWithUsers });
+    return NextResponse.json({ data: coach });
   } catch (error) {
     console.error("코치 조회 오류:", error);
     return NextResponse.json(

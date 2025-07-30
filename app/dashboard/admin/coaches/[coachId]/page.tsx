@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import Pagination from "@/components/Pagination";
 import GroupBadge from "@/components/GroupBadge";
+import CoachStudentsList from "@/components/CoachStudentsList";
 import { User, AdminRole, Group, Course, Organization } from "@prisma/client";
 
 // API 응답 타입 (간결한 버전)
@@ -18,20 +18,6 @@ type CoachWithDetails = User & {
     };
     role: string;
   }>;
-  uniqueUsers?: Array<
-    User & {
-      organizations: Array<{
-        organization: Pick<Organization, "id" | "name" | "department">;
-      }>;
-      groupMemberships: Array<{
-        group: Group & {
-          courses: Array<{
-            course: Pick<Course, "id" | "name" | "startDate" | "endDate">;
-          }>;
-        };
-      }>;
-    }
-  >;
   _count: {
     groupMemberships: number;
   };
@@ -48,14 +34,6 @@ export default function CoachDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
   const [groups, setGroups] = useState<Array<{ id: number; name: string }>>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-
-  // 검색어가 변경될 때 페이지를 1로 리셋
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
 
   useEffect(() => {
     fetchCoachData();
@@ -283,11 +261,10 @@ export default function CoachDetailPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              coach.disabled
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "bg-red-600 hover:bg-red-700 text-white"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${coach.disabled
+              ? "bg-green-600 hover:bg-green-700 text-white"
+              : "bg-red-600 hover:bg-red-700 text-white"
+              }`}
           >
             {coach.disabled ? "활성화" : "비활성화"}
           </button>
@@ -433,222 +410,9 @@ export default function CoachDetailPage() {
         </div>
       </div>
 
-      {/* 소속 학생 목록 카드 */}
+      {/* 소속 학생 목록 */}
       <div className="mt-6">
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
-                소속 학생 목록
-              </h3>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="학생 검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg
-                      className="h-5 w-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="overflow-hidden">
-            {(() => {
-              // 중복 제거 (id 기준)
-              const uniqueCourses = coach.uniqueUsers || [];
-
-              if (uniqueCourses.length > 0) {
-                // 검색 필터링
-                const filteredUsers = uniqueCourses.filter((user) => {
-                  const searchLower = searchTerm.toLowerCase();
-                  return (
-                    (user.name &&
-                      user.name.toLowerCase().includes(searchLower)) ||
-                    user.email.toLowerCase().includes(searchLower) ||
-                    (user.phone && user.phone.includes(searchTerm)) ||
-                    user.organizations.some((org) =>
-                      org.organization.name.toLowerCase().includes(searchLower),
-                    ) ||
-                    user.groupMemberships.some((membership) =>
-                      membership.group.name.toLowerCase().includes(searchLower),
-                    )
-                  );
-                });
-
-                // 페이지네이션 계산
-                const totalPages = Math.ceil(
-                  filteredUsers.length / itemsPerPage,
-                );
-                const startIndex = (currentPage - 1) * itemsPerPage;
-                const endIndex = startIndex + itemsPerPage;
-                const paginatedUsers = filteredUsers.slice(
-                  startIndex,
-                  endIndex,
-                );
-
-                if (filteredUsers.length > 0) {
-                  return (
-                    <>
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              이름
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              이메일
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              전화번호
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              소속 기관
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              소속 그룹
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              참여 과정
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {paginatedUsers.map((user) => (
-                            <tr
-                              key={user.id}
-                              onClick={() => {
-                                router.push(`/dashboard/users/${user.id}`);
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className="flex-shrink-0 h-8 w-8">
-                                    {user.profileImage ? (
-                                      <img
-                                        src={user.profileImage}
-                                        alt={user.name || "사용자 프로필"}
-                                        className="h-8 w-8 rounded-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                                        <span className="text-xs font-medium text-gray-700">
-                                          {user.name?.charAt(0) ||
-                                            user.email.charAt(0).toUpperCase()}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="ml-3">
-                                    <div className="text-sm font-medium text-gray-900">
-                                      {user.name || "이름 없음"}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">
-                                  {user.email}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">
-                                  {user.phone || "-"}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">
-                                  {user.organizations.length > 0
-                                    ? user.organizations
-                                        .map((org) => org.organization.name)
-                                        .join(", ")
-                                    : "-"}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex flex-wrap gap-1">
-                                  {user.groupMemberships.map((membership) => (
-                                    <span
-                                      key={membership.group.id}
-                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                                    >
-                                      {membership.group.name}
-                                    </span>
-                                  ))}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex flex-wrap gap-1">
-                                  {user.groupMemberships.map((membership) =>
-                                    membership.group.courses.map((course) => (
-                                      <span
-                                        key={membership.group.id}
-                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                                      >
-                                        {course.course.name}
-                                      </span>
-                                    )),
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-
-                      {/* 페이지네이션 */}
-                      {totalPages > 1 && (
-                        <Pagination
-                          currentPage={currentPage}
-                          totalPages={totalPages}
-                          totalItems={filteredUsers.length}
-                          hasMore={currentPage < totalPages}
-                          onPageChange={setCurrentPage}
-                          itemsPerPage={itemsPerPage}
-                        />
-                      )}
-                    </>
-                  );
-                } else {
-                  return (
-                    <div className="px-6 py-8 text-center">
-                      <p className="text-sm text-gray-500">
-                        {searchTerm
-                          ? "검색 결과가 없습니다."
-                          : "담당 과정에 참여하는 사용자가 없습니다."}
-                      </p>
-                    </div>
-                  );
-                }
-              } else {
-                return (
-                  <div className="px-6 py-8 text-center">
-                    <p className="text-sm text-gray-500">
-                      담당 과정이 없어 사용자 정보를 표시할 수 없습니다.
-                    </p>
-                  </div>
-                );
-              }
-            })()}
-          </div>
-        </div>
+        <CoachStudentsList coachId={coachId} />
       </div>
 
       {/* 편집 모달 */}
