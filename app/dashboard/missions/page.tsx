@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusIcon, FlagIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  FlagIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 import MissionModal from "@/components/MissionModal";
 import MissionTable from "@/components/MissionTable";
 import StatsCard from "@/components/StatsCard";
@@ -10,9 +14,13 @@ import { missionService } from "@/services/missionService";
 
 export default function MissionsPage() {
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [filteredMissions, setFilteredMissions] = useState<Mission[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
 
   useEffect(() => {
     fetchMissions();
@@ -22,12 +30,55 @@ export default function MissionsPage() {
     try {
       const data = await missionService.getMissions();
       setMissions(data);
+      setFilteredMissions(data);
     } catch (error) {
       console.error("미션 목록 조회 실패:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // 검색 기능
+  const handleSearch = () => {
+    let filtered = missions;
+
+    // 텍스트 검색
+    if (appliedSearchTerm.trim()) {
+      filtered = filtered.filter((mission) => {
+        const titleMatch = mission.title
+          .toLowerCase()
+          .includes(appliedSearchTerm.toLowerCase());
+        const courseMatch = mission.course?.name
+          ?.toLowerCase()
+          .includes(appliedSearchTerm.toLowerCase());
+        return titleMatch || courseMatch;
+      });
+    }
+
+    // 상태 필터
+    if (selectedStatus) {
+      filtered = filtered.filter((mission) => {
+        if (selectedStatus === "public") {
+          return mission.isPublic;
+        } else if (selectedStatus === "private") {
+          return !mission.isPublic;
+        }
+        return true;
+      });
+    }
+
+    setFilteredMissions(filtered);
+  };
+
+  // 검색 버튼 클릭 시 검색어 적용
+  const handleSearchButtonClick = () => {
+    setAppliedSearchTerm(searchTerm);
+  };
+
+  // 상태 변경 시 자동 검색
+  useEffect(() => {
+    handleSearch();
+  }, [appliedSearchTerm, selectedStatus, missions]);
 
   const handleCreateMission = () => {
     setSelectedMission(null);
@@ -63,11 +114,9 @@ export default function MissionsPage() {
 
   // 통계 계산
   const stats = {
-    total: missions.length,
-    public: missions.filter((m) => m.isPublic).length,
-    private: missions.filter((m) => !m.isPublic).length,
-    withSubMissions: missions.filter((m) => (m.subMissions?.length || 0) > 0)
-      .length,
+    total: filteredMissions.length,
+    public: filteredMissions.filter((m) => m.isPublic).length,
+    private: filteredMissions.filter((m) => !m.isPublic).length,
   };
 
   if (isLoading) {
@@ -98,7 +147,7 @@ export default function MissionsPage() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatsCard
           title="전체 미션"
           value={stats.total}
@@ -122,21 +171,58 @@ export default function MissionsPage() {
             </div>
           }
         />
-        <StatsCard
-          title="하위미션 포함"
-          value={stats.withSubMissions}
-          icon={
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-              <FlagIcon className="h-4 w-4 text-purple-600" />
+      </div>
+
+      {/* 검색 */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-end gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              검색
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="미션 제목 또는 과정명으로 검색..."
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearchButtonClick();
+                  }
+                }}
+              />
+              <button
+                onClick={handleSearchButtonClick}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
+                검색
+              </button>
             </div>
-          }
-        />
+          </div>
+          <div className="min-w-[200px]">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              공개 여부
+            </label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">전체</option>
+              <option value="public">공개</option>
+              <option value="private">비공개</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* 미션 테이블 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <MissionTable
-          missions={missions}
+          missions={filteredMissions}
           onCreateNew={handleCreateMission}
           showCreateButton={true}
         />
