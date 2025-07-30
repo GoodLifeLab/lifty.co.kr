@@ -74,6 +74,10 @@ export default function UserTable({
               소속 기관
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              등급
+              <span className="text-xs text-gray-400">(소속 기관 내 직책)</span>
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               소속 그룹
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -122,11 +126,6 @@ export default function UserTable({
                           <span className="text-sm text-gray-900">
                             {org.organization.name}
                           </span>
-                          {org.role && (
-                            <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                              {org.role}
-                            </span>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -135,19 +134,46 @@ export default function UserTable({
                   )}
                 </div>
               </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-900">
+                  {user.organizations.length > 0 ? (
+                    <div className="space-y-1">
+                      {user.organizations.map((org) => (
+                        <div key={org.organization.id}>
+                          {org.role === "ADMIN" && (
+                            <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
+                              관리자
+                            </span>
+                          )}
+                          {org.role === "LEADER" && (
+                            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                              리더
+                            </span>
+                          )}
+                          {org.role === "MEMBER" && (
+                            <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
+                              일반
+                            </span>
+                          )}
+                          {!org.role && (
+                            <span className="text-gray-400">직책 없음</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">직책 없음</span>
+                  )}
+                </div>
+              </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {user.groupMemberships.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="flex flex-wrap gap-2">
                     {user.groupMemberships.map((group) => (
                       <div key={group.group.id} className="flex items-center">
-                        <span className="text-sm text-gray-900">
+                        <span className="text-sm text-gray-900 bg-green-100 rounded-full px-2 py-1">
                           {group.group.name}
                         </span>
-                        {group.role && (
-                          <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                            {group.role}
-                          </span>
-                        )}
                       </div>
                     ))}
                   </div>
