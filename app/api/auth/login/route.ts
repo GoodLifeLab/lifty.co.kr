@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const token = await generateToken({
       userId: user.id,
       email: user.email,
-      phone: user.phone,
+      phone: user.phone || undefined,
     });
     console.log("토큰 생성 완료, 쿠키 설정 중");
 

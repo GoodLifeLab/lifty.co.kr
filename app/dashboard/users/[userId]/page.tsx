@@ -7,6 +7,7 @@ import {
   XMarkIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
+import GroupBadge from "@/components/GroupBadge";
 
 interface User {
   id: string;
@@ -355,6 +356,34 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     }
   };
 
+  const handleRemoveFromGroup = async (groupId: number, groupName: string) => {
+    if (!user) return;
+
+    if (!confirm(`정말로 "${groupName}" 그룹에서 제거하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/groups/${groupId}/members/${user.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (response.ok) {
+        fetchUserData(); // 데이터 새로고침
+        alert("그룹에서 제거되었습니다.");
+      } else {
+        const error = await response.json();
+        alert(error.error || "그룹에서 제거 실패");
+      }
+    } catch (error) {
+      console.error("그룹에서 제거 오류:", error);
+      alert("그룹에서 제거 중 오류가 발생했습니다.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -483,15 +512,14 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                 {user.groupMemberships.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {user.groupMemberships.map((group) => (
-                      <span
+                      <GroupBadge
                         key={group.group.id}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                      >
-                        {group.group.name}
-                        <span className="ml-1 text-green-600">
-                          ({group.role})
-                        </span>
-                      </span>
+                        groupId={group.group.id}
+                        groupName={group.group.name}
+                        role={group.role}
+                        onRemove={handleRemoveFromGroup}
+                        showRemoveButton={true}
+                      />
                     ))}
                   </div>
                 ) : (

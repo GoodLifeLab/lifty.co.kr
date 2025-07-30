@@ -1,23 +1,7 @@
-import {
-  generateToken,
-  verifyToken,
-  hashPassword,
-  comparePassword,
-  JWTPayload,
-} from "./jwt";
+import { verifyToken, hashPassword, comparePassword } from "./jwt";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-
-export interface User {
-  id: string;
-  email: string;
-  phone?: string;
-  password: string;
-  emailVerified: boolean;
-  disabled: boolean;
-  disabledAt?: Date;
-  createdAt: Date;
-}
+import { User } from "@prisma/client";
 
 // 인증번호 저장소
 const verificationCodes = new Map<
@@ -43,16 +27,7 @@ export async function createUser(
     },
   });
 
-  return {
-    id: user.id,
-    email: user.email,
-    phone: user.phone || undefined,
-    password: user.password,
-    emailVerified: user.emailVerified,
-    disabled: user.disabled,
-    disabledAt: user.disabledAt || undefined,
-    createdAt: user.createdAt,
-  };
+  return user;
 }
 
 export async function findUserByEmail(
@@ -66,20 +41,7 @@ export async function findUserByEmail(
     },
   });
 
-  if (!user) {
-    return undefined;
-  }
-
-  return {
-    id: user.id,
-    email: user.email,
-    phone: user.phone || undefined,
-    password: user.password,
-    emailVerified: user.emailVerified,
-    disabled: user.disabled,
-    disabledAt: user.disabledAt || undefined,
-    createdAt: user.createdAt,
-  };
+  return user || undefined;
 }
 
 export async function findUserById(id: string): Promise<User | undefined> {
@@ -90,20 +52,7 @@ export async function findUserById(id: string): Promise<User | undefined> {
     },
   });
 
-  if (!user) {
-    return undefined;
-  }
-
-  return {
-    id: user.id,
-    email: user.email,
-    phone: user.phone || undefined,
-    password: user.password,
-    emailVerified: user.emailVerified,
-    disabled: user.disabled,
-    disabledAt: user.disabledAt || undefined,
-    createdAt: user.createdAt,
-  };
+  return user || undefined;
 }
 
 export async function authenticateUser(
