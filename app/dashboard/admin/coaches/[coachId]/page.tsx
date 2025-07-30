@@ -254,36 +254,40 @@ export default function CoachDetailPage() {
           <h2 className="text-lg font-medium text-gray-900">기본 정보</h2>
         </div>
         <div className="p-6">
-          <div className="flex items-center mb-6">
-            <div className="flex-shrink-0 h-16 w-16">
-              <div className="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">
-                <span className="text-xl font-medium text-gray-700">
-                  {coach.name?.charAt(0) || coach.email.charAt(0).toUpperCase()}
-                </span>
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="col-span-2 xl:col-span-1">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0 h-16 w-16">
+                  <div className="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">
+                    <span className="text-xl font-medium text-gray-700">
+                      {coach.name?.charAt(0) ||
+                        coach.email.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                <div className="ml-6">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {coach.name || "이름 없음"}
+                    </h3>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(coach.role)}`}
+                    >
+                      {getRoleLabel(coach.role)}
+                    </span>
+                  </div>
+                  <p className="text-gray-600">{coach.email}</p>
+                  <p className="text-gray-600">
+                    {coach.phone || "전화번호 없음"}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="ml-6">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {coach.name || "이름 없음"}
-                </h3>
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(coach.role)}`}
-                >
-                  {getRoleLabel(coach.role)}
-                </span>
-              </div>
-              <p className="text-gray-600">{coach.email}</p>
-              <p className="text-gray-600">{coach.phone || "전화번호 없음"}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+            <div className="col-span-2 md:col-span-1">
               <h4 className="text-sm font-medium text-gray-500 mb-2">가입일</h4>
               <p className="text-gray-900">{formatDate(coach.createdAt)}</p>
             </div>
-            <div>
+            <div className="col-span-2 md:col-span-1">
               <h4 className="text-sm font-medium text-gray-500 mb-2">
                 최근 로그인
               </h4>
