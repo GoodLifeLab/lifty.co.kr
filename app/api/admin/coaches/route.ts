@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
           email: true,
           name: true,
           phone: true,
+          profileImage: true,
           position: true,
           role: true,
           createdAt: true,

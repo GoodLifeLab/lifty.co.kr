@@ -37,6 +37,7 @@ export async function GET(
         email: true,
         name: true,
         phone: true,
+        profileImage: true,
         position: true,
         role: true,
         createdAt: true,
@@ -81,6 +82,7 @@ export async function GET(
                         name: true,
                         email: true,
                         phone: true,
+                        profileImage: true,
                         organizations: {
                           include: {
                             organization: {
@@ -184,6 +186,7 @@ export async function PATCH(
         email: true,
         name: true,
         phone: true,
+        profileImage: true,
         position: true,
         role: true,
         disabled: true,

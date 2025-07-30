@@ -5,18 +5,10 @@ import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Pagination from "@/components/Pagination";
+import { User, AdminRole } from "@prisma/client";
 
-interface Coach {
-  id: string;
-  email: string;
-  name?: string;
-  phone?: string;
-  position?: string;
-  role: "COACH" | "SUPER_ADMIN";
-  createdAt: string;
-  lastLoginAt?: string;
-  disabled: boolean;
-  disabledAt?: string;
+// API 응답 타입 (Prisma 타입과 호환)
+type CoachWithDetails = User & {
   organizations: Array<{
     organization: {
       id: string;
@@ -44,6 +36,7 @@ interface Coach {
           name?: string;
           email: string;
           phone?: string;
+          profileImage?: string;
           organizations: Array<{
             organization: {
               id: string;
@@ -66,14 +59,14 @@ interface Coach {
     groupMemberships: number;
     organizations: number;
   };
-}
+};
 
 export default function CoachDetailPage() {
   const router = useRouter();
   const params = useParams();
   const coachId = params.coachId as string;
 
-  const [coach, setCoach] = useState<Coach | null>(null);
+  const [coach, setCoach] = useState<CoachWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -130,9 +123,9 @@ export default function CoachDetailPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ko-KR", {
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString("ko-KR", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -141,23 +134,27 @@ export default function CoachDetailPage() {
     });
   };
 
-  const getRoleLabel = (role: string) => {
+  const getRoleLabel = (role: AdminRole) => {
     switch (role) {
       case "COACH":
         return "코치";
       case "SUPER_ADMIN":
         return "슈퍼 관리자";
+      case "USER":
+        return "사용자";
       default:
         return role;
     }
   };
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: AdminRole) => {
     switch (role) {
       case "COACH":
         return "bg-blue-100 text-blue-800";
       case "SUPER_ADMIN":
         return "bg-red-100 text-red-800";
+      case "USER":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -237,11 +234,10 @@ export default function CoachDetailPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              coach.disabled
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "bg-red-600 hover:bg-red-700 text-white"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${coach.disabled
+              ? "bg-green-600 hover:bg-green-700 text-white"
+              : "bg-red-600 hover:bg-red-700 text-white"
+              }`}
           >
             {coach.disabled ? "활성화" : "비활성화"}
           </button>
@@ -258,12 +254,20 @@ export default function CoachDetailPage() {
             <div className="col-span-2 xl:col-span-1">
               <div className="flex items-center mb-6">
                 <div className="flex-shrink-0 h-16 w-16">
-                  <div className="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-xl font-medium text-gray-700">
-                      {coach.name?.charAt(0) ||
-                        coach.email.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  {coach.profileImage ? (
+                    <img
+                      src={coach.profileImage}
+                      alt={coach.name || "코치 프로필"}
+                      className="h-16 w-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">
+                      <span className="text-xl font-medium text-gray-700">
+                        {coach.name?.charAt(0) ||
+                          coach.email.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="ml-6">
                   <div className="flex items-center gap-2">
@@ -498,8 +502,28 @@ export default function CoachDetailPage() {
                               className="cursor-pointer"
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {user.name || "이름 없음"}
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-8 w-8">
+                                    {user.profileImage ? (
+                                      <img
+                                        src={user.profileImage}
+                                        alt={user.name || "사용자 프로필"}
+                                        className="h-8 w-8 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <span className="text-xs font-medium text-gray-700">
+                                          {user.name?.charAt(0) ||
+                                            user.email.charAt(0).toUpperCase()}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ml-3">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {user.name || "이름 없음"}
+                                    </div>
+                                  </div>
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -516,8 +540,8 @@ export default function CoachDetailPage() {
                                 <div className="text-sm text-gray-900">
                                   {user.organizations.length > 0
                                     ? user.organizations
-                                        .map((org) => org.organization.name)
-                                        .join(", ")
+                                      .map((org) => org.organization.name)
+                                      .join(", ")
                                     : "-"}
                                 </div>
                               </td>
