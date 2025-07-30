@@ -32,80 +32,19 @@ export async function GET(
         id: coachId,
         role: "COACH", // 코치만 조회
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phone: true,
-        profileImage: true,
-        position: true,
-        role: true,
-        createdAt: true,
-        lastLoginAt: true,
-        disabled: true,
-        disabledAt: true,
+      include: {
         organizations: {
           include: {
-            organization: {
-              select: {
-                id: true,
-                name: true,
-                department: true,
-              },
-            },
+            organization: true,
           },
         },
         groupMemberships: {
           include: {
             group: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
+              include: {
                 courses: {
                   include: {
-                    course: {
-                      select: {
-                        id: true,
-                        name: true,
-                        startDate: true,
-                        endDate: true,
-                      },
-                    },
-                  },
-                },
-                memberships: {
-                  include: {
-                    user: {
-                      select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        phone: true,
-                        profileImage: true,
-                        organizations: {
-                          include: {
-                            organization: {
-                              select: {
-                                id: true,
-                                name: true,
-                                department: true,
-                              },
-                            },
-                          },
-                        },
-                        groupMemberships: {
-                          include: {
-                            group: {
-                              select: {
-                                id: true,
-                                name: true,
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
+                    course: true,
                   },
                 },
               },
@@ -128,7 +67,50 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ data: coach });
+    // 코치가 속한 모든 그룹에서 중복 없이 사용자 목록 가져오기
+    const groupIds = coach.groupMemberships.map(
+      (membership) => membership.group.id,
+    );
+
+    const uniqueUsers = await prisma.user.findMany({
+      where: {
+        groupMemberships: {
+          some: {
+            groupId: {
+              in: groupIds,
+            },
+          },
+        },
+        id: {
+          not: coachId, // 코치 본인 제외
+        },
+      },
+      include: {
+        organizations: {
+          include: {
+            organization: true,
+          },
+        },
+        groupMemberships: {
+          where: {
+            groupId: {
+              in: groupIds,
+            },
+          },
+          include: {
+            group: true,
+          },
+        },
+      },
+    });
+
+    // 코치 데이터에 uniqueUsers 추가
+    const coachWithUsers = {
+      ...coach,
+      uniqueUsers,
+    };
+
+    return NextResponse.json({ data: coachWithUsers });
   } catch (error) {
     console.error("코치 조회 오류:", error);
     return NextResponse.json(
@@ -182,17 +164,17 @@ export async function PATCH(
         role: "COACH", // 코치만 업데이트
       },
       data: updateData,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phone: true,
-        profileImage: true,
-        position: true,
-        role: true,
-        disabled: true,
-        disabledAt: true,
-        updatedAt: true,
+      include: {
+        organizations: {
+          include: {
+            organization: true,
+          },
+        },
+        groupMemberships: {
+          include: {
+            group: true,
+          },
+        },
       },
     });
 

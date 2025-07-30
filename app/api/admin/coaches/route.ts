@@ -55,38 +55,15 @@ export async function GET(request: NextRequest) {
     const [coaches, totalCount] = await Promise.all([
       prisma.user.findMany({
         where,
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          phone: true,
-          profileImage: true,
-          position: true,
-          role: true,
-          createdAt: true,
-          lastLoginAt: true,
-          disabled: true,
-          disabledAt: true,
+        include: {
           organizations: {
             include: {
-              organization: {
-                select: {
-                  id: true,
-                  name: true,
-                  department: true,
-                },
-              },
+              organization: true,
             },
           },
           groupMemberships: {
             include: {
-              group: {
-                select: {
-                  id: true,
-                  name: true,
-                  description: true,
-                },
-              },
+              group: true,
             },
           },
           _count: {

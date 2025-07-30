@@ -6,56 +6,32 @@ import { useParams } from "next/navigation";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Pagination from "@/components/Pagination";
 import GroupBadge from "@/components/GroupBadge";
-import { User, AdminRole } from "@prisma/client";
+import { User, AdminRole, Group, Course, Organization } from "@prisma/client";
 
-// API 응답 타입 (Prisma 타입과 호환)
+// API 응답 타입 (간결한 버전)
 type CoachWithDetails = User & {
   organizations: Array<{
-    organization: {
-      id: string;
-      name: string;
-      department: string;
-    };
+    organization: Pick<Organization, "id" | "name" | "department">;
     role?: string;
   }>;
   groupMemberships: Array<{
-    group: {
-      id: number;
-      name: string;
-      description?: string;
+    group: Group & {
       courses: Array<{
-        course: {
-          id: string;
-          name: string;
-          startDate: string;
-          endDate: string;
-        };
-      }>;
-      memberships: Array<{
-        user: {
-          id: string;
-          name?: string;
-          email: string;
-          phone?: string;
-          profileImage?: string;
-          organizations: Array<{
-            organization: {
-              id: string;
-              name: string;
-              department: string;
-            };
-          }>;
-          groupMemberships: Array<{
-            group: {
-              id: number;
-              name: string;
-            };
-          }>;
-        };
+        course: Pick<Course, "id" | "name" | "startDate" | "endDate">;
       }>;
     };
     role: string;
   }>;
+  uniqueUsers?: Array<
+    User & {
+      organizations: Array<{
+        organization: Pick<Organization, "id" | "name" | "department">;
+      }>;
+      groupMemberships: Array<{
+        group: Pick<Group, "id" | "name">;
+      }>;
+    }
+  >;
   _count: {
     groupMemberships: number;
     organizations: number;
@@ -510,19 +486,10 @@ export default function CoachDetailPage() {
               );
 
               if (uniqueCourses.length > 0) {
-                // 모든 그룹의 사용자를 수집하고 중복 제거
-                const allUsers = coach.groupMemberships.flatMap((membership) =>
-                  membership.group.memberships.map((member) => member.user),
-                );
-
-                // 중복 제거 (사용자 ID 기준)
-                const uniqueUsers = allUsers.filter(
-                  (user, index, self) =>
-                    index === self.findIndex((u) => u.id === user.id),
-                );
+                const users = coach.uniqueUsers || [];
 
                 // 검색 필터링
-                const filteredUsers = uniqueUsers.filter((user) => {
+                const filteredUsers = users.filter((user) => {
                   const searchLower = searchTerm.toLowerCase();
                   return (
                     (user.name &&
