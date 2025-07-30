@@ -120,6 +120,8 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   const [missionsTotal, setMissionsTotal] = useState(0);
   const [missionsSearch, setMissionsSearch] = useState("");
   const [missionsStatus, setMissionsStatus] = useState("");
+  const [missionsStartDate, setMissionsStartDate] = useState("");
+  const [missionsEndDate, setMissionsEndDate] = useState("");
 
   // 사용자 정보 로드
   useEffect(() => {
@@ -134,6 +136,8 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     page: number = 1,
     search: string = "",
     status: string = "",
+    startDate: string = "",
+    endDate: string = "",
   ) => {
     try {
       setMissionsLoading(true);
@@ -142,6 +146,8 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         limit: "10",
         ...(search && { search }),
         ...(status && { status }),
+        ...(startDate && { startDate }),
+        ...(endDate && { endDate }),
       });
 
       const response = await fetch(`/api/users/${userId}/missions?${params}`);
@@ -161,12 +167,24 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
   // 미션 검색
   const handleMissionSearch = () => {
-    fetchMissions(1, missionsSearch, missionsStatus);
+    fetchMissions(
+      1,
+      missionsSearch,
+      missionsStatus,
+      missionsStartDate,
+      missionsEndDate,
+    );
   };
 
   // 미션 페이지 변경
   const handleMissionPageChange = (page: number) => {
-    fetchMissions(page, missionsSearch, missionsStatus);
+    fetchMissions(
+      page,
+      missionsSearch,
+      missionsStatus,
+      missionsStartDate,
+      missionsEndDate,
+    );
   };
 
   const fetchUserData = async () => {
@@ -709,6 +727,28 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         {/* 검색 및 필터 */}
         <div className="mb-6">
           <div className="flex items-end gap-4">
+            <div className="min-w-[150px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                시작일
+              </label>
+              <input
+                type="date"
+                value={missionsStartDate}
+                onChange={(e) => setMissionsStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <div className="min-w-[150px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                종료일
+              </label>
+              <input
+                type="date"
+                value={missionsEndDate}
+                onChange={(e) => setMissionsEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 검색
@@ -743,7 +783,13 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                 value={missionsStatus}
                 onChange={(e) => {
                   setMissionsStatus(e.target.value);
-                  fetchMissions(1, missionsSearch, e.target.value);
+                  fetchMissions(
+                    1,
+                    missionsSearch,
+                    e.target.value,
+                    missionsStartDate,
+                    missionsEndDate,
+                  );
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               >
