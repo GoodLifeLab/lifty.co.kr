@@ -45,7 +45,7 @@ export default function MissionTable({
       <thead className="bg-gray-50">
         <tr>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            미션명
+            미션제목
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             과정
@@ -54,13 +54,13 @@ export default function MissionTable({
             수행일자
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            공개여부
+            전체 인원
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            하위미션
+            응답자수
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            생성일
+            수행률
           </th>
         </tr>
       </thead>
@@ -80,24 +80,35 @@ export default function MissionTable({
               {mission.course?.name || "연결된 과정 없음"}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {formatDate(mission.dueDate)}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <span
-                className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                  mission.isPublic
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
-              >
-                {mission.isPublic ? "공개" : "비공개"}
-              </span>
+              {formatDate(mission.createdAt)} ~ {formatDate(mission.dueDate)}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {mission.subMissions?.length || 0}개
+              {mission.totalParticipants || 0}명
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {formatDate(mission.createdAt)}
+              {mission.completedCount || 0}명
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <div className="flex items-center">
+                <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                  <div
+                    className="bg-indigo-600 h-2 rounded-full"
+                    style={{
+                      width: `${(mission.totalParticipants || 0) > 0 ? ((mission.completedCount || 0) / (mission.totalParticipants || 0)) * 100 : 0}%`,
+                    }}
+                  ></div>
+                </div>
+                <span className="text-xs text-gray-500">
+                  {(mission.totalParticipants || 0) > 0
+                    ? Math.round(
+                        ((mission.completedCount || 0) /
+                          (mission.totalParticipants || 0)) *
+                          100,
+                      )
+                    : 0}
+                  %
+                </span>
+              </div>
             </td>
           </tr>
         ))}
