@@ -162,13 +162,14 @@ export async function PATCH(
 
     const { coachId } = params;
     const body = await request.json();
-    const { name, email, phone, disabled } = body;
+    const { name, email, phone, disabled, role } = body;
 
     // 업데이트할 데이터 구성
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
     if (phone !== undefined) updateData.phone = phone;
+    if (role !== undefined) updateData.role = role;
     if (disabled !== undefined) {
       updateData.disabled = disabled;
       updateData.disabledAt = disabled ? new Date() : null;

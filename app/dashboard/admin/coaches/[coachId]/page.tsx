@@ -123,8 +123,37 @@ export default function CoachDetailPage() {
     }
   };
 
+  const handleRemoveCoach = async () => {
+    if (!coach) return;
+
+    if (!confirm("정말로 이 사용자를 코치에서 제거하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/coaches/${coachId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: "USER" }),
+      });
+
+      if (response.ok) {
+        alert("코치에서 제거되었습니다.");
+        router.push("/dashboard/admin/coaches");
+      } else {
+        const error = await response.json();
+        alert(error.error || "코치 제거 실패");
+      }
+    } catch (error) {
+      console.error("코치 제거 오류:", error);
+      alert("코치 제거 중 오류가 발생했습니다.");
+    }
+  };
+
   const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const dateObj = typeof date === "string" ? new Date(date) : date;
     return dateObj.toLocaleDateString("ko-KR", {
       year: "numeric",
       month: "2-digit",
@@ -234,12 +263,19 @@ export default function CoachDetailPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${coach.disabled
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-red-600 hover:bg-red-700 text-white"
-              }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${
+              coach.disabled
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-red-600 hover:bg-red-700 text-white"
+            }`}
           >
             {coach.disabled ? "활성화" : "비활성화"}
+          </button>
+          <button
+            onClick={handleRemoveCoach}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+          >
+            코치 제거
           </button>
         </div>
       </div>
@@ -540,8 +576,8 @@ export default function CoachDetailPage() {
                                 <div className="text-sm text-gray-900">
                                   {user.organizations.length > 0
                                     ? user.organizations
-                                      .map((org) => org.organization.name)
-                                      .join(", ")
+                                        .map((org) => org.organization.name)
+                                        .join(", ")
                                     : "-"}
                                 </div>
                               </td>
