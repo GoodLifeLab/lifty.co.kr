@@ -66,11 +66,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     },
     { name: "프로젝트", href: "/dashboard/courses", icon: AcademicCapIcon },
     { name: "미션", href: "/dashboard/missions", icon: FlagIcon },
-    {
-      name: "소속 기관",
-      href: "/dashboard/organizations",
-      icon: BuildingOfficeIcon,
-    },
     // 관리자만 볼 수 있는 메뉴들
     ...(user?.role === "SUPER_ADMIN"
       ? [
@@ -78,6 +73,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             name: "코치 관리",
             href: "/dashboard/admin/coaches",
             icon: UserCircleIcon,
+          },
+          {
+            name: "기관 관리",
+            href: "/dashboard/admin/organizations",
+            icon: BuildingOfficeIcon,
           },
         ]
       : []),
