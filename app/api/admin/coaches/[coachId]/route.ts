@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/utils/auth";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { coachId: string } },
+  { params }: { params: Promise<{ coachId: string }> },
 ) {
   try {
     // 현재 사용자 확인
@@ -24,7 +24,7 @@ export async function GET(
       );
     }
 
-    const { coachId } = params;
+    const { coachId } = await params;
 
     // 코치 조회
     const coach = await prisma.user.findUnique({
@@ -140,7 +140,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { coachId: string } },
+  { params }: { params: Promise<{ coachId: string }> },
 ) {
   try {
     // 현재 사용자 확인
@@ -160,7 +160,7 @@ export async function PATCH(
       );
     }
 
-    const { coachId } = params;
+    const { coachId } = await params;
     const body = await request.json();
     const { name, email, phone, disabled, role } = body;
 
@@ -211,7 +211,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { coachId: string } },
+  { params }: { params: Promise<{ coachId: string }> },
 ) {
   try {
     // 현재 사용자 확인
@@ -231,7 +231,7 @@ export async function DELETE(
       );
     }
 
-    const { coachId } = params;
+    const { coachId } = await params;
 
     // 자기 자신을 삭제하려는 경우 방지
     if (coachId === currentUser.id) {

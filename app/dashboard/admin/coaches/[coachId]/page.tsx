@@ -70,6 +70,8 @@ export default function CoachDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+  const [groups, setGroups] = useState<Array<{ id: number; name: string }>>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -82,6 +84,20 @@ export default function CoachDetailPage() {
   useEffect(() => {
     fetchCoachData();
   }, [coachId]);
+
+  const fetchGroups = async () => {
+    try {
+      const response = await fetch("/api/groups");
+      if (response.ok) {
+        const data = await response.json();
+        setGroups(data.groups || []);
+      } else {
+        console.error("그룹 목록 가져오기 실패:", response.status);
+      }
+    } catch (error) {
+      console.error("그룹 목록 가져오기 오류:", error);
+    }
+  };
 
   const fetchCoachData = async () => {
     try {
@@ -343,7 +359,13 @@ export default function CoachDetailPage() {
           <div className="mt-6">
             <div className="flex items-center gap-2 mb-2">
               <h4 className="text-sm font-medium text-gray-700">담당 그룹</h4>
-              <button className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded">
+              <button
+                onClick={() => {
+                  fetchGroups();
+                  setShowAddGroupModal(true);
+                }}
+                className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded"
+              >
                 <PlusIcon className="h-4 w-4" />
               </button>
             </div>
@@ -370,9 +392,6 @@ export default function CoachDetailPage() {
           <div className="mt-4">
             <div className="flex items-center gap-2 mb-2">
               <h4 className="text-sm font-medium text-gray-700">담당 과정</h4>
-              <button className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded">
-                <PlusIcon className="h-4 w-4" />
-              </button>
             </div>
             {(() => {
               // 모든 그룹의 과정을 수집하고 중복 제거
@@ -743,6 +762,101 @@ export default function CoachDetailPage() {
                     className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
                   >
                     수정
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 담당 그룹 추가 모달 */}
+      {showAddGroupModal && (
+        <div className="fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                담당 그룹 추가
+              </h3>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const groupId = formData.get("groupId") as string;
+                  const role = formData.get("role") as string;
+
+                  try {
+                    const response = await fetch(`/api/users/add-group`, {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        userId: coach?.id,
+                        groupId: parseInt(groupId),
+                        role: role || "ADMIN",
+                      }),
+                    });
+
+                    if (response.ok) {
+                      setShowAddGroupModal(false);
+                      fetchCoachData(); // 데이터 새로고침
+                      alert("그룹에 추가되었습니다.");
+                    } else {
+                      const error = await response.json();
+                      console.error("그룹 추가 실패:", error);
+                      alert(error.message || "그룹 추가 실패");
+                    }
+                  } catch (error) {
+                    console.error("그룹 추가 오류:", error);
+                    alert("그룹 추가 중 오류가 발생했습니다.");
+                  }
+                }}
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      그룹 선택
+                    </label>
+                    <select
+                      name="groupId"
+                      required
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">그룹을 선택하세요</option>
+                      {groups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      역할
+                    </label>
+                    <select
+                      name="role"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="ADMIN">관리자</option>
+                      <option value="MEMBER">멤버</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddGroupModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
+                  >
+                    추가
                   </button>
                 </div>
               </form>
