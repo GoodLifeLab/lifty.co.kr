@@ -24,6 +24,13 @@ enum GroupMemberRole {
   ADMIN
 }
 
+// 기관 내 사용자 역할 enum
+enum OrganizationRole {
+  MEMBER
+  LEADER
+  ADMIN
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -158,13 +165,13 @@ model Organization {
 
 // 사용자-기관 관계 테이블 (다대다 관계)
 model UserOrganization {
-  id             String   @id @default(cuid())
+  id             String           @id @default(cuid())
   userId         String
   organizationId String
-  role           String? // 사용자의 기관 내 역할 (선택)
-  joinedAt       DateTime @default(now()) @map("joined_at")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  role           OrganizationRole @default(MEMBER) // 사용자의 기관 내 역할
+  joinedAt       DateTime         @default(now()) @map("joined_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
 
   // 관계
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
