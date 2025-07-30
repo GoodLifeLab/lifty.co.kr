@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/utils/auth";
+import { OrganizationRole } from "@prisma/client";
 
 // 사용자 목록 조회
 export async function GET(request: NextRequest) {
   try {
+    console.log("사용자 목록 조회 시작");
     const currentUser = await getCurrentUser();
+    console.log("현재 사용자:", currentUser);
 
     if (!currentUser) {
+      console.log("인증 실패: 사용자를 찾을 수 없음");
       return NextResponse.json(
         { message: "인증이 필요합니다." },
         { status: 401 },
@@ -19,6 +23,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
     const organizationId = searchParams.get("organizationId");
+    const organizationRole = searchParams.get("organizationRole");
 
     const skip = (page - 1) * limit;
 
@@ -37,14 +42,26 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
         { email: { contains: search, mode: "insensitive" } },
+        {
+          organizations: {
+            some: {
+              organization: {
+                name: { contains: search, mode: "insensitive" },
+              },
+            },
+          },
+        },
       ];
     }
 
     // 기관별 필터링
-    if (organizationId) {
+    if (organizationRole) {
       where.organizations = {
         some: {
-          organizationId: organizationId,
+          organization: {
+            name: { contains: search, mode: "insensitive" },
+          },
+          role: organizationRole as OrganizationRole,
         },
       };
     }
