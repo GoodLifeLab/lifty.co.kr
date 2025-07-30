@@ -8,6 +8,7 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import GroupBadge from "@/components/GroupBadge";
+import Pagination from "@/components/Pagination";
 
 interface User {
   id: string;
@@ -29,9 +30,43 @@ interface User {
       id: number;
       name: string;
       description?: string;
+      courses: Array<{
+        course: {
+          id: string;
+          name: string;
+          missions: Array<{
+            id: string;
+            title: string;
+            description?: string;
+            startDate: string;
+            endDate: string;
+          }>;
+        };
+      }>;
     };
     role: string;
   }>;
+  missionProgress: Array<{
+    id: string;
+    mission: {
+      id: string;
+      title: string;
+      description?: string;
+      startDate: string;
+      endDate: string;
+      course: {
+        id: string;
+        name: string;
+      };
+    };
+    isCompleted: boolean;
+    completedAt?: string;
+    createdAt: string;
+  }>;
+  _count: {
+    groupMemberships: number;
+    missionProgress: number;
+  };
 }
 
 interface Organization {
@@ -77,12 +112,62 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     phone: "",
   });
 
+  // 미션 관련 상태
+  const [missions, setMissions] = useState<any[]>([]);
+  const [missionsLoading, setMissionsLoading] = useState(false);
+  const [missionsPage, setMissionsPage] = useState(1);
+  const [missionsTotalPages, setMissionsTotalPages] = useState(1);
+  const [missionsTotal, setMissionsTotal] = useState(0);
+  const [missionsSearch, setMissionsSearch] = useState("");
+  const [missionsStatus, setMissionsStatus] = useState("");
+
   // 사용자 정보 로드
   useEffect(() => {
     fetchUserData();
     fetchOrganizations();
     fetchGroups();
+    fetchMissions();
   }, [userId]);
+
+  // 미션 목록 로드
+  const fetchMissions = async (
+    page: number = 1,
+    search: string = "",
+    status: string = "",
+  ) => {
+    try {
+      setMissionsLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "10",
+        ...(search && { search }),
+        ...(status && { status }),
+      });
+
+      const response = await fetch(`/api/users/${userId}/missions?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMissions(data.missions);
+        setMissionsPage(data.pagination.page);
+        setMissionsTotalPages(data.pagination.totalPages);
+        setMissionsTotal(data.pagination.total);
+      }
+    } catch (error) {
+      console.error("미션 목록 로드 오류:", error);
+    } finally {
+      setMissionsLoading(false);
+    }
+  };
+
+  // 미션 검색
+  const handleMissionSearch = () => {
+    fetchMissions(1, missionsSearch, missionsStatus);
+  };
+
+  // 미션 페이지 변경
+  const handleMissionPageChange = (page: number) => {
+    fetchMissions(page, missionsSearch, missionsStatus);
+  };
 
   const fetchUserData = async () => {
     try {
@@ -608,6 +693,181 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 미션 목록 */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">미션 목록</h3>
+            <p className="text-sm text-gray-600">
+              사용자가 속한 그룹의 모든 코스 미션을 확인할 수 있습니다.
+            </p>
+          </div>
+        </div>
+
+        {/* 검색 및 필터 */}
+        <div className="mb-6">
+          <div className="flex items-end gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                검색
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={missionsSearch}
+                  onChange={(e) => setMissionsSearch(e.target.value)}
+                  placeholder="과정명 또는 미션제목으로 검색..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleMissionSearch();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleMissionSearch}
+                  disabled={missionsLoading}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  검색
+                </button>
+              </div>
+            </div>
+            <div className="min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                상태
+              </label>
+              <select
+                value={missionsStatus}
+                onChange={(e) => {
+                  setMissionsStatus(e.target.value);
+                  fetchMissions(1, missionsSearch, e.target.value);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">전체</option>
+                <option value="completed">완료</option>
+                <option value="incomplete">미완료</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* 미션 테이블 */}
+        {missionsLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">미션 목록을 불러오는 중...</p>
+          </div>
+        ) : missions.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    과정명
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    미션제목
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    완료일자
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    글 작성 일자
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    게시글 보기
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {missions.map((mission) => (
+                  <tr key={mission.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {mission.courseName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {mission.missionTitle}
+                        </div>
+                        {mission.missionDescription && (
+                          <div className="text-sm text-gray-500">
+                            {mission.missionDescription}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {mission.isCompleted ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          완료
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          미완료
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {mission.createdAt ? (
+                        new Date(mission.createdAt).toLocaleDateString("ko-KR")
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => {
+                          // 게시글 보기 기능 구현 예정
+                          alert("게시글 보기 기능은 추후 구현 예정입니다.");
+                        }}
+                        className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                      >
+                        보기
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-gray-400 mb-2">
+              <svg
+                className="mx-auto h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <p className="text-gray-500">참여 가능한 미션이 없습니다.</p>
+          </div>
+        )}
+
+        {/* 페이지네이션 */}
+        {missionsTotalPages > 1 && (
+          <div className="mt-6">
+            <Pagination
+              currentPage={missionsPage}
+              totalPages={missionsTotalPages}
+              totalItems={missionsTotal}
+              hasMore={false}
+              onPageChange={handleMissionPageChange}
+            />
+          </div>
+        )}
       </div>
 
       {/* 수정 모달 */}
