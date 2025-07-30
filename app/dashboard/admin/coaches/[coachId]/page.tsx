@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon } from "@heroicons/react/24/outline";
 import Pagination from "@/components/Pagination";
+import GroupBadge from "@/components/GroupBadge";
 import { User, AdminRole } from "@prisma/client";
 
 // API 응답 타입 (Prisma 타입과 호환)
@@ -400,28 +401,14 @@ export default function CoachDetailPage() {
             {coach.groupMemberships.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {coach.groupMemberships.map((membership) => (
-                  <span
+                  <GroupBadge
                     key={membership.group.id}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 group"
-                  >
-                    {membership.group.name}
-                    <span className="ml-1 text-green-600">
-                      ({membership.role})
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveFromGroup(
-                          membership.group.id,
-                          membership.group.name,
-                        );
-                      }}
-                      className="ml-2 p-0.5 text-green-600 hover:text-green-800 hover:bg-green-200 rounded-full transition-colors"
-                      title={`${membership.group.name} 그룹에서 제거`}
-                    >
-                      <XMarkIcon className="h-3 w-3" />
-                    </button>
-                  </span>
+                    groupId={membership.group.id}
+                    groupName={membership.group.name}
+                    role={membership.role}
+                    onRemove={handleRemoveFromGroup}
+                    showRemoveButton={true}
+                  />
                 ))}
               </div>
             ) : (
