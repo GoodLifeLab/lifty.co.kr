@@ -28,6 +28,23 @@ export async function GET(
                 id: true,
                 name: true,
                 image: true,
+                memberships: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                      },
+                    },
+                  },
+                  where: {
+                    user: {
+                      role: "COACH",
+                    },
+                  },
+                },
               },
             },
           },
@@ -124,6 +141,23 @@ export async function PUT(
                 id: true,
                 name: true,
                 image: true,
+                memberships: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                      },
+                    },
+                  },
+                  where: {
+                    user: {
+                      role: "COACH",
+                    },
+                  },
+                },
               },
             },
           },

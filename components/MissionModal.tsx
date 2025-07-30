@@ -12,6 +12,7 @@ interface MissionModalProps {
   onClose: () => void;
   onSave: (missionData: CreateMissionData) => void;
   mission?: Mission | null;
+  course?: { id: string; name: string }; // 과정 정보를 객체로 받음
 }
 
 export default function MissionModal({
@@ -19,6 +20,7 @@ export default function MissionModal({
   onClose,
   onSave,
   mission,
+  course,
 }: MissionModalProps) {
   const [formData, setFormData] = useState({
     title: "",
@@ -28,7 +30,7 @@ export default function MissionModal({
     detailDesc: "",
     placeholder: "",
     courseId: "",
-    isPublic: false,
+    isPublic: true,
   });
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -43,7 +45,9 @@ export default function MissionModal({
 
   useEffect(() => {
     if (isOpen) {
-      fetchCourses();
+      if (!course) {
+        fetchCourses(); // course가 없을 때만 과정 목록을 가져옴
+      }
       if (mission) {
         setFormData({
           title: mission.title,
@@ -61,9 +65,13 @@ export default function MissionModal({
         setSubMissions(mission.subMissions || []);
       } else {
         resetForm();
+        // course가 있으면 자동으로 설정
+        if (course) {
+          setFormData((prev) => ({ ...prev, courseId: course.id }));
+        }
       }
     }
-  }, [isOpen, mission]);
+  }, [isOpen, mission, course]);
 
   const fetchCourses = async () => {
     try {
@@ -86,7 +94,7 @@ export default function MissionModal({
       detailDesc: "",
       placeholder: "",
       courseId: "",
-      isPublic: false,
+      isPublic: true,
     });
     setUploadedImages([]);
     setSubMissions([]);
@@ -185,21 +193,27 @@ export default function MissionModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   과정 *
                 </label>
-                <select
-                  name="courseId"
-                  value={formData.courseId}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">과정을 선택하세요</option>
-                  {Array.isArray(courses) &&
-                    courses.map((course) => (
-                      <option key={course.id} value={course.id}>
-                        {course.name}
-                      </option>
-                    ))}
-                </select>
+                {course ? (
+                  <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+                    {course.name}
+                  </div>
+                ) : (
+                  <select
+                    name="courseId"
+                    value={formData.courseId}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="">과정을 선택하세요</option>
+                    {Array.isArray(courses) &&
+                      courses.map((course) => (
+                        <option key={course.id} value={course.id}>
+                          {course.name}
+                        </option>
+                      ))}
+                  </select>
+                )}
               </div>
 
               <div>

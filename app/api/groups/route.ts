@@ -20,11 +20,18 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const skip = (page - 1) * limit;
 
-    const where: Prisma.GroupWhereInput = search
-      ? {
-          name: { contains: search, mode: "insensitive" as Prisma.QueryMode },
-        }
-      : {};
+    const where: Prisma.GroupWhereInput = {
+      ...(search && {
+        name: { contains: search, mode: "insensitive" as Prisma.QueryMode },
+      }),
+      ...(currentUser.role !== "SUPER_ADMIN" && {
+        memberships: {
+          some: {
+            userId: currentUser.id,
+          },
+        },
+      }),
+    };
 
     const [groups, total] = await Promise.all([
       prisma.group.findMany({
@@ -33,7 +40,11 @@ export async function GET(request: NextRequest) {
           name: "asc",
         },
         include: {
-          memberships: true,
+          memberships: {
+            where: {
+              userId: currentUser.id,
+            },
+          },
         },
         skip,
         take: limit,

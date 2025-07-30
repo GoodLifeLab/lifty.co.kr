@@ -2,130 +2,129 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  UserGroupIcon,
-  PlusIcon,
-  UserIcon,
-  GlobeAltIcon,
-  LockClosedIcon,
-  CalendarIcon,
-  CogIcon,
-} from "@heroicons/react/24/outline";
-import CreateGroupModal from "@/app/components/CreateGroupModal";
 
-interface Group {
-  id: number;
-  name: string;
-  description: string | null;
-  image: string | null;
-  isPublic: boolean;
-  memberCount: number;
-  createdAt: string;
-  members?: Array<{
-    id: string;
-    email: string;
-  }>;
-}
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+);
 
 export default function DashboardPage() {
-  const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const router = useRouter();
+  const [stats, setStats] = useState({
+    dailyActiveUsers: 0,
+    newUsersToday: 0,
+    newUsersThisWeek: 0,
+    newUsersThisMonth: 0,
+    totalUsers: 0,
+    totalGroups: 0,
+    totalOrganizations: 0,
+    dailyData: [] as Array<{
+      date: string;
+      newUsers: number;
+      activeUsers: number;
+      missionSubmissions: number;
+    }>,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
-  // 이번 달에 생성된 그룹 수 계산
-  const getThisMonthGroups = () => {
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
+  // 통계 데이터 가져오기
+  const fetchStats = async () => {
+    try {
+      setStatsLoading(true);
+      const response = await fetch("/api/admin/stats/dashboard");
 
-    return groups.filter((group) => {
-      const groupDate = new Date(group.createdAt);
-      return (
-        groupDate.getMonth() === thisMonth &&
-        groupDate.getFullYear() === thisYear
-      );
-    }).length;
+      if (!response.ok) {
+        throw new Error("통계 데이터를 가져오는데 실패했습니다.");
+      }
+
+      const data = await response.json();
+      setStats(data.data);
+    } catch (error) {
+      console.error("통계 데이터 조회 오류:", error);
+    } finally {
+      setStatsLoading(false);
+    }
   };
 
-  const stats = [
-    {
-      name: "총 그룹",
-      value: loading ? "..." : groups.length.toString(),
-      change: loading
-        ? "..."
-        : getThisMonthGroups() > 0
-          ? `+${getThisMonthGroups()}`
-          : "0",
-      changeType: "positive",
-      icon: UserGroupIcon,
+  // 차트 데이터 준비
+  const labels = stats.dailyData.map((item) => {
+    const date = new Date(item.date);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  });
+
+  const dauChartData = {
+    labels,
+    datasets: [
+      {
+        label: "DAU",
+        data: stats.dailyData.map((item) => item.activeUsers),
+        borderColor: "rgb(59, 130, 246)",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const newUsersChartData = {
+    labels,
+    datasets: [
+      {
+        label: "신규 유저",
+        data: stats.dailyData.map((item) => item.newUsers),
+        borderColor: "rgb(34, 197, 94)",
+        backgroundColor: "rgba(34, 197, 94, 0.1)",
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const missionChartData = {
+    labels,
+    datasets: [
+      {
+        label: "미션 업로드",
+        data: stats.dailyData.map((item) => item.missionSubmissions),
+        borderColor: "rgb(168, 85, 247)",
+        backgroundColor: "rgba(168, 85, 247, 0.1)",
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top" as const,
+      },
     },
-  ];
-
-  // 그룹 목록 가져오기
-  const fetchGroups = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/groups");
-
-      if (!response.ok) {
-        throw new Error("그룹 목록을 가져오는데 실패했습니다.");
-      }
-
-      const data = await response.json();
-      setGroups(data.groups || []);
-    } catch (error) {
-      console.error("그룹 목록 조회 오류:", error);
-    } finally {
-      setLoading(false);
-    }
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
   };
 
-  // 새 그룹 생성
-  const handleCreateGroup = async (groupData: {
-    name: string;
-    description: string;
-    isPublic: boolean;
-    memberIds: string[];
-  }) => {
-    try {
-      setCreating(true);
-      const response = await fetch("/api/groups", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(groupData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "그룹 생성에 실패했습니다.");
-      }
-
-      const data = await response.json();
-      alert(data.message || "그룹이 성공적으로 생성되었습니다.");
-
-      // 그룹 목록 새로고침
-      await fetchGroups();
-
-      // 모달 닫기
-      setShowCreateGroup(false);
-    } catch (error) {
-      console.error("그룹 생성 오류:", error);
-      alert(
-        error instanceof Error ? error.message : "그룹 생성에 실패했습니다.",
-      );
-      throw error;
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  // 그룹 목록 가져오기
+  // 통계 데이터 가져오기
   useEffect(() => {
-    fetchGroups();
+    fetchStats();
   }, []);
 
   return (
@@ -134,147 +133,67 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">대시보드</h1>
-          <p className="text-gray-600">그룹 현황과 최근 활동을 확인하세요</p>
+          <p className="text-gray-600">7일간의 활동 현황을 확인하세요</p>
         </div>
       </div>
 
-      {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <div
-            key={stat.name}
-            className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-              </div>
-              <div className="text-2xl">
-                <stat.icon className="h-8 w-8 text-indigo-600" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center">
-              <span
-                className={`text-sm font-medium ${
-                  stat.changeType === "positive"
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
-              >
-                {stat.change}
-              </span>
-              <span className="text-sm text-gray-500 ml-1">이번 달 생성</span>
-            </div>
+      {/* 개별 차트들 */}
+      <div className="space-y-6">
+        {/* DAU 차트 */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              Daily Active Users (DAU)
+            </h3>
+            <p className="text-gray-600">최근 7일간의 일일 활성 사용자 수</p>
           </div>
-        ))}
-      </div>
+          {statsLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+          ) : (
+            <div className="h-80">
+              <Line data={dauChartData} options={chartOptions} />
+            </div>
+          )}
+        </div>
 
-      {/* 그룹 관리 섹션 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-medium text-gray-900">그룹 관리</h3>
+        {/* 신규 유저 차트 */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="mb-4">
+            <h3 className="text-lg font-medium text-gray-900">신규 유저</h3>
+            <p className="text-gray-600">최근 7일간의 일일 신규 가입자 수</p>
+          </div>
+          {statsLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+          ) : (
+            <div className="h-80">
+              <Line data={newUsersChartData} options={chartOptions} />
+            </div>
+          )}
+        </div>
+
+        {/* 미션 업로드 차트 */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="mb-4">
+            <h3 className="text-lg font-medium text-gray-900">미션 업로드</h3>
             <p className="text-gray-600">
-              팀과 그룹을 관리하고 구성원을 초대하세요
+              최근 7일간의 일일 미션 기록 업로드 수
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateGroup(true)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center"
-          >
-            <PlusIcon className="h-4 w-4 mr-2" />새 그룹 만들기
-          </button>
+          {statsLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+          ) : (
+            <div className="h-80">
+              <Line data={missionChartData} options={chartOptions} />
+            </div>
+          )}
         </div>
-
-        {/* 그룹 목록 */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">그룹 목록을 불러오는 중...</p>
-          </div>
-        ) : groups.length === 0 ? (
-          <div className="text-center py-12">
-            <UserGroupIcon className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              아직 그룹이 없습니다
-            </h3>
-            <p className="text-gray-600 mb-4">첫 번째 그룹을 만들어보세요!</p>
-            <button
-              onClick={() => setShowCreateGroup(true)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center mx-auto"
-            >
-              <PlusIcon className="h-4 w-4 mr-2" />새 그룹 만들기
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groups.map((group) => (
-              <div
-                key={group.id}
-                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => router.push(`/dashboard/groups/${group.id}`)}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                    <UserGroupIcon className="h-6 w-6 text-indigo-600" />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        group.isPublic
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {group.isPublic ? (
-                        <GlobeAltIcon className="h-3 w-3 inline mr-1" />
-                      ) : (
-                        <LockClosedIcon className="h-3 w-3 inline mr-1" />
-                      )}
-                      {group.isPublic ? "공개" : "비공개"}
-                    </span>
-                  </div>
-                </div>
-                <h4 className="text-lg font-medium text-gray-900 mb-2">
-                  {group.name}
-                </h4>
-                <p className="text-gray-600 text-sm mb-4">
-                  {group.description || "설명이 없습니다."}
-                </p>
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <span className="flex items-center">
-                    <UserIcon className="h-4 w-4 mr-1" />
-                    멤버 {group.memberCount}명
-                  </span>
-                  <span className="flex items-center">
-                    <CalendarIcon className="h-4 w-4 mr-1" />
-                    {group.createdAt}
-                  </span>
-                </div>
-                <div className="mt-4 flex space-x-2">
-                  <button className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center">
-                    <CogIcon className="h-4 w-4 mr-1" />
-                    관리
-                  </button>
-                  <button className="flex-1 px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center">
-                    <PlusIcon className="h-4 w-4 mr-1" />
-                    초대
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-
-      {/* 그룹 생성 모달 */}
-      <CreateGroupModal
-        isOpen={showCreateGroup}
-        onClose={() => setShowCreateGroup(false)}
-        onSubmit={handleCreateGroup}
-        loading={creating}
-      />
     </div>
   );
 }

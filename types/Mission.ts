@@ -10,7 +10,10 @@ export type Mission = Prisma.MissionGetPayload<{
       };
     };
   };
-}>;
+}> & {
+  totalParticipants?: number;
+  completedCount?: number;
+};
 
 // 미션 생성용 타입
 export type CreateMissionData = {
