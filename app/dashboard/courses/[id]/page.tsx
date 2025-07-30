@@ -13,6 +13,7 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import Pagination from "@/components/Pagination";
+import MissionModal from "@/components/MissionModal";
 
 interface Course {
   id: string;
@@ -73,6 +74,10 @@ export default function CourseDetailPage({
   const [missionsTotal, setMissionsTotal] = useState(0);
   const [missionsSearch, setMissionsSearch] = useState("");
 
+  // 미션 모달 관련 상태
+  const [showMissionModal, setShowMissionModal] = useState(false);
+  const [editingMission, setEditingMission] = useState<any>(null);
+
   useEffect(() => {
     fetchCourse();
     fetchGroups();
@@ -112,6 +117,39 @@ export default function CourseDetailPage({
   // 미션 페이지 변경
   const handleMissionPageChange = (page: number) => {
     fetchMissions(page, missionsSearch);
+  };
+
+  // 미션 저장
+  const handleMissionSave = async (missionData: any) => {
+    try {
+      const url = editingMission
+        ? `/api/missions/${editingMission.id}`
+        : "/api/missions";
+      const method = editingMission ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...missionData,
+          courseId: id, // 현재 과정 ID로 설정
+        }),
+      });
+
+      if (response.ok) {
+        setShowMissionModal(false);
+        setEditingMission(null);
+        fetchMissions(); // 미션 목록 새로고침
+      } else {
+        const error = await response.json();
+        alert(error.message || "미션 저장에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("미션 저장 오류:", error);
+      alert("미션 저장에 실패했습니다.");
+    }
   };
 
   const fetchCourse = async () => {
@@ -433,6 +471,15 @@ export default function CourseDetailPage({
               프로젝트의 모든 미션을 확인할 수 있습니다.
             </p>
           </div>
+          <button
+            onClick={() => {
+              setEditingMission(null);
+              setShowMissionModal(true);
+            }}
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            미션 등록
+          </button>
         </div>
 
         {/* 검색 */}
@@ -497,7 +544,13 @@ export default function CourseDetailPage({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {missions.map((mission) => (
-                  <tr key={mission.id} className="hover:bg-gray-50">
+                  <tr
+                    key={mission.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() =>
+                      router.push(`/dashboard/missions/${mission.id}`)
+                    }
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {mission.title}
@@ -581,6 +634,18 @@ export default function CourseDetailPage({
           </div>
         )}
       </div>
+
+      {/* 미션 모달 */}
+      <MissionModal
+        isOpen={showMissionModal}
+        onClose={() => {
+          setShowMissionModal(false);
+          setEditingMission(null);
+        }}
+        onSave={handleMissionSave}
+        mission={editingMission}
+        course={course ? { id: course.id, name: course.name } : undefined}
+      />
 
       {/* 수정 모달 */}
       {showEditModal && (
