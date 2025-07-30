@@ -23,6 +23,14 @@ interface Course {
     id: number;
     name: string;
     image?: string | null;
+    memberships: Array<{
+      user: {
+        id: string;
+        name: string | null;
+        email: string;
+        role: string;
+      };
+    }>;
   }>;
 }
 
@@ -313,9 +321,9 @@ export default function CourseDetailPage({
               <Link
                 key={group.id}
                 href={`/dashboard/groups/${group.id}`}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors block"
               >
-                <div className="flex items-center">
+                <div className="flex items-center mb-3">
                   {group.image ? (
                     <div className="w-8 h-8 rounded-lg overflow-hidden mr-3 flex-shrink-0">
                       <img
@@ -335,6 +343,36 @@ export default function CourseDetailPage({
                     </p>
                   </div>
                 </div>
+
+                {/* 코치 정보 */}
+                {group.memberships.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs font-medium text-gray-500 mb-2">
+                      지정된 코치
+                    </p>
+                    <div className="space-y-1">
+                      {group.memberships.map((membership) => (
+                        <div
+                          key={membership.user.id}
+                          className="flex items-center"
+                        >
+                          <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                            <span className="text-xs text-green-600 font-medium">
+                              {membership.user.name
+                                ? membership.user.name.charAt(0).toUpperCase()
+                                : membership.user.email.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-gray-900 truncate">
+                              {membership.user.name || membership.user.email}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </Link>
             ))}
           </div>

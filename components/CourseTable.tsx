@@ -141,14 +141,6 @@ export default function CourseTable({
                 status={getCourseStatus(course.startDate, course.endDate)}
               />
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <Link
-                href={`/dashboard/courses/${course.id}`}
-                className="text-indigo-600 hover:text-indigo-900"
-              >
-                <EyeIcon className="h-4 w-4" />
-              </Link>
-            </td>
           </tr>
         ))}
       </tbody>
