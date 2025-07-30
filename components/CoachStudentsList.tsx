@@ -41,7 +41,9 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
       if (pageParam > 1) params.append("page", pageParam.toString());
       params.append("limit", itemsPerPage.toString());
 
-      const response = await fetch(`/api/admin/coaches/${coachId}/students?${params}`);
+      const response = await fetch(
+        `/api/admin/coaches/${coachId}/students?${params}`,
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -231,8 +233,8 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
                       <div className="text-sm text-gray-900">
                         {user.organizations.length > 0
                           ? user.organizations
-                            .map((org) => org.organization.name)
-                            .join(", ")
+                              .map((org) => org.organization.name)
+                              .join(", ")
                           : "-"}
                       </div>
                     </td>
@@ -291,4 +293,4 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
       </div>
     </div>
   );
-} 
+}

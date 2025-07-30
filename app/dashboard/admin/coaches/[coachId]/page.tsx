@@ -261,10 +261,11 @@ export default function CoachDetailPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${coach.disabled
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-red-600 hover:bg-red-700 text-white"
-              }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${
+              coach.disabled
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-red-600 hover:bg-red-700 text-white"
+            }`}
           >
             {coach.disabled ? "활성화" : "비활성화"}
           </button>

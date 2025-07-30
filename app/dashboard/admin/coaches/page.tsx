@@ -175,7 +175,7 @@ export default function CoachesPage() {
 
       {/* 검색 및 필터 */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex items-end sm:flex-row gap-4">
           <div className="flex-1">
             <SearchInput
               value={searchTerm}
@@ -186,12 +186,6 @@ export default function CoachesPage() {
             />
           </div>
           <div className="sm:w-48">
-            <label
-              htmlFor="role-filter"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              상태
-            </label>
             <select
               id="role-filter"
               value={selectedRole}

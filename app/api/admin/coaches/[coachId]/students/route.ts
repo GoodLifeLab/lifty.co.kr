@@ -78,30 +78,30 @@ export async function GET(
     // 검색 조건 구성
     const searchConditions = search
       ? {
-        OR: [
-          { name: { contains: search, mode: "insensitive" as const } },
-          { email: { contains: search, mode: "insensitive" as const } },
-          { phone: { contains: search, mode: "insensitive" as const } },
-          {
-            organizations: {
-              some: {
-                organization: {
-                  name: { contains: search, mode: "insensitive" as const },
+          OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+            { phone: { contains: search, mode: "insensitive" as const } },
+            {
+              organizations: {
+                some: {
+                  organization: {
+                    name: { contains: search, mode: "insensitive" as const },
+                  },
                 },
               },
             },
-          },
-          {
-            groupMemberships: {
-              some: {
-                group: {
-                  name: { contains: search, mode: "insensitive" as const },
+            {
+              groupMemberships: {
+                some: {
+                  group: {
+                    name: { contains: search, mode: "insensitive" as const },
+                  },
                 },
               },
             },
-          },
-        ],
-      }
+          ],
+        }
       : {};
 
     const users = await prisma.user.findMany({
@@ -181,4 +181,4 @@ export async function GET(
       { status: 500 },
     );
   }
-} 
+}
