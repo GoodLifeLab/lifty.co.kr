@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const user = await createUser(email, phone || "", password);
     return NextResponse.json({
       success: true,
-      user: { id: user.id, email: user.email },
+      user: { id: user.id, email: user.email, name: user.name },
     });
   } catch (error: any) {
     return NextResponse.json(
