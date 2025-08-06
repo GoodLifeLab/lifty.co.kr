@@ -2,6 +2,7 @@ import { verifyToken, hashPassword, comparePassword } from "./jwt";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { User } from "@prisma/client";
+import { generateRandomName } from "./nameGenerator";
 
 // 인증번호 저장소
 const verificationCodes = new Map<
@@ -17,6 +18,9 @@ export async function createUser(
   // 비밀번호 해시화
   const hashedPassword = await hashPassword(password);
 
+  // 랜덤 이름 생성
+  const randomName = generateRandomName();
+
   // Prisma를 사용하여 사용자 저장
   const user = await prisma.user.create({
     data: {
@@ -24,6 +28,7 @@ export async function createUser(
       phone,
       password: hashedPassword,
       emailVerified: true,
+      name: randomName,
     },
   });
 

@@ -183,6 +183,7 @@ export async function DELETE(
 ) {
   try {
     const currentUser = await getCurrentUser();
+    const userRole = currentUser?.role;
 
     if (!currentUser) {
       return NextResponse.json(
@@ -221,7 +222,7 @@ export async function DELETE(
       },
     });
 
-    if (!group) {
+    if (!group && userRole === "USER") {
       return NextResponse.json(
         { error: "그룹을 찾을 수 없거나 접근 권한이 없습니다." },
         { status: 404 },
