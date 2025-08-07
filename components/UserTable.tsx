@@ -75,7 +75,6 @@ export default function UserTable({
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               등급
-              <span className="text-xs text-gray-400">(소속 기관 내 직책)</span>
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               소속 그룹
@@ -136,7 +135,7 @@ export default function UserTable({
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-900">
-                  {user.organizations.length > 0 ? (
+                  {/* {user.organizations.length > 0 ? (
                     <div className="space-y-1">
                       {user.organizations.map((org) => (
                         <div key={org.organization.id}>
@@ -155,15 +154,15 @@ export default function UserTable({
                               일반
                             </span>
                           )}
-                          {!org.role && (
-                            <span className="text-gray-400">직책 없음</span>
-                          )}
                         </div>
                       ))}
                     </div>
                   ) : (
                     <span className="text-gray-400">직책 없음</span>
-                  )}
+                  )} */}
+                  <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
+                    일반
+                  </span>
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
