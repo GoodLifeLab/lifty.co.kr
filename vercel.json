@@ -5,6 +5,11 @@
       "memory": 3009,
       "maxDuration": 300,
       "includeFiles": "**/*"
+    },
+    "app/api/**/*": {
+      "memory": 3009,
+      "maxDuration": 300,
+      "includeFiles": "**/*"
     }
   },
   "crons": [],
