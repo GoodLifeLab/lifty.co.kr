@@ -23,11 +23,19 @@ const nextConfig = {
       },
     ],
     unoptimized: true,
-    domains: ["localhost"],
+    domains: [
+      "localhost",
+      "lifty-co-kr.vercel.app",
+      "lifty-staging.vercel.app",
+    ],
   },
   swcMinify: false,
   typescript: {
     ignoreBuildErrors: true,
+  },
+  // 성능 최적화 설정
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
   },
 };
 
