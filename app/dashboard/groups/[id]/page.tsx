@@ -325,63 +325,43 @@ export default function GroupDetailPage() {
 
       {/* 그룹 정보 카드 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-start space-x-6">
-          {group.image ? (
-            <img
-              src={group.image}
-              alt={group.name}
-              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-              onError={(e) => {
-                // 이미지 로드 실패 시 기본 아이콘으로 대체
-                const target = e.target as HTMLImageElement;
-                target.style.display = "none";
-                target.nextElementSibling?.classList.remove("hidden");
-              }}
-            />
-          ) : null}
-          <div
-            className={`w-20 h-20 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0 ${group.image ? "hidden" : ""}`}
-          >
-            <UserGroupIcon className="h-10 w-10 text-indigo-600" />
+        <div className="flex-1">
+          <div className="flex items-center space-x-3 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {group.name}
+            </h2>
+            <span
+              className={`px-3 py-1 text-sm font-medium rounded-full ${
+                group.isPublic
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {group.isPublic ? (
+                <>
+                  <GlobeAltIcon className="h-4 w-4 inline mr-1" />
+                  공개
+                </>
+              ) : (
+                <>
+                  <LockClosedIcon className="h-4 w-4 inline mr-1" />
+                  비공개
+                </>
+              )}
+            </span>
           </div>
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {group.name}
-              </h2>
-              <span
-                className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  group.isPublic
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
-              >
-                {group.isPublic ? (
-                  <>
-                    <GlobeAltIcon className="h-4 w-4 inline mr-1" />
-                    공개
-                  </>
-                ) : (
-                  <>
-                    <LockClosedIcon className="h-4 w-4 inline mr-1" />
-                    비공개
-                  </>
-                )}
-              </span>
-            </div>
-            <p className="text-gray-600 mb-4">
-              {group.description || "설명이 없습니다."}
-            </p>
-            <div className="flex items-center space-x-6 text-sm text-gray-500">
-              <span className="flex items-center">
-                <CalendarIcon className="h-4 w-4 mr-1" />
-                생성일: {new Date(group.createdAt).toLocaleDateString()}
-              </span>
-              <span className="flex items-center">
-                <UserIcon className="h-4 w-4 mr-1" />
-                멤버 {group.memberships ? group.memberships.length : 0}명
-              </span>
-            </div>
+          <p className="text-gray-600 mb-4">
+            {group.description || "설명이 없습니다."}
+          </p>
+          <div className="flex items-center space-x-6 text-sm text-gray-500">
+            <span className="flex items-center">
+              <CalendarIcon className="h-4 w-4 mr-1" />
+              생성일: {new Date(group.createdAt).toLocaleDateString()}
+            </span>
+            <span className="flex items-center">
+              <UserIcon className="h-4 w-4 mr-1" />
+              멤버 {group.memberships ? group.memberships.length : 0}명
+            </span>
           </div>
         </div>
       </div>
