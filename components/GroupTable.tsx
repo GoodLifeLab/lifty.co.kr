@@ -1,3 +1,4 @@
+import { GroupWithMembers } from "@/types/Group";
 import {
   UserGroupIcon,
   GlobeAltIcon,
@@ -7,27 +8,8 @@ import {
   CalendarIcon,
 } from "@heroicons/react/24/outline";
 
-interface Group {
-  id: number;
-  name: string;
-  description?: string;
-  isPublic: boolean;
-  image?: string;
-  createdAt: string;
-  memberships?: Array<{
-    id: number;
-    userId: string;
-    role: string;
-    user: {
-      id: string;
-      name?: string;
-      email: string;
-    };
-  }>;
-}
-
 interface GroupTableProps {
-  groups: Group[];
+  groups: GroupWithMembers[];
   loading: boolean;
   onGroupClick: (groupId: number) => void;
   onCreateNew?: () => void;
@@ -100,29 +82,8 @@ export default function GroupTable({
               onClick={() => onGroupClick(group.id)}
             >
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  {group.image ? (
-                    <img
-                      src={group.image}
-                      alt={group.name}
-                      className="w-10 h-10 rounded-lg object-cover mr-3"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
-                        target.nextElementSibling?.classList.remove("hidden");
-                      }}
-                    />
-                  ) : null}
-                  <div
-                    className={`w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3 ${group.image ? "hidden" : ""}`}
-                  >
-                    <UserGroupIcon className="h-5 w-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {group.name}
-                    </div>
-                  </div>
+                <div className="text-sm font-medium text-gray-900">
+                  {group.name}
                 </div>
               </td>
               <td className="px-6 py-4">
