@@ -45,7 +45,7 @@ export default function GroupSettingsModal({
     if (group) {
       setName(group.name || "");
       setDescription(group.description || "");
-      setImage(group.image || "");
+      // setImage(group.image || "");
       setUploadedImages(group.image ? [group.image] : []);
       setIsPublic(group.isPublic || false);
       setErrors({});
@@ -81,7 +81,7 @@ export default function GroupSettingsModal({
       await onSubmit({
         name: name.trim(),
         description: description.trim(),
-        image: image || undefined,
+        // image: image || undefined,
         isPublic,
       });
     } catch (error) {
@@ -111,7 +111,7 @@ export default function GroupSettingsModal({
       if (group) {
         setName(group.name || "");
         setDescription(group.description || "");
-        setImage(group.image || "");
+        // setImage(group.image || "");
         setUploadedImages(group.image ? [group.image] : []);
         setIsPublic(group.isPublic || false);
       }
@@ -216,7 +216,7 @@ export default function GroupSettingsModal({
           </div>
 
           {/* 그룹 이미지 업로드 */}
-          <div>
+          {/* <div>
             <label
               htmlFor="image"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -239,7 +239,7 @@ export default function GroupSettingsModal({
             <p className="mt-1 text-xs text-gray-500">
               현재 이미지가 설정되어 있으면 새 이미지로 교체됩니다.
             </p>
-          </div>
+          </div> */}
 
           {/* 공개/비공개 설정 */}
           <div>

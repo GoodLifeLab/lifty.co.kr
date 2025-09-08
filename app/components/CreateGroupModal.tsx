@@ -124,7 +124,7 @@ export default function CreateGroupModal({
     try {
       await onSubmit({
         ...formData,
-        image: formData.image || undefined,
+        // image: formData.image || undefined,
         memberIds: selectedUsers.map((user) => user.id),
       });
       // 성공 시 폼 초기화
@@ -140,7 +140,7 @@ export default function CreateGroupModal({
   const handleClose = () => {
     if (!loading) {
       setFormData({ name: "", description: "", isPublic: true, image: "" });
-      setUploadedImages([]);
+      // setUploadedImages([]);
       setSelectedUsers([]);
       setSearchTerm("");
       onClose();
@@ -210,7 +210,7 @@ export default function CreateGroupModal({
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               그룹 이미지 (선택 사항)
             </label>
@@ -227,7 +227,7 @@ export default function CreateGroupModal({
               folder="groups"
               maxFiles={1}
             />
-          </div>
+          </div> */}
 
           <div className="flex items-center">
             <input
