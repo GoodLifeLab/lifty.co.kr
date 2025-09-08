@@ -27,48 +27,6 @@ export async function GET(request: NextRequest) {
       today.getMonth(),
       today.getDate(),
     );
-    const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
-
-    // 오늘 활성 사용자 수 (DAU)
-    const dailyActiveUsers = await prisma.user.count({
-      where: {
-        lastLoginAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-        disabled: false,
-      },
-    });
-
-    // 오늘 신규 가입자 수
-    const newUsersToday = await prisma.user.count({
-      where: {
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-      },
-    });
-
-    // 이번 주 신규 가입자 수
-    const startOfWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const newUsersThisWeek = await prisma.user.count({
-      where: {
-        createdAt: {
-          gte: startOfWeek,
-        },
-      },
-    });
-
-    // 이번 달 신규 가입자 수
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const newUsersThisMonth = await prisma.user.count({
-      where: {
-        createdAt: {
-          gte: startOfMonth,
-        },
-      },
-    });
 
     // 총 사용자 수
     const totalUsers = await prisma.user.count({
@@ -83,6 +41,37 @@ export async function GET(request: NextRequest) {
     // 총 기관 수
     const totalOrganizations = await prisma.organization.count();
 
+    // 총 프로젝트 수 - super admin이면 전체, 아니면 자신이 속한 그룹의 프로젝트만
+    let totalProjects;
+    if (currentUser.role === "SUPER_ADMIN") {
+      totalProjects = await prisma.course.count();
+    } else {
+      // 현재 사용자가 속한 그룹들의 프로젝트 수
+      const userGroups = await prisma.groupMember.findMany({
+        where: {
+          userId: currentUser.id,
+        },
+        select: {
+          groupId: true,
+        },
+      });
+
+      const groupIds = userGroups.map((ug) => ug.groupId);
+
+      totalProjects = await prisma.course.count({
+        where: {
+          groups: {
+            some: {
+              groupId: {
+                in: groupIds,
+              },
+            },
+          },
+
+        },
+      });
+    }
+
     // 최근 7일간의 일별 데이터
     const dailyData = await Promise.all(
       Array.from({ length: 7 }, async (_, i) => {
@@ -96,24 +85,28 @@ export async function GET(request: NextRequest) {
           startOfDate.getTime() + 24 * 60 * 60 * 1000 - 1,
         );
 
-        // 일별 신규 사용자 수
-        const newUsers = await prisma.user.count({
-          where: {
-            createdAt: {
-              gte: startOfDate,
-              lte: endOfDate,
-            },
-          },
-        });
-
-        // 일별 활성 사용자 수 (DAU)
+        // 일별 활성 사용자 수 (DAU) - 로그인 또는 미션 참여 기준
         const activeUsers = await prisma.user.count({
           where: {
-            lastLoginAt: {
-              gte: startOfDate,
-              lte: endOfDate,
-            },
             disabled: false,
+            OR: [
+              {
+                lastLoginAt: {
+                  gte: startOfDate,
+                  lte: endOfDate,
+                },
+              },
+              {
+                missionProgress: {
+                  some: {
+                    createdAt: {
+                      gte: startOfDate,
+                      lte: endOfDate,
+                    },
+                  },
+                },
+              },
+            ],
           },
         });
 
@@ -129,7 +122,6 @@ export async function GET(request: NextRequest) {
 
         return {
           date: startOfDate.toISOString().split("T")[0],
-          newUsers,
           activeUsers,
           missionSubmissions,
         };
@@ -141,13 +133,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: {
-        dailyActiveUsers,
-        newUsersToday,
-        newUsersThisWeek,
-        newUsersThisMonth,
         totalUsers,
         totalGroups,
         totalOrganizations,
+        totalProjects,
         dailyData: sortedDailyData,
       },
     });
