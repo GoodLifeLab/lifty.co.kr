@@ -5,38 +5,12 @@ import { useRouter } from "next/navigation";
 import Pagination from "@/components/Pagination";
 import SearchInput from "@/components/SearchInput";
 import UserTable from "@/components/UserTable";
-
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  position?: string;
-  createdAt: string;
-  organizations: Array<{
-    organization: {
-      id: string;
-      name: string;
-      department: string;
-    };
-    role?: string;
-  }>;
-  groupMemberships: Array<{
-    group: {
-      id: number;
-      name: string;
-      description?: string;
-    };
-    role: string;
-  }>;
-  _count: {
-    groupMemberships: number;
-  };
-}
+import { UserWithOrganizations } from "@/types/User";
 
 export default function UsersPage() {
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState<string>("");
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserWithOrganizations[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

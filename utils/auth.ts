@@ -14,6 +14,7 @@ export async function createUser(
   email: string,
   phone: string,
   password: string,
+  name: string,
 ): Promise<User> {
   // 비밀번호 해시화
   const hashedPassword = await hashPassword(password);
@@ -28,7 +29,8 @@ export async function createUser(
       phone,
       password: hashedPassword,
       emailVerified: true,
-      name: randomName,
+      name: name || randomName,
+      nickName: randomName,
     },
   });
 
