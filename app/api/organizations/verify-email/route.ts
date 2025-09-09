@@ -142,6 +142,21 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    if (email) {
+      const verifiedOrganization = await prisma.userOrganization.findFirst({
+        where: {
+          organizationEmail: email,
+        },
+      });
+
+      if (verifiedOrganization) {
+        return NextResponse.json(
+          { message: "이미 해당 기관에 연동된 이메일이 있습니다." },
+          { status: 400 },
+        );
+      }
+    }
+
     // 이메일 도메인으로 기관 찾기
     const emailDomain = email.split("@")[1];
     const organization = await prisma.organization.findFirst({
@@ -160,6 +175,7 @@ export async function PUT(request: NextRequest) {
       data: {
         userId,
         organizationId: organization.id,
+        organizationEmail: email,
         role: "MEMBER",
       },
       include: {

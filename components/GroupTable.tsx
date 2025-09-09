@@ -1,3 +1,4 @@
+import { GroupWithMembers } from "@/types/Group";
 import {
   UserGroupIcon,
   GlobeAltIcon,
@@ -7,27 +8,8 @@ import {
   CalendarIcon,
 } from "@heroicons/react/24/outline";
 
-interface Group {
-  id: number;
-  name: string;
-  description?: string;
-  isPublic: boolean;
-  image?: string;
-  createdAt: string;
-  memberships?: Array<{
-    id: number;
-    userId: string;
-    role: string;
-    user: {
-      id: string;
-      name?: string;
-      email: string;
-    };
-  }>;
-}
-
 interface GroupTableProps {
-  groups: Group[];
+  groups: GroupWithMembers[];
   loading: boolean;
   onGroupClick: (groupId: number) => void;
   onCreateNew?: () => void;
@@ -85,6 +67,12 @@ export default function GroupTable({
               소속 인원 수
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              시작일
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              종료일
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               생성일
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -100,29 +88,8 @@ export default function GroupTable({
               onClick={() => onGroupClick(group.id)}
             >
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  {group.image ? (
-                    <img
-                      src={group.image}
-                      alt={group.name}
-                      className="w-10 h-10 rounded-lg object-cover mr-3"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
-                        target.nextElementSibling?.classList.remove("hidden");
-                      }}
-                    />
-                  ) : null}
-                  <div
-                    className={`w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3 ${group.image ? "hidden" : ""}`}
-                  >
-                    <UserGroupIcon className="h-5 w-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {group.name}
-                    </div>
-                  </div>
+                <div className="text-sm font-medium text-gray-900">
+                  {group.name}
                 </div>
               </td>
               <td className="px-6 py-4">
@@ -137,6 +104,22 @@ export default function GroupTable({
                     ? group.memberships.length.toLocaleString()
                     : 0}
                   명
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center text-sm text-gray-900">
+                  <CalendarIcon className="h-4 w-4 mr-1" />
+                  {(group as any).startDate
+                    ? new Date((group as any).startDate).toLocaleDateString()
+                    : "미설정"}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center text-sm text-gray-900">
+                  <CalendarIcon className="h-4 w-4 mr-1" />
+                  {(group as any).endDate
+                    ? new Date((group as any).endDate).toLocaleDateString()
+                    : "미설정"}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">

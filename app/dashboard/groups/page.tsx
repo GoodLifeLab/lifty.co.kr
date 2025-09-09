@@ -15,25 +15,7 @@ import GroupTable from "@/components/GroupTable";
 import Pagination from "@/components/Pagination";
 import { usePagination } from "@/hooks/usePagination";
 import { GroupService } from "@/services/groupService";
-
-interface Group {
-  id: number;
-  name: string;
-  description?: string;
-  isPublic: boolean;
-  image?: string;
-  createdAt: string;
-  memberships?: Array<{
-    id: number;
-    userId: string;
-    role: string;
-    user: {
-      id: string;
-      name?: string;
-      email: string;
-    };
-  }>;
-}
+import { GroupWithMembers } from "@/types/Group";
 
 export default function GroupsPage() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -55,7 +37,7 @@ export default function GroupsPage() {
     executeSearch,
     goToPage,
     refresh,
-  } = usePagination<Group>("/api/groups", {
+  } = usePagination<GroupWithMembers>("/api/groups", {
     limit: 10,
   });
 

@@ -14,6 +14,8 @@ interface GroupSettingsModalProps {
     description: string;
     isPublic: boolean;
     image?: string;
+    startDate: string;
+    endDate: string;
   }) => Promise<void>;
   onDelete?: () => Promise<void>;
   loading?: boolean;
@@ -34,6 +36,8 @@ export default function GroupSettingsModal({
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -45,9 +49,19 @@ export default function GroupSettingsModal({
     if (group) {
       setName(group.name || "");
       setDescription(group.description || "");
-      setImage(group.image || "");
+      // setImage(group.image || "");
       setUploadedImages(group.image ? [group.image] : []);
       setIsPublic(group.isPublic || false);
+      setStartDate(
+        (group as any).startDate
+          ? new Date((group as any).startDate).toISOString().split("T")[0]
+          : "",
+      );
+      setEndDate(
+        (group as any).endDate
+          ? new Date((group as any).endDate).toISOString().split("T")[0]
+          : "",
+      );
       setErrors({});
       setDeleteConfirmText("");
     }
@@ -81,8 +95,10 @@ export default function GroupSettingsModal({
       await onSubmit({
         name: name.trim(),
         description: description.trim(),
-        image: image || undefined,
+        // image: image || undefined,
         isPublic,
+        startDate,
+        endDate,
       });
     } catch (error) {
       console.error("그룹 설정 업데이트 오류:", error);
@@ -111,9 +127,19 @@ export default function GroupSettingsModal({
       if (group) {
         setName(group.name || "");
         setDescription(group.description || "");
-        setImage(group.image || "");
+        // setImage(group.image || "");
         setUploadedImages(group.image ? [group.image] : []);
         setIsPublic(group.isPublic || false);
+        setStartDate(
+          (group as any).startDate
+            ? new Date((group as any).startDate).toISOString().split("T")[0]
+            : "",
+        );
+        setEndDate(
+          (group as any).endDate
+            ? new Date((group as any).endDate).toISOString().split("T")[0]
+            : "",
+        );
       }
       setErrors({});
       setDeleteConfirmText("");
@@ -215,8 +241,46 @@ export default function GroupSettingsModal({
             </p>
           </div>
 
+          {/* 시작일/종료일 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="startDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                시작일 *
+              </label>
+              <input
+                type="date"
+                id="startDate"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={loading || deleting}
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="endDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                종료일 *
+              </label>
+              <input
+                type="date"
+                id="endDate"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={loading || deleting}
+                required
+              />
+            </div>
+          </div>
+
           {/* 그룹 이미지 업로드 */}
-          <div>
+          {/* <div>
             <label
               htmlFor="image"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -239,7 +303,7 @@ export default function GroupSettingsModal({
             <p className="mt-1 text-xs text-gray-500">
               현재 이미지가 설정되어 있으면 새 이미지로 교체됩니다.
             </p>
-          </div>
+          </div> */}
 
           {/* 공개/비공개 설정 */}
           <div>

@@ -34,6 +34,8 @@ interface CreateGroupModalProps {
     description: string;
     isPublic: boolean;
     image?: string;
+    startDate: string;
+    endDate: string;
     memberIds: string[];
   }) => Promise<void>;
   loading?: boolean;
@@ -51,6 +53,8 @@ export default function CreateGroupModal({
     description: "",
     isPublic: true,
     image: "",
+    startDate: "",
+    endDate: "",
   });
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
@@ -124,11 +128,18 @@ export default function CreateGroupModal({
     try {
       await onSubmit({
         ...formData,
-        image: formData.image || undefined,
+        // image: formData.image || undefined,
         memberIds: selectedUsers.map((user) => user.id),
       });
       // 성공 시 폼 초기화
-      setFormData({ name: "", description: "", isPublic: true, image: "" });
+      setFormData({
+        name: "",
+        description: "",
+        isPublic: true,
+        image: "",
+        startDate: "",
+        endDate: "",
+      });
       setSelectedUsers([]);
       setSearchTerm("");
     } catch (error) {
@@ -139,8 +150,15 @@ export default function CreateGroupModal({
 
   const handleClose = () => {
     if (!loading) {
-      setFormData({ name: "", description: "", isPublic: true, image: "" });
-      setUploadedImages([]);
+      setFormData({
+        name: "",
+        description: "",
+        isPublic: true,
+        image: "",
+        startDate: "",
+        endDate: "",
+      });
+      // setUploadedImages([]);
       setSelectedUsers([]);
       setSearchTerm("");
       onClose();
@@ -210,7 +228,41 @@ export default function CreateGroupModal({
             />
           </div>
 
-          <div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                시작일 *
+              </label>
+              <input
+                type="date"
+                value={formData.startDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, startDate: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={loading}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                종료일 *
+              </label>
+              <input
+                type="date"
+                value={formData.endDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, endDate: e.target.value })
+                }
+                min={formData.startDate}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={loading}
+                required
+              />
+            </div>
+          </div>
+
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               그룹 이미지 (선택 사항)
             </label>
@@ -227,7 +279,7 @@ export default function CreateGroupModal({
               folder="groups"
               maxFiles={1}
             />
-          </div>
+          </div> */}
 
           <div className="flex items-center">
             <input

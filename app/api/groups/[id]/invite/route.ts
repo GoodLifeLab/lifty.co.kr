@@ -79,48 +79,24 @@ export async function POST(
       );
     }
 
-    // 이미 그룹 멤버인지 확인
-    const existingMembers = await prisma.group.findUnique({
-      where: { id: groupId },
-      include: {
-        memberships: {
-          where: {
-            userId: { in: memberIds },
-          },
-          select: { id: true, userId: true },
+    for (const user of usersToInvite) {
+      await prisma.groupMember.upsert({
+        where: { userId_groupId: { userId: user.id, groupId } },
+        update: { endDate: endDate ? new Date(endDate) : null },
+        create: {
+          userId: user.id,
+          groupId,
+          startDate: new Date(),
+          role: GroupMemberRole.MEMBER,
+          endDate: endDate ? new Date(endDate) : null,
         },
-      },
-    });
-
-    const alreadyMembers = existingMembers?.memberships || [];
-    const newMembers = usersToInvite.filter(
-      (user) => !alreadyMembers.some((member) => member.userId === user.id),
-    );
-
-    if (newMembers.length === 0) {
-      return NextResponse.json(
-        { error: "선택한 사용자들이 이미 그룹 멤버입니다." },
-        { status: 400 },
-      );
+      });
     }
-
-    // 새 멤버들을 그룹에 추가
-    const memberData = newMembers.map((user) => ({
-      userId: user.id,
-      groupId,
-      startDate: new Date(),
-      role: GroupMemberRole.MEMBER,
-      endDate: endDate ? new Date(endDate) : null,
-    }));
-
-    await prisma.groupMember.createMany({
-      data: memberData,
-    });
 
     return NextResponse.json(
       {
-        message: `${newMembers.length}명의 멤버가 성공적으로 초대되었습니다.`,
-        invitedMembers: newMembers,
+        message: `${usersToInvite.length}명의 멤버가 성공적으로 초대되었습니다.`,
+        invitedMembers: usersToInvite,
       },
       { status: 200 },
     );
