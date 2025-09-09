@@ -81,6 +81,8 @@ model Group {
   description String?
   image       String?
   createdAt   DateTime @default(now()) @map("created_at")
+  startDate   DateTime @default(now()) @map("start_date")
+  endDate     DateTime @default(now()) @map("end_date")
   isPublic    Boolean
 
   // 그룹 멤버십 관계
