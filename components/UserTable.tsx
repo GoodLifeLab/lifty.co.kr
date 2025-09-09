@@ -1,34 +1,8 @@
+import { UserWithOrganizations } from "@/types/User";
 import { UserIcon } from "@heroicons/react/24/outline";
 
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  position?: string;
-  createdAt: string;
-  organizations: Array<{
-    organization: {
-      id: string;
-      name: string;
-      department: string;
-    };
-    role?: string;
-  }>;
-  groupMemberships: Array<{
-    group: {
-      id: number;
-      name: string;
-      description?: string;
-    };
-    role: string;
-  }>;
-  _count: {
-    groupMemberships: number;
-  };
-}
-
 interface UserTableProps {
-  users: User[];
+  users: UserWithOrganizations[];
   loading: boolean;
   onUserClick: (userId: string) => void;
 }
@@ -68,6 +42,9 @@ export default function UserTable({
               사용자
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              닉네임
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               이메일
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -98,17 +75,15 @@ export default function UserTable({
                       ? user.name.charAt(0).toUpperCase()
                       : user.email.charAt(0).toUpperCase()}
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-4 flex items-center gap-2">
                     <div className="text-sm font-medium text-gray-900">
                       {user.name || "이름 없음"}
                     </div>
-                    {user.position && (
-                      <div className="text-xs text-gray-400">
-                        {user.position}
-                      </div>
-                    )}
                   </div>
                 </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {user.nickName || "닉네임 없음"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {user.email}
