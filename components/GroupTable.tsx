@@ -67,6 +67,12 @@ export default function GroupTable({
               소속 인원 수
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              시작일
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              종료일
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               생성일
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -103,16 +109,31 @@ export default function GroupTable({
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center text-sm text-gray-900">
                   <CalendarIcon className="h-4 w-4 mr-1" />
+                  {(group as any).startDate
+                    ? new Date((group as any).startDate).toLocaleDateString()
+                    : "미설정"}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center text-sm text-gray-900">
+                  <CalendarIcon className="h-4 w-4 mr-1" />
+                  {(group as any).endDate
+                    ? new Date((group as any).endDate).toLocaleDateString()
+                    : "미설정"}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center text-sm text-gray-900">
+                  <CalendarIcon className="h-4 w-4 mr-1" />
                   {new Date(group.createdAt).toLocaleDateString()}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    group.isPublic
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${group.isPublic
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-800"
-                  }`}
+                    }`}
                 >
                   {group.isPublic ? (
                     <GlobeAltIcon className="h-3 w-3 mr-1" />

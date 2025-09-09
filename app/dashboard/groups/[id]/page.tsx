@@ -359,6 +359,20 @@ export default function GroupDetailPage() {
               생성일: {new Date(group.createdAt).toLocaleDateString()}
             </span>
             <span className="flex items-center">
+              <CalendarIcon className="h-4 w-4 mr-1" />
+              시작일:{" "}
+              {(group as any).startDate
+                ? new Date((group as any).startDate).toLocaleDateString()
+                : "미설정"}
+            </span>
+            <span className="flex items-center">
+              <CalendarIcon className="h-4 w-4 mr-1" />
+              종료일:{" "}
+              {(group as any).endDate
+                ? new Date((group as any).endDate).toLocaleDateString()
+                : "미설정"}
+            </span>
+            <span className="flex items-center">
               <UserIcon className="h-4 w-4 mr-1" />
               멤버 {group.memberships ? group.memberships.length : 0}명
             </span>
