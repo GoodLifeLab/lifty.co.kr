@@ -10,6 +10,7 @@ export default function SignupPage() {
 
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -34,6 +35,10 @@ export default function SignupPage() {
     }
 
     setPhoneNumber(value);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
   };
 
   const handleSendEmailVerification = async () => {
@@ -133,7 +138,7 @@ export default function SignupPage() {
     setIsLoading(true);
     setError("");
 
-    const result = await signup(email, phoneNumber, password);
+    const result = await signup(email, phoneNumber, password, name);
 
     if (result.success) {
       router.push("/login?signup=success");
@@ -247,6 +252,24 @@ export default function SignupPage() {
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               placeholder="1012345678"
+            />
+          </div>
+
+          {/* 이름 섹션 */}
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              이름
+            </label>
+            <input
+              id="name"
+              name="name"
+              value={name}
+              onChange={handleNameChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="성함을 입력해주세요."
             />
           </div>
 

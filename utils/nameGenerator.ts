@@ -114,9 +114,9 @@ export function generateRandomName(): string {
   const firstWord = FIRST_WORDS[Math.floor(Math.random() * FIRST_WORDS.length)];
   const secondWord =
     SECOND_WORDS[Math.floor(Math.random() * SECOND_WORDS.length)];
-  const number = Math.floor(Math.random() * 900000) + 100000; // 100000-999999 사이의 6자리 숫자
+  const number = Math.floor(Math.random() * 90) + 10; // 10-99 사이의 6자리 숫자
 
-  return `${firstWord}_${secondWord}_${number}`;
+  return `${firstWord} ${secondWord} ${number}`;
 }
 
 /**
