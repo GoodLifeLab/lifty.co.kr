@@ -130,10 +130,11 @@ export default function GroupTable({
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${group.isPublic
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    group.isPublic
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-800"
-                    }`}
+                  }`}
                 >
                   {group.isPublic ? (
                     <GlobeAltIcon className="h-3 w-3 mr-1" />
