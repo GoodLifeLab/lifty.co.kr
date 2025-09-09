@@ -325,7 +325,10 @@ export default function InviteMembersModal({
                 </h4>
                 <ul className="text-sm text-blue-700 space-y-1">
                   <li>• 첫 번째 행은 헤더로 사용됩니다</li>
-                  <li>• 'email' 또는 '이메일' 컬럼이 포함되어야 합니다</li>
+                  <li>
+                    • &apos;email&apos; 또는 &apos;이메일&apos; 컬럼이
+                    포함되어야 합니다
+                  </li>
                   <li>
                     • 이메일 주소는 users.email 또는
                     userOrganization.organizationEmail과 매칭됩니다
