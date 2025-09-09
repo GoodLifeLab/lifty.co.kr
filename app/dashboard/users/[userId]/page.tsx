@@ -9,43 +9,9 @@ import {
 } from "@heroicons/react/24/outline";
 import GroupBadge from "@/components/GroupBadge";
 import Pagination from "@/components/Pagination";
+import { UserWithOrganizations } from "@/types/User";
 
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  position?: string;
-  phone?: string;
-  createdAt: string;
-  organizations: Array<{
-    organization: {
-      id: string;
-      name: string;
-      department: string;
-    };
-    role?: string;
-  }>;
-  groupMemberships: Array<{
-    group: {
-      id: number;
-      name: string;
-      description?: string;
-      courses: Array<{
-        course: {
-          id: string;
-          name: string;
-          missions: Array<{
-            id: string;
-            title: string;
-            description?: string;
-            startDate: string;
-            endDate: string;
-          }>;
-        };
-      }>;
-    };
-    role: string;
-  }>;
+interface User extends UserWithOrganizations {
   missionProgress: Array<{
     id: string;
     mission: {
@@ -561,13 +527,15 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
             {/* 기본 정보 */}
             <div className="flex-1">
-              <h2 className="text-lg font-medium text-gray-900 mb-2">
-                {user.name || "이름 없음"}
-              </h2>
-              <p className="text-sm text-gray-500 mb-1">{user.email}</p>
-              {user.position && (
-                <p className="text-sm text-gray-400 mb-3">{user.position}</p>
-              )}
+              <div className="flex items-center mb-2 gap-3">
+                <h2 className="text-lg font-medium text-gray-900">
+                  {user.name || "이름 없음"}
+                </h2>
+                {user.nickName && (
+                  <p className="text-sm text-gray-500">{user.nickName}</p>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mb-3">{user.email}</p>
 
               {/* 소속 기관 뱃지 */}
               <div className="mb-3">
