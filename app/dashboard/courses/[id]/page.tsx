@@ -225,23 +225,6 @@ export default function CourseDetailPage({
     });
   };
 
-  const getCourseStatus = (
-    startDate: string,
-    endDate: string,
-  ): "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    if (now < start) {
-      return "NOT_STARTED";
-    } else if (now >= start && now <= end) {
-      return "IN_PROGRESS";
-    } else {
-      return "COMPLETED";
-    }
-  };
-
   const toggleGroupSelection = (group: Group) => {
     const isSelected = selectedGroups.some((g) => g.id === group.id);
     if (isSelected) {

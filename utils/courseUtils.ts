@@ -1,14 +1,12 @@
 export function getCourseStatus(
-  startDate: string,
-  endDate: string,
+  startDate: Date,
+  endDate: Date,
 ): "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" {
   const now = new Date();
-  const start = new Date(startDate);
-  const end = new Date(endDate);
 
-  if (now < start) {
+  if (now < startDate) {
     return "NOT_STARTED";
-  } else if (now >= start && now <= end) {
+  } else if (now >= startDate && now <= endDate) {
     return "IN_PROGRESS";
   } else {
     return "COMPLETED";

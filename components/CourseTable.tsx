@@ -8,21 +8,10 @@ import {
 } from "@heroicons/react/24/outline";
 import StatusBadge from "./StatusBadge";
 import { getCourseStatus } from "@/utils/courseUtils";
-
-interface Course {
-  id: string;
-  name: string;
-  createdAt: string;
-  startDate: string;
-  endDate: string;
-  groups: Array<{
-    id: number;
-    name: string;
-  }>;
-}
+import { CourseWithGroups } from "@/types/Group";
 
 interface CourseTableProps {
-  courses: Course[];
+  courses: CourseWithGroups[];
   loading: boolean;
   onCreateNew?: () => void;
   showCreateButton?: boolean;
