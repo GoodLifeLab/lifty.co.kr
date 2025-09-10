@@ -28,11 +28,19 @@ export async function GET(request: NextRequest) {
         groups: {
           include: {
             group: {
-              select: {
-                id: true,
-                name: true,
+              include: {
+                _count: {
+                  select: {
+                    memberships: true,
+                  },
+                },
               },
             },
+          },
+        },
+        missions: {
+          include: {
+            userProgress: true,
           },
         },
       },
@@ -46,7 +54,12 @@ export async function GET(request: NextRequest) {
     // 그룹 정보를 평면화
     const formattedCourses = courses.map((course) => ({
       ...course,
-      groups: course.groups.map((gc) => gc.group),
+      groups: course.groups.map((gc) => {
+        return {
+          ...gc.group,
+          totalMembers: gc.group._count.memberships,
+        };
+      }),
     }));
 
     // 페이지네이션 정보

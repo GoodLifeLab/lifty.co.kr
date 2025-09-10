@@ -10,7 +10,7 @@ import StatsCard from "@/components/StatsCard";
 import CourseModal from "@/components/CourseModal";
 import CourseTable from "@/components/CourseTable";
 import { CourseService } from "@/services/courseService";
-import { CourseWithGroups } from "@/types/Group";
+import { CourseWithGroupsAndMissions } from "@/types/Group";
 
 export default function CoursesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -28,7 +28,7 @@ export default function CoursesPage() {
     executeSearch,
     goToPage,
     refresh,
-  } = usePagination<CourseWithGroups>("/api/courses", { limit: 10 });
+  } = usePagination<CourseWithGroupsAndMissions>("/api/courses", { limit: 10 });
 
   // 전체 통계를 위한 상태
   const [totalStats, setTotalStats] = useState({

@@ -8,10 +8,10 @@ import {
 } from "@heroicons/react/24/outline";
 import StatusBadge from "./StatusBadge";
 import { getCourseStatus } from "@/utils/courseUtils";
-import { CourseWithGroups } from "@/types/Group";
+import { CourseWithGroupsAndMissions } from "@/types/Group";
 
 interface CourseTableProps {
-  courses: CourseWithGroups[];
+  courses: CourseWithGroupsAndMissions[];
   loading: boolean;
   onCreateNew?: () => void;
   showCreateButton?: boolean;
@@ -69,6 +69,9 @@ export default function CourseTable({
             참여그룹
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            미션 수행률
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             상태
           </th>
           <th className="relative px-6 py-3">
@@ -77,61 +80,92 @@ export default function CourseTable({
         </tr>
       </thead>
       <tbody className="bg-white divide-y divide-gray-200">
-        {courses.map((course) => (
-          <tr
-            key={course.id}
-            className="hover:bg-gray-50 cursor-pointer"
-            onClick={() =>
-              (window.location.href = `/dashboard/courses/${course.id}`)
-            }
-          >
-            <td className="px-6 py-4 whitespace-nowrap">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
-                  <AcademicCapIcon className="h-5 w-5 text-indigo-600" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {course.name}
+        {courses.map((course) => {
+          const totalParticipants = course.groups.reduce((acc, group) => {
+            return acc + group.totalMembers;
+          }, 0);
+          const missionProgress = course.missions.reduce((acc, mission) => {
+            const completedCount = mission.userProgress.length;
+            return acc + (completedCount / totalParticipants) * 100;
+          }, 0);
+          const missionProgressPercentage =
+            missionProgress / course.missions.length;
+          return (
+            <tr
+              key={course.id}
+              className="hover:bg-gray-50 cursor-pointer"
+              onClick={() =>
+                (window.location.href = `/dashboard/courses/${course.id}`)
+              }
+            >
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                    <AcademicCapIcon className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {course.name}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <div className="flex items-center text-sm text-gray-900">
-                <CalendarIcon className="h-4 w-4 mr-1" />
-                {new Date(course.startDate).toLocaleDateString()}
-              </div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <div className="flex items-center text-sm text-gray-900">
-                <CalendarIcon className="h-4 w-4 mr-1" />
-                {new Date(course.endDate).toLocaleDateString()}
-              </div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <div className="flex flex-wrap gap-1">
-                {course.groups.length > 0 ? (
-                  course.groups.map((group) => (
-                    <span
-                      key={group.id}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
-                    >
-                      {group.name}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center text-sm text-gray-900">
+                  <CalendarIcon className="h-4 w-4 mr-1" />
+                  {new Date(course.startDate).toLocaleDateString()}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center text-sm text-gray-900">
+                  <CalendarIcon className="h-4 w-4 mr-1" />
+                  {new Date(course.endDate).toLocaleDateString()}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex flex-wrap gap-1">
+                  {course.groups.length > 0 ? (
+                    course.groups.map((group) => (
+                      <span
+                        key={group.id}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                      >
+                        {group.name}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-gray-500">
+                      참여 그룹 없음
                     </span>
-                  ))
-                ) : (
-                  <span className="text-sm text-gray-500">참여 그룹 없음</span>
-                )}
-              </div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <StatusBadge
-                status={getCourseStatus(course.startDate, course.endDate)}
-              />
-            </td>
-          </tr>
-        ))}
+                  )}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                  <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                    <div
+                      className="bg-indigo-600 h-2 rounded-full"
+                      style={{
+                        width: `${totalParticipants > 0 ? missionProgressPercentage * 100 : 0}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {totalParticipants > 0
+                      ? Math.round(missionProgressPercentage * 100)
+                      : 0}
+                    %
+                  </span>
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <StatusBadge
+                  status={getCourseStatus(course.startDate, course.endDate)}
+                />
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
