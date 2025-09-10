@@ -218,7 +218,20 @@ export default function MissionModal({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  수행일자 *
+                  공개일자
+                </label>
+                <input
+                  type="date"
+                  name="createdAt"
+                  value={new Date().toISOString().split("T")[0]}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md disabled:bg-gray-50 disabled:text-gray-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  종료일자 *
                 </label>
                 <input
                   type="date"
