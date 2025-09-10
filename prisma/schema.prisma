@@ -190,6 +190,7 @@ model UserOrganization {
 model Mission {
   id          String   @id @default(cuid())
   title       String // 제목
+  openDate    DateTime @default(now()) @map("open_date") // 공개 일자
   dueDate     DateTime @map("due_date") // 수행일자
   image       String? // 이미지 URL
   shortDesc   String   @map("short_desc") // 간략 설명
