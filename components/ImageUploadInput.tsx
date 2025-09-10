@@ -173,7 +173,7 @@ export default function ImageUploadInput({
       {/* 드래그 앤 드롭 영역 - maxFiles보다 적을 때만 표시 */}
       {shouldShowInput && (!hideAfterUpload || !isUploaded) && (
         <div
-          className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
             isDragOver
               ? "border-indigo-500 bg-indigo-50"
               : "border-gray-300 hover:border-gray-400"
@@ -193,7 +193,7 @@ export default function ImageUploadInput({
             disabled={disabled}
           />
 
-          <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <PhotoIcon className="mx-auto size-12 text-gray-400" />
           <p className="mt-2 text-sm text-gray-600">{placeholder}</p>
           <p className="mt-1 text-xs text-gray-500">
             최대 {maxSize}MB, 지원 형식: {allowedTypes.join(", ")}

@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       title,
+      openDate,
       dueDate,
       image,
       shortDesc,
@@ -61,7 +62,14 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // 필수 필드 검증
-    if (!title || !dueDate || !shortDesc || !detailDesc || !courseId) {
+    if (
+      !title ||
+      !openDate ||
+      !dueDate ||
+      !shortDesc ||
+      !detailDesc ||
+      !courseId
+    ) {
       return NextResponse.json(
         { error: "필수 필드가 누락되었습니다." },
         { status: 400 },
@@ -84,6 +92,7 @@ export async function POST(request: NextRequest) {
     const mission = await prisma.mission.create({
       data: {
         title,
+        openDate: new Date(openDate),
         dueDate: new Date(dueDate),
         image,
         shortDesc,
