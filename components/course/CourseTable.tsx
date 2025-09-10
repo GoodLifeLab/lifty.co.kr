@@ -6,7 +6,7 @@ import {
   EyeIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import StatusBadge from "./StatusBadge";
+import StatusBadge from "../StatusBadge";
 import { getCourseStatus } from "@/utils/courseUtils";
 import { CourseWithGroupsAndMissions } from "@/types/Group";
 

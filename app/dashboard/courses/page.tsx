@@ -7,8 +7,8 @@ import Pagination from "@/components/Pagination";
 import { calculateCourseStats } from "@/utils/courseUtils";
 import SearchInput from "@/components/SearchInput";
 import StatsCard from "@/components/StatsCard";
-import CourseModal from "@/components/CourseModal";
-import CourseTable from "@/components/CourseTable";
+import CourseModal from "@/components/course/CourseModal";
+import CourseTable from "@/components/course/CourseTable";
 import { CourseService } from "@/services/courseService";
 import { CourseWithGroupsAndMissions } from "@/types/Group";
 
