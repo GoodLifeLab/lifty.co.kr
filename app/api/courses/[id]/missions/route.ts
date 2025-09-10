@@ -22,9 +22,6 @@ export async function GET(
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
-    const status = searchParams.get("status"); // "completed" | "incomplete"
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
 
     const skip = (page - 1) * limit;
 
@@ -54,29 +51,13 @@ export async function GET(
             mode: "insensitive",
           },
         },
-        {
-          shortDesc: {
-            contains: search,
-            mode: "insensitive",
-          },
-        },
+        // {
+        //   shortDesc: {
+        //     contains: search,
+        //     mode: "insensitive",
+        //   },
+        // },
       ];
-    }
-
-    // 날짜 필터
-    if (startDate || endDate) {
-      if (startDate) {
-        whereConditions.createdAt = {
-          ...whereConditions.createdAt,
-          gte: new Date(startDate),
-        };
-      }
-      if (endDate) {
-        whereConditions.dueDate = {
-          ...whereConditions.dueDate,
-          lte: new Date(endDate + "T23:59:59.999Z"),
-        };
-      }
     }
 
     const missions = await prisma.mission.findMany({
@@ -114,44 +95,17 @@ export async function GET(
       const totalParticipants = mission.userProgress.length;
 
       return {
-        id: mission.id,
-        title: mission.title,
-        shortDesc: mission.shortDesc,
-        detailDesc: mission.detailDesc,
-        dueDate: mission.dueDate,
-        isPublic: mission.isPublic,
-        subMissions: mission.subMissions,
+        ...mission,
         completedCount,
         totalParticipants,
-        participants: mission.userProgress.map((progress) => ({
-          id: progress.user.id,
-          name: progress.user.name,
-          email: progress.user.email,
-          isCompleted: progress.isChecked,
-          completedAt: progress.checkedAt,
-        })),
       };
     });
-
-    // 상태 필터 (클라이언트 측에서 처리)
-    let filteredMissions = missionData;
-    if (status) {
-      if (status === "completed") {
-        filteredMissions = filteredMissions.filter(
-          (mission) => mission.completedCount > 0,
-        );
-      } else if (status === "incomplete") {
-        filteredMissions = filteredMissions.filter(
-          (mission) => mission.completedCount === 0,
-        );
-      }
-    }
 
     const totalPages = Math.ceil(totalCount / limit);
     const hasMore = page * limit < totalCount;
 
     return NextResponse.json({
-      missions: filteredMissions,
+      data: missionData,
       pagination: {
         page,
         limit,

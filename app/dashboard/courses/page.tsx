@@ -7,21 +7,10 @@ import Pagination from "@/components/Pagination";
 import { calculateCourseStats } from "@/utils/courseUtils";
 import SearchInput from "@/components/SearchInput";
 import StatsCard from "@/components/StatsCard";
-import CourseModal from "@/components/CourseModal";
-import CourseTable from "@/components/CourseTable";
+import CourseModal from "@/components/course/CourseModal";
+import CourseTable from "@/components/course/CourseTable";
 import { CourseService } from "@/services/courseService";
-
-interface Course {
-  id: string;
-  name: string;
-  createdAt: string;
-  startDate: string;
-  endDate: string;
-  groups: Array<{
-    id: number;
-    name: string;
-  }>;
-}
+import { CourseWithGroupsAndMissions } from "@/types/Group";
 
 export default function CoursesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -39,7 +28,7 @@ export default function CoursesPage() {
     executeSearch,
     goToPage,
     refresh,
-  } = usePagination<Course>("/api/courses", { limit: 10 });
+  } = usePagination<CourseWithGroupsAndMissions>("/api/courses", { limit: 10 });
 
   // 전체 통계를 위한 상태
   const [totalStats, setTotalStats] = useState({

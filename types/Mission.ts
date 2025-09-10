@@ -73,3 +73,8 @@ export type UserMissionProgress = Prisma.UserMissionProgressGetPayload<{
     };
   };
 }>;
+
+export interface MissionWithUserProgressCount extends Mission {
+  totalParticipants: number;
+  completedCount: number;
+}

@@ -1,4 +1,9 @@
-import { GroupMember } from "@prisma/client";
+import {
+  Course,
+  GroupMember,
+  Mission,
+  UserMissionProgress,
+} from "@prisma/client";
 
 import { Group } from "@prisma/client";
 
@@ -14,6 +19,19 @@ type UserWithOrganizations = User & {
     role?: string;
   }>;
 };
+
+export interface CourseWithGroups extends Course {
+  groups: Group[];
+}
+
+export interface CourseWithGroupsAndMissions extends Course {
+  groups: (Group & {
+    totalMembers: number;
+  })[];
+  missions: (Mission & {
+    userProgress: UserMissionProgress[];
+  })[];
+}
 
 export type GroupWithMembers = Group & {
   memberships: (GroupMember & {
