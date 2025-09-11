@@ -27,6 +27,28 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [allCourses, setAllCourses] = useState<
+    Array<{
+      id: string;
+      name: string;
+      _count: { missions: number; missionsInProgress: number };
+    }>
+  >([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch("/api/courses");
+        const data = await response.json();
+        setAllCourses(data.allCourses || []);
+      } catch (error) {
+        console.error("과정 목록을 불러오는 중 오류:", error);
+        setAllCourses([]);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   useEffect(() => {
     fetchMission();
@@ -290,6 +312,7 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
         onClose={() => setIsModalOpen(false)}
         onSave={handleMissionSave}
         mission={mission}
+        courses={allCourses}
       />
     </div>
   );

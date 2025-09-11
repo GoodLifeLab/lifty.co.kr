@@ -195,6 +195,7 @@ export default function MissionsPage() {
         onClose={handleModalClose}
         onSave={handleMissionSave}
         mission={selectedMission}
+        courses={allCourses}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import MissionModal from "../MissionModal";
 import Pagination from "../Pagination";
@@ -36,6 +36,28 @@ export default function MissionTable({
   // 미션 모달 관련 상태
   const [showMissionModal, setShowMissionModal] = useState(false);
   const [editingMission, setEditingMission] = useState<any>(null);
+  const [allCourses, setAllCourses] = useState<
+    Array<{
+      id: string;
+      name: string;
+      _count: { missions: number; missionsInProgress: number };
+    }>
+  >([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch("/api/courses");
+        const data = await response.json();
+        setAllCourses(data.allCourses || []);
+      } catch (error) {
+        console.error("과정 목록을 불러오는 중 오류:", error);
+        setAllCourses([]);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   // 미션 저장
   const handleMissionSave = async (missionData: any) => {
@@ -238,8 +260,9 @@ export default function MissionTable({
               currentPage={currentPage}
               totalPages={totalPages}
               totalItems={totalItems}
-              hasMore={false}
+              hasMore={hasMore}
               onPageChange={goToPage}
+              itemsPerPage={10}
             />
           </div>
         )}
@@ -248,6 +271,7 @@ export default function MissionTable({
       {/* 미션 모달 */}
       <MissionModal
         isOpen={showMissionModal}
+        courses={allCourses}
         onClose={() => {
           setShowMissionModal(false);
           setEditingMission(null);
