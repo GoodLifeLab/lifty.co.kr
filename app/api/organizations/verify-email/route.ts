@@ -91,7 +91,6 @@ export async function POST(request: NextRequest) {
       message: "인증 코드가 이메일로 전송되었습니다.",
       organization: {
         name: organization.name,
-        department: organization.department,
       },
     });
   } catch (error) {

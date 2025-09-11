@@ -148,7 +148,10 @@ export async function GET(
                   select: {
                     id: true,
                     name: true,
-                    department: true,
+                    contactEmail: true,
+                    contactName: true,
+                    contactPhone: true,
+                    emailDomain: true,
                   },
                 },
               },
