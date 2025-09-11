@@ -17,6 +17,7 @@ interface PaginationData<T> {
 interface UsePaginationOptions {
   limit?: number;
   initialSearch?: string;
+  initialFilter?: Record<string, string>;
 }
 
 interface UsePaginationReturn<T> {
@@ -27,6 +28,8 @@ interface UsePaginationReturn<T> {
   totalItems: number;
   hasMore: boolean;
   searchTerm: string;
+  activeFilter: Record<string, string>;
+  setActiveFilter: (filter: Record<string, string>) => void;
   setSearchTerm: (term: string) => void;
   executeSearch: () => void;
   goToPage: (page: number) => void;
@@ -39,7 +42,7 @@ export function usePagination<T>(
   apiUrl: string,
   options: UsePaginationOptions = {},
 ): UsePaginationReturn<T> {
-  const { limit = 10, initialSearch = "" } = options;
+  const { limit = 10, initialSearch = "", initialFilter = {} } = options;
 
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,6 +52,7 @@ export function usePagination<T>(
   const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [activeSearchTerm, setActiveSearchTerm] = useState(initialSearch);
+  const [activeFilter, setActiveFilter] = useState(initialFilter);
 
   const fetchData = async (
     page: number,
@@ -64,6 +68,7 @@ export function usePagination<T>(
         page: page.toString(),
         limit: limit.toString(),
         ...(search && { search }),
+        ...(Object.keys(activeFilter).length > 0 && { ...activeFilter }),
       });
 
       const response = await fetch(`${apiUrl}?${params}`);
@@ -72,8 +77,7 @@ export function usePagination<T>(
         const result: PaginationData<T> = await response.json();
 
         // API 응답 구조에 따라 데이터 추출
-        const responseData =
-          result.courses || result.users || result.groups || result.data || [];
+        const responseData = result.users || result.groups || result.data || [];
 
         if (append) {
           setData((prev) => [...prev, ...responseData]);
@@ -137,6 +141,8 @@ export function usePagination<T>(
     totalItems,
     hasMore,
     searchTerm,
+    activeFilter,
+    setActiveFilter,
     setSearchTerm,
     executeSearch,
     goToPage,

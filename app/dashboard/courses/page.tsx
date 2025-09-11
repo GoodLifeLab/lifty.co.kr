@@ -69,14 +69,6 @@ export default function CoursesPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* 헤더 */}
@@ -146,14 +138,21 @@ export default function CoursesPage() {
             </div>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <CourseTable
-            courses={courses}
-            loading={loading}
-            onCreateNew={() => setShowCreateModal(true)}
-            showCreateButton={true}
-          />
-        </div>
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">프로젝트 목록을 불러오는 중...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <CourseTable
+              courses={courses}
+              loading={loading}
+              onCreateNew={() => setShowCreateModal(true)}
+              showCreateButton={true}
+            />
+          </div>
+        )}
 
         {/* 페이지네이션 */}
         {courses.length > 0 && (

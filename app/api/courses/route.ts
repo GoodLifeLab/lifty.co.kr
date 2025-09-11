@@ -22,34 +22,47 @@ export async function GET(request: NextRequest) {
     const total = await prisma.course.count({ where });
 
     // 페이지네이션된 데이터 조회
-    const courses = await prisma.course.findMany({
-      where,
-      include: {
-        groups: {
-          include: {
-            group: {
-              include: {
-                _count: {
-                  select: {
-                    memberships: true,
+    const [courses, allCourses] = await Promise.all([
+      prisma.course.findMany({
+        where,
+        include: {
+          groups: {
+            include: {
+              group: {
+                include: {
+                  _count: {
+                    select: {
+                      memberships: true,
+                    },
                   },
                 },
               },
             },
           },
-        },
-        missions: {
-          include: {
-            userProgress: true,
+          missions: {
+            include: {
+              userProgress: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      skip,
-      take: limit,
-    });
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.course.findMany({
+        select: {
+          id: true,
+          name: true,
+          _count: {
+            select: {
+              missions: true,
+            },
+          },
+        },
+      }),
+    ]);
 
     // 그룹 정보를 평면화
     const formattedCourses = courses.map((course) => ({
@@ -72,7 +85,8 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json({
-      courses: formattedCourses,
+      data: formattedCourses,
+      allCourses,
       pagination,
     });
   } catch (error) {
