@@ -1,68 +1,13 @@
 "use client";
 
+import { Coach } from "@/types/User";
 import { useState } from "react";
-
-interface Coach {
-  id: string;
-  email: string;
-  name?: string;
-  phone?: string;
-  position?: string;
-  role: "COACH" | "SUPER_ADMIN";
-  createdAt: string;
-  lastLoginAt?: string;
-  disabled: boolean;
-  disabledAt?: string;
-  organizations: Array<{
-    organization: {
-      id: string;
-      name: string;
-      department: string;
-    };
-    role?: string;
-  }>;
-  groupMemberships: Array<{
-    group: {
-      id: number;
-      name: string;
-      description?: string;
-    };
-    role: string;
-  }>;
-  _count: {
-    groupMemberships: number;
-    organizations: number;
-  };
-}
 
 interface CoachTableProps {
   coaches: Coach[];
   loading: boolean;
   onCoachClick?: (coachId: string) => void;
-  onEditCoach?: (coach: Coach) => void;
-  onToggleStatus?: (coachId: string, disabled: boolean) => void;
 }
-
-// 날짜 포맷팅 함수
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-};
-
-const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 // 상태 배지 컴포넌트
 const StatusBadge = ({ isActive }: { isActive: boolean }) => {
@@ -83,8 +28,6 @@ export default function CoachTable({
   coaches,
   loading,
   onCoachClick,
-  onEditCoach,
-  onToggleStatus,
 }: CoachTableProps) {
   const [sortField, setSortField] = useState<keyof Coach>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
