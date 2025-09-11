@@ -9,6 +9,7 @@ import { useFileUpload } from "@/hooks/useFileUpload";
 
 interface MissionModalProps {
   isOpen: boolean;
+  courses: Array<{ id: string; name: string }>;
   onClose: () => void;
   onSave: (missionData: CreateMissionData) => void;
   mission?: Mission | null;
@@ -17,6 +18,7 @@ interface MissionModalProps {
 
 export default function MissionModal({
   isOpen,
+  courses,
   onClose,
   onSave,
   mission,
@@ -37,18 +39,12 @@ export default function MissionModal({
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const [subMissions, setSubMissions] = useState<string[]>([]);
-  const [courses, setCourses] = useState<Array<{ id: string; name: string }>>(
-    [],
-  );
   const [isLoading, setIsLoading] = useState(false);
 
   const { deleteFile } = useFileUpload();
 
   useEffect(() => {
     if (isOpen) {
-      if (!course) {
-        fetchCourses(); // course가 없을 때만 과정 목록을 가져옴
-      }
       if (mission) {
         setFormData({
           title: mission.title,
@@ -76,18 +72,6 @@ export default function MissionModal({
       }
     }
   }, [isOpen, mission, course]);
-
-  const fetchCourses = async () => {
-    try {
-      const response = await fetch("/api/courses");
-      if (response.ok) {
-        const data = await response.json();
-        setCourses(data.courses || []);
-      }
-    } catch (error) {
-      console.error("과정 목록 조회 실패:", error);
-    }
-  };
 
   const resetForm = () => {
     const openDate = new Date();
@@ -273,21 +257,6 @@ export default function MissionModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                미션 이미지
-                <span className="text-xs text-gray-500"> (선택)</span>
-              </label>
-              <ImageUploadInput
-                onUploadComplete={handleImageUpload}
-                onImageDelete={handleImageDelete}
-                uploadedImages={uploadedImages}
-                className="mt-1"
-                folder="missions"
-                maxFiles={1}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
                 제목 *
               </label>
               <textarea
@@ -367,6 +336,21 @@ export default function MissionModal({
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="유저가 미션 입력 할 때 기본으로 표시되는 문구입니다. 샘플 답안을 보여주고 싶을 때만 작성하세요."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                미션 이미지
+                <span className="text-xs text-gray-500"> (선택)</span>
+              </label>
+              <ImageUploadInput
+                onUploadComplete={handleImageUpload}
+                onImageDelete={handleImageDelete}
+                uploadedImages={uploadedImages}
+                className="mt-1"
+                folder="missions"
+                maxFiles={1}
               />
             </div>
           </div>
