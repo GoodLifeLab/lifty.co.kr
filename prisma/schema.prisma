@@ -31,6 +31,28 @@ enum OrganizationRole {
   ADMIN
 }
 
+// 댓글 모델
+model Comment {
+  id                    String   @id @default(cuid())
+  content               String // 댓글 내용
+  authorId              String // 작성자 ID
+  userMissionProgressId String // UserMissionProgress ID
+  parentId              String? // 부모 댓글 ID (대댓글용)
+  isDeleted             Boolean  @default(false) @map("is_deleted") // 삭제 여부
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // 관계
+  author              User                @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  userMissionProgress UserMissionProgress @relation(fields: [userMissionProgressId], references: [id], onDelete: Cascade)
+
+  // 대댓글 관계
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -52,6 +74,7 @@ model User {
   organizations    UserOrganization[]
   groupMemberships GroupMember[]
   missionProgress  UserMissionProgress[]
+  comments         Comment[]
 
   @@map("users")
 }
@@ -225,8 +248,9 @@ model UserMissionProgress {
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
   // 관계
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mission  Mission   @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  comments Comment[]
 
   // 복합 유니크 제약조건
   @@unique([userId, missionId])
