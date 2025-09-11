@@ -15,8 +15,6 @@ export async function GET(request: NextRequest) {
 
     const where: Prisma.MissionWhereInput = {};
 
-    console.log(courseId, isPublic, search);
-
     if (courseId) {
       where.courseId = courseId;
     }

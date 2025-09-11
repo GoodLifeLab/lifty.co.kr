@@ -55,9 +55,11 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           name: true,
-          _count: {
+          missions: {
             select: {
-              missions: true,
+              id: true,
+              openDate: true,
+              dueDate: true,
             },
           },
         },
@@ -75,6 +77,23 @@ export async function GET(request: NextRequest) {
       }),
     }));
 
+    const formattedAllCourses = allCourses.map((course) => {
+      const now = new Date();
+      const totalMissions = course.missions.length;
+      const missionsInProgress = course.missions.filter((mission) => {
+        return mission.openDate <= now && mission.dueDate >= now;
+      }).length;
+
+      return {
+        id: course.id,
+        name: course.name,
+        _count: {
+          missions: totalMissions,
+          missionsInProgress: missionsInProgress,
+        },
+      };
+    });
+
     // 페이지네이션 정보
     const pagination = {
       page,
@@ -86,7 +105,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: formattedCourses,
-      allCourses,
+      allCourses: formattedAllCourses,
       pagination,
     });
   } catch (error) {

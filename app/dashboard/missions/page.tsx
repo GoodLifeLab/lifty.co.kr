@@ -13,7 +13,11 @@ export default function MissionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [allCourses, setAllCourses] = useState<
-    Array<{ id: string; name: string; _count: { missions: number } }>
+    Array<{
+      id: string;
+      name: string;
+      _count: { missions: number; missionsInProgress: number };
+    }>
   >([]);
 
   useEffect(() => {
@@ -139,7 +143,7 @@ export default function MissionsPage() {
           </div>
           <div className="min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              공개 여부
+              프로젝트
             </label>
             <select
               value={activeFilter.courseId}
@@ -149,7 +153,8 @@ export default function MissionsPage() {
               <option value="">전체</option>
               {allCourses.map((course) => (
                 <option key={course.id} value={course.id}>
-                  {course.name} ({course._count.missions})
+                  {course.name} (진행중: {course._count.missionsInProgress} /{" "}
+                  {course._count.missions})
                 </option>
               ))}
             </select>

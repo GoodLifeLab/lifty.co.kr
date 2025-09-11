@@ -83,7 +83,7 @@ export default function MissionTable({
               {mission.course?.name || "연결된 과정 없음"}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {formatDate(mission.createdAt)}
+              {formatDate(mission.openDate)}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               {formatDate(mission.dueDate)}
