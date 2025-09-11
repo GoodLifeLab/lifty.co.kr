@@ -261,11 +261,10 @@ export default function CoachDetailPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              coach.disabled
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "bg-red-600 hover:bg-red-700 text-white"
-            }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${coach.disabled
+              ? "bg-green-600 hover:bg-green-700 text-white"
+              : "bg-red-600 hover:bg-red-700 text-white"
+              }`}
           >
             {coach.disabled ? "활성화" : "비활성화"}
           </button>
@@ -355,10 +354,9 @@ export default function CoachDetailPage() {
               <div className="flex flex-wrap gap-2">
                 {coach.groupMemberships.map((membership) => (
                   <GroupBadge
-                    key={membership.group.id}
+                    key={`group-${membership.group.id}`}
                     groupId={membership.group.id}
                     groupName={membership.group.name}
-                    role={membership.role}
                     onRemove={handleRemoveFromGroup}
                     showRemoveButton={true}
                   />
@@ -393,7 +391,7 @@ export default function CoachDetailPage() {
                   <div className="flex flex-wrap gap-2">
                     {uniqueCourses.map((course) => (
                       <span
-                        key={course.id}
+                        key={`course-${course.id}`}
                         className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                       >
                         {course.name}
@@ -574,7 +572,7 @@ export default function CoachDetailPage() {
                     >
                       <option value="">그룹을 선택하세요</option>
                       {groups.map((group) => (
-                        <option key={group.id} value={group.id}>
+                        <option key={`newgroup-${group.id}`} value={group.id}>
                           {group.name}
                         </option>
                       ))}

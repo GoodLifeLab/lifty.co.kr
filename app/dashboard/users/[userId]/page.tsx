@@ -587,7 +587,6 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                         key={group.group.id}
                         groupId={group.group.id}
                         groupName={group.group.name}
-                        role={group.role}
                         onRemove={handleRemoveFromGroup}
                         showRemoveButton={true}
                       />

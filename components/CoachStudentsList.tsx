@@ -190,7 +190,7 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
               <tbody className="bg-white divide-y divide-gray-200">
                 {students.map((user) => (
                   <tr
-                    key={user.id}
+                    key={`user-${user.id}`}
                     onClick={() => {
                       router.push(`/dashboard/users/${user.id}`);
                     }}
@@ -233,8 +233,8 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
                       <div className="text-sm text-gray-900">
                         {user.organizations.length > 0
                           ? user.organizations
-                              .map((org) => org.organization.name)
-                              .join(", ")
+                            .map((org) => org.organization.name)
+                            .join(", ")
                           : "-"}
                       </div>
                     </td>
@@ -242,7 +242,7 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
                       <div className="flex flex-wrap gap-1">
                         {user.groupMemberships.map((membership) => (
                           <span
-                            key={membership.group.id}
+                            key={`membership-group-${membership.group.id}`}
                             className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
                           >
                             {membership.group.name}
@@ -255,7 +255,7 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
                         {user.groupMemberships.map((membership) =>
                           membership.group.courses.map((course) => (
                             <span
-                              key={membership.group.id}
+                              key={course.course.id}
                               className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                             >
                               {course.course.name}
