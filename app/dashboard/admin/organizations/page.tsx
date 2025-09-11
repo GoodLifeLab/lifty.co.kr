@@ -1,27 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { usePagination } from "@/hooks/usePagination";
 import Pagination from "@/components/Pagination";
 import SearchInput from "@/components/SearchInput";
 import OrganizationTable from "@/components/OrganizationTable";
 import OrganizationModal from "@/components/OrganizationModal";
-
-interface Organization {
-  id: string;
-  name: string;
-  department: string;
-  contactName?: string;
-  contactPhone?: string;
-  code: string;
-  emailDomain?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Organization } from "@prisma/client";
 
 export default function AdminOrganizationsPage() {
-  const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -42,11 +29,6 @@ export default function AdminOrganizationsPage() {
   } = usePagination<Organization>("/api/admin/organizations", {
     limit: 10,
   });
-
-  // 기관 상세 페이지로 이동
-  const handleOrganizationClick = (orgId: string) => {
-    router.push(`/dashboard/admin/organizations/${orgId}`);
-  };
 
   // 기관 수정
   const handleEdit = (org: Organization) => {
@@ -83,7 +65,7 @@ export default function AdminOrganizationsPage() {
   // 기관 생성/수정 제출
   const handleSubmit = async (formData: {
     name: string;
-    department: string;
+    contactEmail?: string;
     contactName?: string;
     contactPhone?: string;
     emailDomain?: string;
@@ -171,7 +153,7 @@ export default function AdminOrganizationsPage() {
           value={searchTerm}
           onChange={setSearchTerm}
           onSearch={executeSearch}
-          placeholder="기관명, 부서, 담당자로 검색..."
+          placeholder="기관명, 담당자 이메일, 담당자 연락처로 검색..."
           loading={loading}
         />
       </div>

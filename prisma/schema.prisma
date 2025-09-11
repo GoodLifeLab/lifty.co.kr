@@ -175,9 +175,9 @@ model GroupCourse {
 model Organization {
   id           String   @id @default(cuid())
   name         String // 기관명 (필수)
-  department   String // 기관부서 (필수)
   contactName  String? // 담당자 이름 (선택)
   contactPhone String? // 담당자 연락처 (선택)
+  contactEmail String? // 담당자 이메일 (선택)
   code         String   @unique // 기관 코드
   emailDomain  String? // 이메일 도메인 (선택)
   createdAt    DateTime @default(now()) @map("created_at")

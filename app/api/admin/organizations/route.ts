@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
-        { department: { contains: search, mode: "insensitive" } },
         { contactName: { contains: search, mode: "insensitive" } },
+        { contactEmail: { contains: search, mode: "insensitive" } },
         { code: { contains: search, mode: "insensitive" } },
       ];
     }
@@ -131,12 +131,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, department, contactName, contactPhone, emailDomain } = body;
+    const { name, contactEmail, contactName, contactPhone, emailDomain } = body;
 
     // 필수 필드 검증
-    if (!name || !department) {
+    if (!name) {
       return NextResponse.json(
-        { error: "기관명과 기관부서는 필수입니다." },
+        { error: "기관명은 필수입니다." },
         { status: 400 },
       );
     }
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     const organization = await prisma.organization.create({
       data: {
         name,
-        department,
+        contactEmail: contactEmail || null,
         contactName: contactName || null,
         contactPhone: contactPhone || null,
         code,

@@ -4,18 +4,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-
-interface Organization {
-  id: string;
-  name: string;
-  department: string;
-  contactName?: string;
-  contactPhone?: string;
-  code: string;
-  emailDomain?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Organization } from "@prisma/client";
 
 interface OrganizationTableProps {
   organizations: Organization[];
@@ -75,16 +64,16 @@ export default function OrganizationTable({
               기관 코드
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              부서
+              기관 담당자
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              담당자
+              기관 담당자 연락처
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              연락처
+              기관 담당자 이메일
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              이메일 도메인
+              기관 이메일 도메인
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               생성일
@@ -108,13 +97,13 @@ export default function OrganizationTable({
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {org.department}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {org.contactName || "-"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {org.contactPhone || "-"}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {org.contactEmail || "-"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {org.emailDomain || "-"}

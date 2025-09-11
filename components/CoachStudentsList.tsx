@@ -7,7 +7,7 @@ import { User, Group, Course, Organization } from "@prisma/client";
 
 type StudentWithDetails = User & {
   organizations: Array<{
-    organization: Pick<Organization, "id" | "name" | "department">;
+    organization: Pick<Organization, "id" | "name">;
   }>;
   groupMemberships: Array<{
     group: Group & {

@@ -94,12 +94,12 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, department, contactName, contactPhone, emailDomain } = body;
+    const { name, contactName, contactPhone, contactEmail, emailDomain } = body;
 
     // 업데이트할 데이터 구성
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
-    if (department !== undefined) updateData.department = department;
+    if (contactEmail !== undefined) updateData.contactEmail = contactEmail;
     if (contactName !== undefined) updateData.contactName = contactName;
     if (contactPhone !== undefined) updateData.contactPhone = contactPhone;
     if (emailDomain !== undefined) updateData.emailDomain = emailDomain;
@@ -168,33 +168,19 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // 기관에 속한 사용자가 있는지 확인
-    const organizationWithUsers = await prisma.organization.findUnique({
+    // 기관 존재 여부 확인
+    const organization = await prisma.organization.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: {
-            users: true,
-          },
-        },
-      },
     });
 
-    if (!organizationWithUsers) {
+    if (!organization) {
       return NextResponse.json(
         { error: "기관을 찾을 수 없습니다." },
         { status: 404 },
       );
     }
 
-    if (organizationWithUsers._count.users > 0) {
-      return NextResponse.json(
-        { error: "소속된 사용자가 있는 기관은 삭제할 수 없습니다." },
-        { status: 400 },
-      );
-    }
-
-    // 기관 삭제
+    // 기관 삭제 (관련된 user_organizations는 cascade로 자동 삭제됨)
     await prisma.organization.delete({
       where: { id },
     });
