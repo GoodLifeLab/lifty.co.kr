@@ -1,25 +1,14 @@
+import { Organization } from "@prisma/client";
 import { useState, useEffect } from "react";
-
-interface Organization {
-  id: string;
-  name: string;
-  department: string;
-  contactName?: string;
-  contactPhone?: string;
-  code: string;
-  emailDomain?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface OrganizationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: {
     name: string;
-    department: string;
     contactName?: string;
     contactPhone?: string;
+    contactEmail?: string;
     emailDomain?: string;
   }) => void;
   initialData?: Organization | null;
@@ -35,7 +24,7 @@ export default function OrganizationModal({
 }: OrganizationModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    department: "",
+    contactEmail: "",
     contactName: "",
     contactPhone: "",
     emailDomain: "",
@@ -46,7 +35,7 @@ export default function OrganizationModal({
     if (initialData) {
       setFormData({
         name: initialData.name,
-        department: initialData.department,
+        contactEmail: initialData.contactEmail || "",
         contactName: initialData.contactName || "",
         contactPhone: initialData.contactPhone || "",
         emailDomain: initialData.emailDomain || "",
@@ -54,7 +43,7 @@ export default function OrganizationModal({
     } else {
       setFormData({
         name: "",
-        department: "",
+        contactEmail: "",
         contactName: "",
         contactPhone: "",
         emailDomain: "",
@@ -66,6 +55,7 @@ export default function OrganizationModal({
     e.preventDefault();
     onSubmit({
       ...formData,
+      contactEmail: formData.contactEmail || undefined,
       contactName: formData.contactName || undefined,
       contactPhone: formData.contactPhone || undefined,
       emailDomain: formData.emailDomain || undefined,
@@ -98,21 +88,7 @@ export default function OrganizationModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                기관부서 *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.department}
-                onChange={(e) =>
-                  setFormData({ ...formData, department: e.target.value })
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                담당자 이름
+                기관 담당자 이름
               </label>
               <input
                 type="text"
@@ -125,7 +101,7 @@ export default function OrganizationModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                담당자 연락처
+                기관 담당자 연락처
               </label>
               <input
                 type="text"
@@ -138,11 +114,24 @@ export default function OrganizationModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                이메일 도메인
+                기관 담당자 이메일
               </label>
               <input
                 type="text"
-                placeholder="example.com"
+                value={formData.contactEmail}
+                onChange={(e) =>
+                  setFormData({ ...formData, contactEmail: e.target.value })
+                }
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                기관 이메일 도메인
+              </label>
+              <input
+                type="text"
+                placeholder="예: goodlifelab.kr"
                 value={formData.emailDomain}
                 onChange={(e) =>
                   setFormData({ ...formData, emailDomain: e.target.value })

@@ -94,12 +94,12 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, department, contactName, contactPhone, emailDomain } = body;
+    const { name, contactName, contactPhone, contactEmail, emailDomain } = body;
 
     // 업데이트할 데이터 구성
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
-    if (department !== undefined) updateData.department = department;
+    if (contactEmail !== undefined) updateData.contactEmail = contactEmail;
     if (contactName !== undefined) updateData.contactName = contactName;
     if (contactPhone !== undefined) updateData.contactPhone = contactPhone;
     if (emailDomain !== undefined) updateData.emailDomain = emailDomain;
