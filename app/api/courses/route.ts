@@ -22,34 +22,49 @@ export async function GET(request: NextRequest) {
     const total = await prisma.course.count({ where });
 
     // 페이지네이션된 데이터 조회
-    const courses = await prisma.course.findMany({
-      where,
-      include: {
-        groups: {
-          include: {
-            group: {
-              include: {
-                _count: {
-                  select: {
-                    memberships: true,
+    const [courses, allCourses] = await Promise.all([
+      prisma.course.findMany({
+        where,
+        include: {
+          groups: {
+            include: {
+              group: {
+                include: {
+                  _count: {
+                    select: {
+                      memberships: true,
+                    },
                   },
                 },
               },
             },
           },
-        },
-        missions: {
-          include: {
-            userProgress: true,
+          missions: {
+            include: {
+              userProgress: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      skip,
-      take: limit,
-    });
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.course.findMany({
+        select: {
+          id: true,
+          name: true,
+          missions: {
+            select: {
+              id: true,
+              openDate: true,
+              dueDate: true,
+            },
+          },
+        },
+      }),
+    ]);
 
     // 그룹 정보를 평면화
     const formattedCourses = courses.map((course) => ({
@@ -62,6 +77,23 @@ export async function GET(request: NextRequest) {
       }),
     }));
 
+    const formattedAllCourses = allCourses.map((course) => {
+      const now = new Date();
+      const totalMissions = course.missions.length;
+      const missionsInProgress = course.missions.filter((mission) => {
+        return mission.openDate <= now && mission.dueDate >= now;
+      }).length;
+
+      return {
+        id: course.id,
+        name: course.name,
+        _count: {
+          missions: totalMissions,
+          missionsInProgress: missionsInProgress,
+        },
+      };
+    });
+
     // 페이지네이션 정보
     const pagination = {
       page,
@@ -72,7 +104,8 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json({
-      courses: formattedCourses,
+      data: formattedCourses,
+      allCourses: formattedAllCourses,
       pagination,
     });
   } catch (error) {

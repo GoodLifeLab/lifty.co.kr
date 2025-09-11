@@ -74,9 +74,6 @@ export default function CourseTable({
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             상태
           </th>
-          <th className="relative px-6 py-3">
-            <span className="sr-only">상세보기</span>
-          </th>
         </tr>
       </thead>
       <tbody className="bg-white divide-y divide-gray-200">
@@ -88,8 +85,9 @@ export default function CourseTable({
             const completedCount = mission.userProgress.length;
             return acc + (completedCount / totalParticipants) * 100;
           }, 0);
-          const missionProgressPercentage =
-            missionProgress / course.missions.length;
+          const missionProgressPercentage = course.missions.length
+            ? missionProgress / course.missions.length
+            : 0;
           return (
             <tr
               key={course.id}

@@ -49,6 +49,7 @@ export async function PUT(
     const body = await request.json();
     const {
       title,
+      openDate,
       dueDate,
       image,
       shortDesc,
@@ -90,6 +91,7 @@ export async function PUT(
       where: { id },
       data: {
         title,
+        openDate: openDate ? new Date(openDate) : undefined,
         dueDate: dueDate ? new Date(dueDate) : undefined,
         image,
         shortDesc,

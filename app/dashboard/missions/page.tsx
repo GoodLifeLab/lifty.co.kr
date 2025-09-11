@@ -1,84 +1,65 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  PlusIcon,
-  FlagIcon,
-  MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
+import { useState, useEffect, useMemo } from "react";
+import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import MissionModal from "@/components/MissionModal";
 import MissionTable from "@/components/MissionTable";
-import StatsCard from "@/components/StatsCard";
 import { Mission, CreateMissionData } from "@/types/Mission";
 import { missionService } from "@/services/missionService";
+import { usePagination } from "@/hooks/usePagination";
+import Pagination from "@/components/Pagination";
 
 export default function MissionsPage() {
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [filteredMissions, setFilteredMissions] = useState<Mission[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
+  const [allCourses, setAllCourses] = useState<
+    Array<{
+      id: string;
+      name: string;
+      _count: { missions: number; missionsInProgress: number };
+    }>
+  >([]);
 
   useEffect(() => {
-    fetchMissions();
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch("/api/courses");
+        const data = await response.json();
+        setAllCourses(data.allCourses || []);
+      } catch (error) {
+        console.error("과정 목록을 불러오는 중 오류:", error);
+        setAllCourses([]);
+      }
+    };
+
+    fetchCourses();
   }, []);
 
-  const fetchMissions = async () => {
-    try {
-      const data = await missionService.getMissions();
-      setMissions(data);
-      setFilteredMissions(data);
-    } catch (error) {
-      console.error("미션 목록 조회 실패:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 검색 기능
-  const handleSearch = () => {
-    let filtered = missions;
-
-    // 텍스트 검색
-    if (appliedSearchTerm.trim()) {
-      filtered = filtered.filter((mission) => {
-        const titleMatch = mission.title
-          .toLowerCase()
-          .includes(appliedSearchTerm.toLowerCase());
-        const courseMatch = mission.course?.name
-          ?.toLowerCase()
-          .includes(appliedSearchTerm.toLowerCase());
-        return titleMatch || courseMatch;
-      });
-    }
-
-    // 상태 필터
-    if (selectedStatus) {
-      filtered = filtered.filter((mission) => {
-        if (selectedStatus === "public") {
-          return mission.isPublic;
-        } else if (selectedStatus === "private") {
-          return !mission.isPublic;
-        }
-        return true;
-      });
-    }
-
-    setFilteredMissions(filtered);
-  };
-
-  // 검색 버튼 클릭 시 검색어 적용
-  const handleSearchButtonClick = () => {
-    setAppliedSearchTerm(searchTerm);
-  };
+  // 페이지네이션 훅 사용
+  const {
+    data: missions,
+    loading,
+    currentPage,
+    totalPages,
+    totalItems: totalMissions,
+    hasMore,
+    searchTerm,
+    activeFilter,
+    setActiveFilter,
+    setSearchTerm,
+    executeSearch,
+    goToPage,
+    refresh,
+  } = usePagination<Mission>("/api/missions", {
+    limit: 10,
+    initialFilter: { courseId: "" },
+  });
 
   // 상태 변경 시 자동 검색
   useEffect(() => {
-    handleSearch();
-  }, [appliedSearchTerm, selectedStatus, missions]);
+    console.log(activeFilter);
+    refresh();
+  }, [activeFilter]);
 
   const handleCreateMission = () => {
     setSelectedMission(null);
@@ -100,7 +81,7 @@ export default function MissionsPage() {
         alert("미션이 생성되었습니다.");
       }
 
-      await fetchMissions();
+      await refresh();
       handleModalClose();
     } catch (error) {
       console.error("미션 저장 오류:", error);
@@ -111,21 +92,6 @@ export default function MissionsPage() {
       );
     }
   };
-
-  // 통계 계산
-  const stats = {
-    total: filteredMissions.length,
-    public: filteredMissions.filter((m) => m.isPublic).length,
-    private: filteredMissions.filter((m) => !m.isPublic).length,
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -146,33 +112,6 @@ export default function MissionsPage() {
         </button>
       </div>
 
-      {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatsCard
-          title="전체 미션"
-          value={stats.total}
-          icon={<FlagIcon className="h-8 w-8 text-indigo-600" />}
-        />
-        <StatsCard
-          title="공개 미션"
-          value={stats.public}
-          icon={
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-              <FlagIcon className="h-4 w-4 text-green-600" />
-            </div>
-          }
-        />
-        <StatsCard
-          title="비공개 미션"
-          value={stats.private}
-          icon={
-            <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-              <FlagIcon className="h-4 w-4 text-yellow-600" />
-            </div>
-          }
-        />
-      </div>
-
       {/* 검색 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-end gap-4">
@@ -189,12 +128,12 @@ export default function MissionsPage() {
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 onKeyPress={(e) => {
                   if (e.key === "Enter") {
-                    handleSearchButtonClick();
+                    executeSearch();
                   }
                 }}
               />
               <button
-                onClick={handleSearchButtonClick}
+                onClick={executeSearch}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
@@ -204,28 +143,51 @@ export default function MissionsPage() {
           </div>
           <div className="min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              공개 여부
+              프로젝트
             </label>
             <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
+              value={activeFilter.courseId}
+              onChange={(e) => setActiveFilter({ courseId: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="">전체</option>
-              <option value="public">공개</option>
-              <option value="private">비공개</option>
+              {allCourses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.name} (진행중: {course._count.missionsInProgress} /{" "}
+                  {course._count.missions})
+                </option>
+              ))}
             </select>
           </div>
         </div>
       </div>
 
       {/* 미션 테이블 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <MissionTable
-          missions={filteredMissions}
-          onCreateNew={handleCreateMission}
-          showCreateButton={true}
-        />
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">미션 목록을 불러오는 중...</p>
+          </div>
+        ) : (
+          <MissionTable
+            missions={missions}
+            onCreateNew={handleCreateMission}
+            showCreateButton={true}
+          />
+        )}
+
+        {/* 페이지네이션 */}
+        {missions.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalMissions}
+            hasMore={hasMore}
+            onPageChange={goToPage}
+            itemsPerPage={10}
+          />
+        )}
       </div>
 
       <MissionModal

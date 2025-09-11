@@ -24,6 +24,7 @@ export default function MissionModal({
 }: MissionModalProps) {
   const [formData, setFormData] = useState({
     title: "",
+    openDate: new Date().toISOString().slice(0, 16),
     dueDate: "",
     image: "",
     shortDesc: "",
@@ -51,6 +52,9 @@ export default function MissionModal({
       if (mission) {
         setFormData({
           title: mission.title,
+          openDate: mission.openDate
+            ? new Date(mission.openDate).toISOString().slice(0, 16)
+            : new Date().toISOString().slice(0, 16),
           dueDate: mission.dueDate
             ? new Date(mission.dueDate).toISOString().split("T")[0]
             : "",
@@ -86,9 +90,12 @@ export default function MissionModal({
   };
 
   const resetForm = () => {
+    const openDate = new Date();
+    openDate.setHours(18, 0, 0, 0);
     setFormData({
       title: "",
-      dueDate: "",
+      openDate: openDate.toISOString().slice(0, 16),
+      dueDate: new Date().toISOString().split("T")[0],
       image: "",
       shortDesc: "",
       detailDesc: "",
@@ -148,6 +155,7 @@ export default function MissionModal({
     try {
       const missionData = {
         ...formData,
+        openDate: new Date(formData.openDate),
         dueDate: new Date(formData.dueDate),
         subMissions: subMissions.filter((sub) => sub.trim() !== ""),
       };
@@ -218,7 +226,21 @@ export default function MissionModal({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  수행일자 *
+                  공개일자 *
+                </label>
+                <input
+                  type="datetime-local"
+                  name="openDate"
+                  value={formData.openDate}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md disabled:bg-gray-50 disabled:text-gray-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  종료일자 *
                 </label>
                 <input
                   type="date"
@@ -230,7 +252,7 @@ export default function MissionModal({
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   공개여부
                 </label>
@@ -246,12 +268,13 @@ export default function MissionModal({
                     공개로 설정
                   </label>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 미션 이미지
+                <span className="text-xs text-gray-500"> (선택)</span>
               </label>
               <ImageUploadInput
                 onUploadComplete={handleImageUpload}
@@ -265,7 +288,7 @@ export default function MissionModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                간략 설명 *
+                제목 *
               </label>
               <textarea
                 name="shortDesc"
@@ -274,59 +297,49 @@ export default function MissionModal({
                 required
                 rows={2}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="미션에 대한 간략한 설명을 입력하세요"
+                placeholder="미션카드에 표시될 제목입니다."
               />
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  하위 미션
-                </label>
-                <button
-                  type="button"
-                  onClick={addSubMission}
-                  className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-                >
-                  <PlusIcon className="h-3 w-3 mr-1" />
-                  추가
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {subMissions.map((subMission, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={subMission}
-                      onChange={(e) => updateSubMission(index, e.target.value)}
-                      placeholder={`하위 미션 ${index + 1}`}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeSubMission(index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Placeholder
+            <div className="flex flex-col gap-2">
+              <label className="block text-sm font-medium text-gray-700">
+                하위 미션
+                <span className="text-xs text-gray-500"> (선택)</span>
               </label>
-              <input
-                type="text"
-                name="placeholder"
-                value={formData.placeholder}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="사용자에게 보여줄 힌트 텍스트"
-              />
+
+              {subMissions.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  {subMissions.map((subMission, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={subMission}
+                        onChange={(e) =>
+                          updateSubMission(index, e.target.value)
+                        }
+                        placeholder={`하위 미션 ${index + 1}`}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSubMission(index)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={addSubMission}
+                className="inline-flex items-center justify-center px-2 py-1 border border-indigo-500 text-sm font-medium rounded text-indigo-500 hover:bg-indigo-50"
+              >
+                <PlusIcon className="h-3 w-3 mr-1" />
+                추가
+              </button>
             </div>
 
             <div>
@@ -340,6 +353,20 @@ export default function MissionModal({
                   setFormData((prev) => ({ ...prev, detailDesc: value }))
                 }
                 placeholder="미션에 대한 상세한 설명을 입력하세요"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Placeholder
+                <span className="text-xs text-gray-500"> (선택)</span>
+              </label>
+              <textarea
+                name="placeholder"
+                value={formData.placeholder}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="유저가 미션 입력 할 때 기본으로 표시되는 문구입니다. 샘플 답안을 보여주고 싶을 때만 작성하세요."
               />
             </div>
           </div>

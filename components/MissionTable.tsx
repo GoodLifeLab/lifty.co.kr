@@ -51,7 +51,10 @@ export default function MissionTable({
             과정
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            수행일자
+            공개일자
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            종료일자
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             전체 인원
@@ -80,7 +83,10 @@ export default function MissionTable({
               {mission.course?.name || "연결된 과정 없음"}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {formatDate(mission.createdAt)} ~ {formatDate(mission.dueDate)}
+              {formatDate(mission.openDate)}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {formatDate(mission.dueDate)}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               {mission.totalParticipants || 0}명

@@ -178,7 +178,15 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">
-                    수행일자
+                    공개일자
+                  </dt>
+                  <dd className="text-sm text-gray-900">
+                    {formatDate(mission.openDate)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    종료일자
                   </dt>
                   <dd className="text-sm text-gray-900">
                     {formatDate(mission.dueDate)}
