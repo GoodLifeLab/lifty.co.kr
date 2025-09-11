@@ -68,7 +68,11 @@ export default function CoachDetailPage() {
       setCoach(coachData);
       setError(null);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "코치 정보를 불러오는 중 오류가 발생했습니다.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "코치 정보를 불러오는 중 오류가 발생했습니다.",
+      );
     } finally {
       setLoading(false);
     }
@@ -82,7 +86,11 @@ export default function CoachDetailPage() {
       fetchCoachData();
     } catch (error) {
       console.error("상태 변경 오류:", error);
-      alert(error instanceof Error ? error.message : "상태 변경 중 오류가 발생했습니다.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "상태 변경 중 오류가 발생했습니다.",
+      );
     }
   };
 
@@ -99,7 +107,11 @@ export default function CoachDetailPage() {
       router.push("/dashboard/admin/coaches");
     } catch (error) {
       console.error("코치 제거 오류:", error);
-      alert(error instanceof Error ? error.message : "코치 제거 중 오류가 발생했습니다.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "코치 제거 중 오류가 발생했습니다.",
+      );
     }
   };
 
@@ -116,7 +128,11 @@ export default function CoachDetailPage() {
       alert("그룹에서 제거되었습니다.");
     } catch (error) {
       console.error("그룹에서 제거 오류:", error);
-      alert(error instanceof Error ? error.message : "그룹에서 제거 중 오류가 발생했습니다.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "그룹에서 제거 중 오류가 발생했습니다.",
+      );
     }
   };
 
@@ -169,16 +185,23 @@ export default function CoachDetailPage() {
     },
 
     removeFromGroup: async (groupId: number) => {
-      const response = await fetch(`/api/groups/${groupId}/members/${coach?.id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/groups/${groupId}/members/${coach?.id}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || "그룹에서 제거에 실패했습니다.");
       }
     },
 
-    updateCoachInfo: async (data: { name: string; email: string; phone: string }) => {
+    updateCoachInfo: async (data: {
+      name: string;
+      email: string;
+      phone: string;
+    }) => {
       const response = await fetch(`/api/admin/coaches/${coach?.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -208,7 +231,8 @@ export default function CoachDetailPage() {
   };
 
   const getRoleLabel = (role: AdminRole) => ROLE_LABELS[role] || role;
-  const getRoleColor = (role: AdminRole) => ROLE_COLORS[role] || "bg-gray-100 text-gray-800";
+  const getRoleColor = (role: AdminRole) =>
+    ROLE_COLORS[role] || "bg-gray-100 text-gray-800";
 
   if (loading) {
     return (
@@ -284,10 +308,11 @@ export default function CoachDetailPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${coach.disabled
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-red-600 hover:bg-red-700 text-white"
-              }`}
+            className={`px-4 py-2 rounded-md text-sm font-medium ${
+              coach.disabled
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "bg-red-600 hover:bg-red-700 text-white"
+            }`}
           >
             {coach.disabled ? "활성화" : "비활성화"}
           </button>
@@ -459,7 +484,11 @@ export default function CoachDetailPage() {
                     fetchCoachData();
                   } catch (error) {
                     console.error("코치 정보 수정 오류:", error);
-                    alert(error instanceof Error ? error.message : "코치 정보 수정 중 오류가 발생했습니다.");
+                    alert(
+                      error instanceof Error
+                        ? error.message
+                        : "코치 정보 수정 중 오류가 발생했습니다.",
+                    );
                   }
                 }}
               >
@@ -543,7 +572,11 @@ export default function CoachDetailPage() {
                     alert("그룹에 추가되었습니다.");
                   } catch (error) {
                     console.error("그룹 추가 오류:", error);
-                    alert(error instanceof Error ? error.message : "그룹 추가 중 오류가 발생했습니다.");
+                    alert(
+                      error instanceof Error
+                        ? error.message
+                        : "그룹 추가 중 오류가 발생했습니다.",
+                    );
                   }
                 }}
               >

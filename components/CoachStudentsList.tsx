@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { usePagination } from "@/hooks/usePagination";
 import Pagination from "@/components/Pagination";
 import { User, Group, Course, Organization } from "@prisma/client";
 
@@ -18,69 +19,57 @@ type StudentWithDetails = User & {
   }>;
 };
 
+// 상수 정의
+const ITEMS_PER_PAGE = 10;
+const DEBOUNCE_DELAY = 300;
+
 interface CoachStudentsListProps {
   coachId: string;
 }
 
 export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
   const router = useRouter();
-  const [students, setStudents] = useState<StudentWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [itemsPerPage] = useState(10);
 
-  const fetchStudents = async (searchTermParam = "", pageParam = 1) => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (searchTermParam) params.append("search", searchTermParam);
-      if (pageParam > 1) params.append("page", pageParam.toString());
-      params.append("limit", itemsPerPage.toString());
+  // 페이지네이션 훅 사용
+  const {
+    data: students,
+    loading,
+    currentPage,
+    totalPages,
+    totalItems: totalStudents,
+    hasMore,
+    searchTerm,
+    setSearchTerm,
+    executeSearch,
+    goToPage,
+  } = usePagination<StudentWithDetails>(
+    `/api/admin/coaches/${coachId}/students`,
+    {
+      limit: ITEMS_PER_PAGE,
+    },
+  );
 
-      const response = await fetch(
-        `/api/admin/coaches/${coachId}/students?${params}`,
-      );
+  // debounce된 검색 함수
+  const debouncedSearch = useCallback(() => {
+    let timeoutId: NodeJS.Timeout;
 
-      if (response.ok) {
-        const data = await response.json();
-        setStudents(data.data);
-        if (data.pagination) {
-          setCurrentPage(data.pagination.page);
-          setTotalPages(data.pagination.totalPages);
-          setTotalStudents(data.pagination.total);
-        }
-      } else {
-        setError("학생 목록을 불러올 수 없습니다.");
-      }
-    } catch (error) {
-      setError("학생 목록을 불러오는 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 초기 로딩
-  useEffect(() => {
-    fetchStudents("", 1);
-  }, [coachId]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    fetchStudents(searchTerm, page);
-  };
-
-  const handleSearch = () => {
-    fetchStudents(searchTerm, 1);
-  };
+    return (term: string) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        executeSearch();
+      }, DEBOUNCE_DELAY);
+    };
+  }, [executeSearch])();
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSearch();
+      executeSearch();
     }
+  };
+
+  const handleSearchTermChange = (value: string) => {
+    setSearchTerm(value);
+    debouncedSearch(value);
   };
 
   if (loading) {
@@ -104,21 +93,6 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
-            소속 학생 목록
-          </h3>
-        </div>
-        <div className="px-6 py-8 text-center">
-          <p className="text-sm text-red-500">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white shadow rounded-lg">
       <div className="px-6 py-4 border-b border-gray-200">
@@ -132,7 +106,7 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
                 type="text"
                 placeholder="학생 검색..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchTermChange(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
@@ -153,7 +127,7 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
               </div>
             </div>
             <button
-              onClick={handleSearch}
+              onClick={executeSearch}
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               검색
@@ -233,8 +207,8 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
                       <div className="text-sm text-gray-900">
                         {user.organizations.length > 0
                           ? user.organizations
-                            .map((org) => org.organization.name)
-                            .join(", ")
+                              .map((org) => org.organization.name)
+                              .join(", ")
                           : "-"}
                       </div>
                     </td>
@@ -275,9 +249,9 @@ export default function CoachStudentsList({ coachId }: CoachStudentsListProps) {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 totalItems={totalStudents}
-                hasMore={currentPage < totalPages}
-                onPageChange={handlePageChange}
-                itemsPerPage={itemsPerPage}
+                hasMore={hasMore}
+                onPageChange={goToPage}
+                itemsPerPage={ITEMS_PER_PAGE}
               />
             )}
           </>
