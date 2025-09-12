@@ -95,12 +95,14 @@ jobs:
       - name: Run Prisma Migrations
         run: pnpm prisma migrate deploy
         env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
 
       - name: Verify Database Schema
         run: |
           pnpm prisma migrate status
         env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
 
       - name: Check Prisma Migrate Diff

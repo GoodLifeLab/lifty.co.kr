@@ -84,7 +84,8 @@ jobs:
       - name: Run Prisma Migrations on Production DB
         run: pnpm prisma migrate deploy
         env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
 
       - name: Run Data Migration Scripts
         run: |
@@ -95,12 +96,14 @@ jobs:
             fi
           done
         env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
 
       - name: Verify Production Database Schema
         run: pnpm prisma migrate status --schema=./prisma/schema.prisma
         env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
 
       - name: Check for Drift in Production
         run: |
