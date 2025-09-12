@@ -117,4 +117,5 @@ jobs:
             echo "✅ No drift in Production DB."
           fi
         env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
