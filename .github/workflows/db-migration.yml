@@ -24,13 +24,12 @@ jobs:
           pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
-        run: pnpm prisma:generate
+        run: pnpm prisma generate
 
       - name: Run Prisma Migrations on Staging DB
         run: pnpm prisma migrate deploy
         env:
-          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.STAGING_DIRECT_URL }}
 
       - name: Run Data Migration Scripts
         run: |
@@ -45,21 +44,20 @@ jobs:
           DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
 
       - name: Verify Staging Database Schema
-        run: |
-          pnpm prisma migrate status
+        run: pnpm prisma migrate status --schema=./prisma/schema.prisma
         env:
-          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.STAGING_DIRECT_URL }}
+
       - name: Check for Drift in Staging
         run: |
-          if pnpm prisma migrate status | grep -q "sync with"; then
-            echo "Staging database schema is out of sync with Prisma schema!"
+          DRIFT=$(pnpm prisma migrate diff --from-schema-datasource ./prisma/schema.prisma --to-url $DIRECT_URL --exit-code || echo "drift")
+          if [ "$DRIFT" = "drift" ]; then
+            echo "❌ Drift detected in Staging DB!"
             exit 1
           else
-            echo "Staging database schema is up to date."
+            echo "✅ No drift in Staging DB."
           fi
         env:
-          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
 
   migrate-production-db:
@@ -86,8 +84,7 @@ jobs:
       - name: Run Prisma Migrations on Production DB
         run: pnpm prisma migrate deploy
         env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
 
       - name: Run Data Migration Scripts
         run: |
@@ -98,24 +95,21 @@ jobs:
             fi
           done
         env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
 
       - name: Verify Production Database Schema
-        run: |
-          pnpm prisma migrate status
+        run: pnpm prisma migrate status --schema=./prisma/schema.prisma
         env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
 
       - name: Check for Drift in Production
         run: |
-          if pnpm prisma migrate status | grep -q "sync with"; then
-            echo "Production database schema is out of sync with Prisma schema!"
+          DRIFT=$(pnpm prisma migrate diff --from-schema-datasource ./prisma/schema.prisma --to-url $DIRECT_URL --exit-code || echo "drift")
+          if [ "$DRIFT" = "drift" ]; then
+            echo "❌ Drift detected in Production DB!"
             exit 1
           else
-            echo "Production database schema is up to date."
+            echo "✅ No drift in Production DB."
           fi
         env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.PRODUCTION_DIRECT_URL }}
