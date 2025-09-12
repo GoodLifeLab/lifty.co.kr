@@ -23,6 +23,19 @@ type CoachWithDetails = User & {
   };
 };
 
+// 상수 정의
+const ROLE_LABELS: Record<AdminRole, string> = {
+  COACH: "코치",
+  SUPER_ADMIN: "슈퍼 관리자",
+  USER: "사용자",
+};
+
+const ROLE_COLORS: Record<AdminRole, string> = {
+  COACH: "bg-blue-100 text-blue-800",
+  SUPER_ADMIN: "bg-red-100 text-red-800",
+  USER: "bg-gray-100 text-gray-800",
+};
+
 export default function CoachDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -41,13 +54,8 @@ export default function CoachDetailPage() {
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch("/api/groups");
-      if (response.ok) {
-        const data = await response.json();
-        setGroups(data.groups || []);
-      } else {
-        console.error("그룹 목록 가져오기 실패:", response.status);
-      }
+      const groups = await apiCalls.fetchGroups();
+      setGroups(groups);
     } catch (error) {
       console.error("그룹 목록 가져오기 오류:", error);
     }
@@ -56,16 +64,15 @@ export default function CoachDetailPage() {
   const fetchCoachData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/coaches/${coachId}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setCoach(data.data);
-      } else {
-        setError("코치 정보를 불러올 수 없습니다.");
-      }
+      const coachData = await apiCalls.fetchCoach();
+      setCoach(coachData);
+      setError(null);
     } catch (error) {
-      setError("코치 정보를 불러오는 중 오류가 발생했습니다.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "코치 정보를 불러오는 중 오류가 발생했습니다.",
+      );
     } finally {
       setLoading(false);
     }
@@ -75,21 +82,15 @@ export default function CoachDetailPage() {
     if (!coach) return;
 
     try {
-      const response = await fetch(`/api/admin/coaches/${coachId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ disabled: !coach.disabled }),
-      });
-
-      if (response.ok) {
-        fetchCoachData();
-      } else {
-        console.error("상태 변경 실패");
-      }
+      await apiCalls.updateCoachStatus(!coach.disabled);
+      fetchCoachData();
     } catch (error) {
       console.error("상태 변경 오류:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "상태 변경 중 오류가 발생했습니다.",
+      );
     }
   };
 
@@ -101,24 +102,16 @@ export default function CoachDetailPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin/coaches/${coachId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ role: "USER" }),
-      });
-
-      if (response.ok) {
-        alert("코치에서 제거되었습니다.");
-        router.push("/dashboard/admin/coaches");
-      } else {
-        const error = await response.json();
-        alert(error.error || "코치 제거 실패");
-      }
+      await apiCalls.removeCoach();
+      alert("코치에서 제거되었습니다.");
+      router.push("/dashboard/admin/coaches");
     } catch (error) {
       console.error("코치 제거 오류:", error);
-      alert("코치 제거 중 오류가 발생했습니다.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "코치 제거 중 오류가 발생했습니다.",
+      );
     }
   };
 
@@ -130,23 +123,16 @@ export default function CoachDetailPage() {
     }
 
     try {
-      const response = await fetch(
-        `/api/groups/${groupId}/members/${coach.id}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (response.ok) {
-        fetchCoachData(); // 데이터 새로고침
-        alert("그룹에서 제거되었습니다.");
-      } else {
-        const error = await response.json();
-        alert(error.error || "그룹에서 제거 실패");
-      }
+      await apiCalls.removeFromGroup(groupId);
+      fetchCoachData();
+      alert("그룹에서 제거되었습니다.");
     } catch (error) {
       console.error("그룹에서 제거 오류:", error);
-      alert("그룹에서 제거 중 오류가 발생했습니다.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "그룹에서 제거 중 오류가 발생했습니다.",
+      );
     }
   };
 
@@ -161,31 +147,92 @@ export default function CoachDetailPage() {
     });
   };
 
-  const getRoleLabel = (role: AdminRole) => {
-    switch (role) {
-      case "COACH":
-        return "코치";
-      case "SUPER_ADMIN":
-        return "슈퍼 관리자";
-      case "USER":
-        return "사용자";
-      default:
-        return role;
-    }
+  // API 호출 함수들
+  const apiCalls = {
+    fetchCoach: async () => {
+      const response = await fetch(`/api/admin/coaches/${coachId}`);
+      if (!response.ok) throw new Error("코치 정보를 불러올 수 없습니다.");
+      const data = await response.json();
+      return data.data;
+    },
+
+    fetchGroups: async () => {
+      const response = await fetch("/api/groups");
+      if (!response.ok) throw new Error("그룹 목록을 불러올 수 없습니다.");
+      const data = await response.json();
+      return data.groups || [];
+    },
+
+    updateCoachStatus: async (disabled: boolean) => {
+      const response = await fetch(`/api/admin/coaches/${coachId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ disabled }),
+      });
+      if (!response.ok) throw new Error("상태 변경에 실패했습니다.");
+    },
+
+    removeCoach: async () => {
+      const response = await fetch(`/api/admin/coaches/${coachId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "USER" }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "코치 제거에 실패했습니다.");
+      }
+    },
+
+    removeFromGroup: async (groupId: number) => {
+      const response = await fetch(
+        `/api/groups/${groupId}/members/${coach?.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "그룹에서 제거에 실패했습니다.");
+      }
+    },
+
+    updateCoachInfo: async (data: {
+      name: string;
+      email: string;
+      phone: string;
+    }) => {
+      const response = await fetch(`/api/admin/coaches/${coach?.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "코치 정보 수정에 실패했습니다.");
+      }
+    },
+
+    addToGroup: async (groupId: number, role: string) => {
+      const response = await fetch(`/api/users/add-group`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: coach?.id,
+          groupId,
+          role: role || "ADMIN",
+        }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "그룹 추가에 실패했습니다.");
+      }
+    },
   };
 
-  const getRoleColor = (role: AdminRole) => {
-    switch (role) {
-      case "COACH":
-        return "bg-blue-100 text-blue-800";
-      case "SUPER_ADMIN":
-        return "bg-red-100 text-red-800";
-      case "USER":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const getRoleLabel = (role: AdminRole) => ROLE_LABELS[role] || role;
+  const getRoleColor = (role: AdminRole) =>
+    ROLE_COLORS[role] || "bg-gray-100 text-gray-800";
 
   if (loading) {
     return (
@@ -355,10 +402,9 @@ export default function CoachDetailPage() {
               <div className="flex flex-wrap gap-2">
                 {coach.groupMemberships.map((membership) => (
                   <GroupBadge
-                    key={membership.group.id}
+                    key={`group-${membership.group.id}`}
                     groupId={membership.group.id}
                     groupName={membership.group.name}
-                    role={membership.role}
                     onRemove={handleRemoveFromGroup}
                     showRemoveButton={true}
                   />
@@ -393,7 +439,7 @@ export default function CoachDetailPage() {
                   <div className="flex flex-wrap gap-2">
                     {uniqueCourses.map((course) => (
                       <span
-                        key={course.id}
+                        key={`course-${course.id}`}
                         className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                       >
                         {course.name}
@@ -433,31 +479,16 @@ export default function CoachDetailPage() {
                   const phone = formData.get("phone") as string;
 
                   try {
-                    const response = await fetch(
-                      `/api/admin/coaches/${coach?.id}`,
-                      {
-                        method: "PATCH",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                          name,
-                          email,
-                          phone,
-                        }),
-                      },
-                    );
-
-                    if (response.ok) {
-                      setShowEditModal(false);
-                      fetchCoachData(); // 데이터 새로고침
-                    } else {
-                      const error = await response.json();
-                      alert(error.error || "코치 정보 수정 실패");
-                    }
+                    await apiCalls.updateCoachInfo({ name, email, phone });
+                    setShowEditModal(false);
+                    fetchCoachData();
                   } catch (error) {
                     console.error("코치 정보 수정 오류:", error);
-                    alert("코치 정보 수정 중 오류가 발생했습니다.");
+                    alert(
+                      error instanceof Error
+                        ? error.message
+                        : "코치 정보 수정 중 오류가 발생했습니다.",
+                    );
                   }
                 }}
               >
@@ -535,30 +566,17 @@ export default function CoachDetailPage() {
                   const role = formData.get("role") as string;
 
                   try {
-                    const response = await fetch(`/api/users/add-group`, {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                        userId: coach?.id,
-                        groupId: parseInt(groupId),
-                        role: role || "ADMIN",
-                      }),
-                    });
-
-                    if (response.ok) {
-                      setShowAddGroupModal(false);
-                      fetchCoachData(); // 데이터 새로고침
-                      alert("그룹에 추가되었습니다.");
-                    } else {
-                      const error = await response.json();
-                      console.error("그룹 추가 실패:", error);
-                      alert(error.message || "그룹 추가 실패");
-                    }
+                    await apiCalls.addToGroup(parseInt(groupId), role);
+                    setShowAddGroupModal(false);
+                    fetchCoachData();
+                    alert("그룹에 추가되었습니다.");
                   } catch (error) {
                     console.error("그룹 추가 오류:", error);
-                    alert("그룹 추가 중 오류가 발생했습니다.");
+                    alert(
+                      error instanceof Error
+                        ? error.message
+                        : "그룹 추가 중 오류가 발생했습니다.",
+                    );
                   }
                 }}
               >
@@ -574,7 +592,7 @@ export default function CoachDetailPage() {
                     >
                       <option value="">그룹을 선택하세요</option>
                       {groups.map((group) => (
-                        <option key={group.id} value={group.id}>
+                        <option key={`newgroup-${group.id}`} value={group.id}>
                           {group.name}
                         </option>
                       ))}

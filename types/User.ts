@@ -10,3 +10,11 @@ export interface UserWithOrganizations extends User {
     role: string;
   }>;
 }
+
+export interface Coach extends UserWithOrganizations {
+  role: "COACH";
+  _count: {
+    groupMemberships: number;
+    organizations: number;
+  };
+}

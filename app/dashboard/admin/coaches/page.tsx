@@ -1,44 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { usePagination } from "@/hooks/usePagination";
 import Pagination from "@/components/Pagination";
 import SearchInput from "@/components/SearchInput";
 import CoachTable from "@/components/CoachTable";
-
-interface Coach {
-  id: string;
-  email: string;
-  name?: string;
-  phone?: string;
-  position?: string;
-  role: "COACH" | "SUPER_ADMIN";
-  createdAt: string;
-  lastLoginAt?: string;
-  disabled: boolean;
-  disabledAt?: string;
-  organizations: Array<{
-    organization: {
-      id: string;
-      name: string;
-      department: string;
-    };
-    role?: string;
-  }>;
-  groupMemberships: Array<{
-    group: {
-      id: number;
-      name: string;
-      description?: string;
-    };
-    role: string;
-  }>;
-  _count: {
-    groupMemberships: number;
-    organizations: number;
-  };
-}
+import { Coach } from "@/types/User";
 
 export default function CoachesPage() {
   const router = useRouter();
@@ -76,28 +44,35 @@ export default function CoachesPage() {
     router.push(`/dashboard/admin/coaches/${coachId}`);
   };
 
-  // 사용자 검색
-  const searchUsers = async (term: string) => {
-    if (!term.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  // 사용자 검색 (debounce 적용)
+  const searchUsers = useCallback(() => {
+    let timeoutId: NodeJS.Timeout;
 
-    setSearchLoading(true);
-    try {
-      const response = await fetch(
-        `/api/users?search=${encodeURIComponent(term)}&limit=10&coachSearch=true`,
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data.users || []);
-      }
-    } catch (error) {
-      console.error("사용자 검색 오류:", error);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
+    return (term: string) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        if (!term.trim()) {
+          setSearchResults([]);
+          return;
+        }
+
+        setSearchLoading(true);
+        try {
+          const response = await fetch(
+            `/api/users?search=${encodeURIComponent(term)}&limit=10&coachSearch=true`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setSearchResults(data.users || []);
+          }
+        } catch (error) {
+          console.error("사용자 검색 오류:", error);
+        } finally {
+          setSearchLoading(false);
+        }
+      }, 300);
+    };
+  }, [])();
 
   // 사용자 선택
   const handleUserSelect = (user: any) => {
@@ -133,27 +108,6 @@ export default function CoachesPage() {
     } catch (error) {
       console.error("코치 추가 오류:", error);
       alert("코치 추가 중 오류가 발생했습니다.");
-    }
-  };
-
-  // 코치 상태 토글
-  const handleToggleStatus = async (coachId: string, disabled: boolean) => {
-    try {
-      const response = await fetch(`/api/admin/coaches/${coachId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ disabled }),
-      });
-
-      if (response.ok) {
-        refresh();
-      } else {
-        console.error("상태 변경 실패");
-      }
-    } catch (error) {
-      console.error("상태 변경 오류:", error);
     }
   };
 
@@ -210,7 +164,6 @@ export default function CoachesPage() {
           coaches={coaches}
           loading={loading}
           onCoachClick={handleCoachClick}
-          onToggleStatus={handleToggleStatus}
         />
 
         {/* 페이지네이션 */}
