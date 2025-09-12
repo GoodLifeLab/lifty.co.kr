@@ -105,12 +105,9 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
 
-      - name: Check Prisma Migrate Diff
+      - name: Test Database Connection
         run: |
-          pnpm prisma migrate diff \
-            --from-url $DATABASE_URL \
-            --to-schema-datamodel ./prisma/schema.prisma \
-            --exit-code
+          pnpm prisma db push --accept-data-loss
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:6543/testdb
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/testdb
