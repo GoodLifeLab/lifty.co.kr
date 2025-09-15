@@ -36,7 +36,10 @@ export default function DashboardPage() {
     dailyData: [] as Array<{
       date: string;
       activeUsers: number;
-      missionSubmissions: number;
+    }>,
+    monthlyData: [] as Array<{
+      month: string;
+      activeUsers: number;
     }>,
   });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -60,14 +63,14 @@ export default function DashboardPage() {
     }
   };
 
-  // 차트 데이터 준비
-  const labels = stats.dailyData.map((item) => {
+  // 일별 차트 데이터 준비
+  const dailyLabels = stats.dailyData.map((item) => {
     const date = new Date(item.date);
     return `${date.getMonth() + 1}/${date.getDate()}`;
   });
 
   const dauChartData = {
-    labels,
+    labels: dailyLabels,
     datasets: [
       {
         label: "DAU",
@@ -79,14 +82,20 @@ export default function DashboardPage() {
     ],
   };
 
-  const missionChartData = {
-    labels,
+  // 월별 차트 데이터 준비
+  const monthlyLabels = stats.monthlyData.map((item) => {
+    const [year, month] = item.month.split("-");
+    return `${year}/${month}`;
+  });
+
+  const monthlyDauChartData = {
+    labels: monthlyLabels,
     datasets: [
       {
-        label: "미션 업로드",
-        data: stats.dailyData.map((item) => item.missionSubmissions),
-        borderColor: "rgb(168, 85, 247)",
-        backgroundColor: "rgba(168, 85, 247, 0.1)",
+        label: "MAU",
+        data: stats.monthlyData.map((item) => item.activeUsers),
+        borderColor: "rgb(34, 197, 94)",
+        backgroundColor: "rgba(34, 197, 94, 0.1)",
         tension: 0.4,
       },
     ],
@@ -165,13 +174,13 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* 미션 업로드 차트 */}
+        {/* 월별 MAU 차트 */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="mb-4">
-            <h3 className="text-lg font-medium text-gray-900">미션 업로드</h3>
-            <p className="text-gray-600">
-              최근 7일간의 일일 미션 기록 업로드 수
-            </p>
+            <h3 className="text-lg font-medium text-gray-900">
+              Monthly Active Users (MAU)
+            </h3>
+            <p className="text-gray-600">최근 12개월간의 월별 활성 사용자 수</p>
           </div>
           {statsLoading ? (
             <div className="flex items-center justify-center h-64">
@@ -179,7 +188,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="h-80">
-              <Line data={missionChartData} options={chartOptions} />
+              <Line data={monthlyDauChartData} options={chartOptions} />
             </div>
           )}
         </div>

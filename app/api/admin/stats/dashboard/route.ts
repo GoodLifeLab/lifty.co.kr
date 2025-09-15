@@ -144,20 +144,9 @@ export async function GET(request: NextRequest) {
           },
         });
 
-        // 일별 미션 기록 업로드 수
-        const missionSubmissions = await prisma.userMissionProgress.count({
-          where: {
-            createdAt: {
-              gte: startOfDate,
-              lte: endOfDate,
-            },
-          },
-        });
-
         return {
           date: startOfDate.toISOString().split("T")[0],
           activeUsers,
-          missionSubmissions,
         };
       }),
     );
@@ -165,13 +154,54 @@ export async function GET(request: NextRequest) {
     // 날짜 순서대로 정렬 (최신이 마지막에 오도록)
     const sortedDailyData = dailyData.reverse();
 
-    // const monthlyData = await Promise.all(
-    //   Array.from({ length: 12 }, async (_, i) => {
-    //     const date = new Date(today.getTime() - i * 30 * 24 * 60 * 60 * 1000);
-    //     const startOfDate = new Date(date.getFullYear(), date.getMonth(), 1);
-    //     const endOfDate = new Date(startOfDate.getTime() + 30 * 24 * 60 * 60 * 1000 - 1);
-    //   }),
-    // );
+    // 최근 12개월간의 월별 DAU 데이터
+    const monthlyData = await Promise.all(
+      Array.from({ length: 6 }, async (_, i) => {
+        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+        const endOfMonth = new Date(
+          date.getFullYear(),
+          date.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+        );
+
+        // 월별 활성 사용자 수 (MAU) - 로그인 또는 미션 참여 기준
+        const monthlyActiveUsers = await prisma.user.count({
+          where: {
+            disabled: false,
+            OR: [
+              {
+                lastLoginAt: {
+                  gte: startOfMonth,
+                  lte: endOfMonth,
+                },
+              },
+              {
+                missionProgress: {
+                  some: {
+                    createdAt: {
+                      gte: startOfMonth,
+                      lte: endOfMonth,
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        });
+
+        return {
+          month: startOfMonth.toISOString().split("T")[0].substring(0, 7), // YYYY-MM 형식
+          activeUsers: monthlyActiveUsers,
+        };
+      }),
+    );
+
+    // 월별 데이터를 시간 순서대로 정렬 (오래된 것부터)
+    const sortedMonthlyData = monthlyData.reverse();
 
     return NextResponse.json({
       data: {
@@ -179,6 +209,7 @@ export async function GET(request: NextRequest) {
         totalProjects,
         activeMissions,
         dailyData: sortedDailyData,
+        monthlyData: sortedMonthlyData,
       },
     });
   } catch (error) {
