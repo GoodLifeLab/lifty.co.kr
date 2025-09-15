@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { UsersIcon, BookOpenIcon, FlagIcon } from "@heroicons/react/24/outline";
 
 import {
   Chart as ChartJS,
@@ -14,6 +15,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import StatsCard from "@/components/StatsCard";
 
 ChartJS.register(
   CategoryScale,
@@ -28,17 +30,16 @@ ChartJS.register(
 export default function DashboardPage() {
   const [stats, setStats] = useState({
     dailyActiveUsers: 0,
-    newUsersToday: 0,
-    newUsersThisWeek: 0,
-    newUsersThisMonth: 0,
     totalUsers: 0,
-    totalGroups: 0,
-    totalOrganizations: 0,
+    totalProjects: 0,
+    activeMissions: 0,
     dailyData: [] as Array<{
       date: string;
-      newUsers: number;
       activeUsers: number;
-      missionSubmissions: number;
+    }>,
+    monthlyData: [] as Array<{
+      month: string;
+      activeUsers: number;
     }>,
   });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -62,14 +63,14 @@ export default function DashboardPage() {
     }
   };
 
-  // 차트 데이터 준비
-  const labels = stats.dailyData.map((item) => {
+  // 일별 차트 데이터 준비
+  const dailyLabels = stats.dailyData.map((item) => {
     const date = new Date(item.date);
     return `${date.getMonth() + 1}/${date.getDate()}`;
   });
 
   const dauChartData = {
-    labels,
+    labels: dailyLabels,
     datasets: [
       {
         label: "DAU",
@@ -81,27 +82,20 @@ export default function DashboardPage() {
     ],
   };
 
-  const newUsersChartData = {
-    labels,
+  // 월별 차트 데이터 준비
+  const monthlyLabels = stats.monthlyData.map((item) => {
+    const [year, month] = item.month.split("-");
+    return `${year}/${month}`;
+  });
+
+  const monthlyDauChartData = {
+    labels: monthlyLabels,
     datasets: [
       {
-        label: "신규 유저",
-        data: stats.dailyData.map((item) => item.newUsers),
+        label: "MAU",
+        data: stats.monthlyData.map((item) => item.activeUsers),
         borderColor: "rgb(34, 197, 94)",
         backgroundColor: "rgba(34, 197, 94, 0.1)",
-        tension: 0.4,
-      },
-    ],
-  };
-
-  const missionChartData = {
-    labels,
-    datasets: [
-      {
-        label: "미션 업로드",
-        data: stats.dailyData.map((item) => item.missionSubmissions),
-        borderColor: "rgb(168, 85, 247)",
-        backgroundColor: "rgba(168, 85, 247, 0.1)",
         tension: 0.4,
       },
     ],
@@ -137,6 +131,28 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* 통계 카드 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatsCard
+          title="총 유저"
+          value={stats.totalUsers}
+          icon={<UsersIcon className="h-8 w-8 text-blue-600" />}
+          loading={statsLoading}
+        />
+        <StatsCard
+          title="진행 중 과정"
+          value={stats.totalProjects}
+          icon={<BookOpenIcon className="h-8 w-8 text-green-600" />}
+          loading={statsLoading}
+        />
+        <StatsCard
+          title="진행 중 미션"
+          value={stats.activeMissions}
+          icon={<FlagIcon className="h-8 w-8 text-purple-600" />}
+          loading={statsLoading}
+        />
+      </div>
+
       {/* 개별 차트들 */}
       <div className="space-y-6">
         {/* DAU 차트 */}
@@ -158,11 +174,13 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* 신규 유저 차트 */}
+        {/* 월별 MAU 차트 */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="mb-4">
-            <h3 className="text-lg font-medium text-gray-900">신규 유저</h3>
-            <p className="text-gray-600">최근 7일간의 일일 신규 가입자 수</p>
+            <h3 className="text-lg font-medium text-gray-900">
+              Monthly Active Users (MAU)
+            </h3>
+            <p className="text-gray-600">최근 12개월간의 월별 활성 사용자 수</p>
           </div>
           {statsLoading ? (
             <div className="flex items-center justify-center h-64">
@@ -170,26 +188,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="h-80">
-              <Line data={newUsersChartData} options={chartOptions} />
-            </div>
-          )}
-        </div>
-
-        {/* 미션 업로드 차트 */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="mb-4">
-            <h3 className="text-lg font-medium text-gray-900">미션 업로드</h3>
-            <p className="text-gray-600">
-              최근 7일간의 일일 미션 기록 업로드 수
-            </p>
-          </div>
-          {statsLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-            </div>
-          ) : (
-            <div className="h-80">
-              <Line data={missionChartData} options={chartOptions} />
+              <Line data={monthlyDauChartData} options={chartOptions} />
             </div>
           )}
         </div>
