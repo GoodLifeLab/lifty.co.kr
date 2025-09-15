@@ -22,29 +22,30 @@ export async function GET(request: NextRequest) {
     }
 
     const today = new Date();
-    const startOfDay = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-    );
-
-    // 총 사용자 수
-    const totalUsers = await prisma.user.count({
-      where: {
-        disabled: false,
-      },
-    });
-
-    // 총 그룹 수
-    const totalGroups = await prisma.group.count();
-
-    // 총 기관 수
-    const totalOrganizations = await prisma.organization.count();
 
     // 총 프로젝트 수 - super admin이면 전체, 아니면 자신이 속한 그룹의 프로젝트만
     let totalProjects;
+    let activeMissions;
+    let totalUsers;
     if (currentUser.role === "SUPER_ADMIN") {
       totalProjects = await prisma.course.count();
+
+      activeMissions = await prisma.mission.count({
+        where: {
+          openDate: {
+            lte: today,
+          },
+          dueDate: {
+            gte: today,
+          },
+        },
+      });
+
+      totalUsers = await prisma.user.count({
+        where: {
+          disabled: false,
+        },
+      });
     } else {
       // 현재 사용자가 속한 그룹들의 프로젝트 수
       const userGroups = await prisma.groupMember.findMany({
@@ -67,7 +68,40 @@ export async function GET(request: NextRequest) {
               },
             },
           },
+        },
+      });
 
+      // 그룹에 속한 과정들의 미션 중 진행 중인 것들
+      activeMissions = await prisma.mission.count({
+        where: {
+          openDate: {
+            lte: today,
+          },
+          dueDate: {
+            gte: today,
+          },
+          course: {
+            groups: {
+              some: {
+                groupId: {
+                  in: groupIds,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      totalUsers = await prisma.user.count({
+        where: {
+          disabled: false,
+          groupMemberships: {
+            some: {
+              groupId: {
+                in: groupIds,
+              },
+            },
+          },
         },
       });
     }
@@ -131,12 +165,19 @@ export async function GET(request: NextRequest) {
     // 날짜 순서대로 정렬 (최신이 마지막에 오도록)
     const sortedDailyData = dailyData.reverse();
 
+    // const monthlyData = await Promise.all(
+    //   Array.from({ length: 12 }, async (_, i) => {
+    //     const date = new Date(today.getTime() - i * 30 * 24 * 60 * 60 * 1000);
+    //     const startOfDate = new Date(date.getFullYear(), date.getMonth(), 1);
+    //     const endOfDate = new Date(startOfDate.getTime() + 30 * 24 * 60 * 60 * 1000 - 1);
+    //   }),
+    // );
+
     return NextResponse.json({
       data: {
         totalUsers,
-        totalGroups,
-        totalOrganizations,
         totalProjects,
+        activeMissions,
         dailyData: sortedDailyData,
       },
     });

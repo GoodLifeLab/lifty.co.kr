@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { UsersIcon, BookOpenIcon, FlagIcon } from "@heroicons/react/24/outline";
 
 import {
   Chart as ChartJS,
@@ -14,6 +15,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import StatsCard from "@/components/StatsCard";
 
 ChartJS.register(
   CategoryScale,
@@ -29,8 +31,8 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({
     dailyActiveUsers: 0,
     totalUsers: 0,
-    totalGroups: 0,
-    totalOrganizations: 0,
+    totalProjects: 0,
+    activeMissions: 0,
     dailyData: [] as Array<{
       date: string;
       activeUsers: number;
@@ -118,6 +120,28 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900">대시보드</h1>
           <p className="text-gray-600">7일간의 활동 현황을 확인하세요</p>
         </div>
+      </div>
+
+      {/* 통계 카드 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatsCard
+          title="총 유저"
+          value={stats.totalUsers}
+          icon={<UsersIcon className="h-8 w-8 text-blue-600" />}
+          loading={statsLoading}
+        />
+        <StatsCard
+          title="진행 중 과정"
+          value={stats.totalProjects}
+          icon={<BookOpenIcon className="h-8 w-8 text-green-600" />}
+          loading={statsLoading}
+        />
+        <StatsCard
+          title="진행 중 미션"
+          value={stats.activeMissions}
+          icon={<FlagIcon className="h-8 w-8 text-purple-600" />}
+          loading={statsLoading}
+        />
       </div>
 
       {/* 개별 차트들 */}
