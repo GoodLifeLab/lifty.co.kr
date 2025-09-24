@@ -225,10 +225,11 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                   </dt>
                   <dd className="text-sm">
                     <span
-                      className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${mission.isPublic
+                      className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                        mission.isPublic
                           ? "bg-green-100 text-green-800"
                           : "bg-gray-100 text-gray-800"
-                        }`}
+                      }`}
                     >
                       {mission.isPublic ? "공개" : "비공개"}
                     </span>
