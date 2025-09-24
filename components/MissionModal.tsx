@@ -76,6 +76,7 @@ export default function MissionModal({
 
         // 기존 미션의 태그 ID 설정
         const existingTagIds = mission.tags?.map(tag => tag.tag.id) || [];
+
         setSelectedTagIds(existingTagIds);
       } else {
         resetForm();
@@ -87,13 +88,6 @@ export default function MissionModal({
       }
     }
   }, [isOpen, mission, course]);
-
-  // 과정이 변경될 때 선택된 태그 초기화
-  useEffect(() => {
-    if (formData.courseId) {
-      setSelectedTagIds([]); // 과정이 바뀌면 선택된 태그 초기화
-    }
-  }, [formData.courseId]);
 
   const resetForm = () => {
     const openDate = new Date();
@@ -112,6 +106,7 @@ export default function MissionModal({
       subDescriptions: [],
     });
     setUploadedImages([]);
+    setSelectedTagIds([]);
   };
 
   const handleInputChange = (
@@ -162,13 +157,6 @@ export default function MissionModal({
         ? prev.filter(id => id !== tagId)
         : [...prev, tagId];
 
-      // formData의 tags도 업데이트 (올바른 타입 구조로)
-      const availableTags = getAvailableTags();
-      const selectedTags = availableTags
-        .filter(tag => newSelected.includes(tag.id))
-        .map(tag => tag.id);
-      setFormData(prev => ({ ...prev, tags: selectedTags }));
-
       return newSelected;
     });
   };
@@ -176,11 +164,6 @@ export default function MissionModal({
   const removeTag = (tagId: string) => {
     setSelectedTagIds(prev => {
       const newSelected = prev.filter(id => id !== tagId);
-      const availableTags = getAvailableTags();
-      const selectedTags = availableTags
-        .filter(tag => newSelected.includes(tag.id))
-        .map(tag => tag.id);
-      setFormData(prev => ({ ...prev, tags: selectedTags }));
       return newSelected;
     });
   };
@@ -193,6 +176,7 @@ export default function MissionModal({
       const missionData = {
         ...formData,
         subDescriptions: formData.subDescriptions.filter((sub) => sub.trim() !== ""),
+        tags: selectedTagIds,
       };
 
       await onSave(missionData);
@@ -244,7 +228,10 @@ export default function MissionModal({
                   <select
                     name="courseId"
                     value={formData.courseId}
-                    onChange={handleInputChange}
+                    onChange={(e) => {
+                      handleInputChange(e);
+                      setSelectedTagIds([]);
+                    }}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
