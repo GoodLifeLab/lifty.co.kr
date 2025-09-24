@@ -19,6 +19,18 @@ export async function GET(
             name: true,
           },
         },
+        tags: {
+          select: {
+            id: true,
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -58,6 +70,7 @@ export async function PUT(
       courseId,
       isPublic,
       subDescriptions = [],
+      tags = [],
     } = body;
 
     // 미션 존재 여부 확인
@@ -100,6 +113,7 @@ export async function PUT(
         courseId,
         isPublic,
         subDescriptions,
+        tags,
       },
       include: {
         course: {

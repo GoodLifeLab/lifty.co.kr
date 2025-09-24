@@ -31,6 +31,11 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
     Array<{
       id: string;
       name: string;
+      tags: Array<{
+        id: string;
+        name: string;
+        color: string;
+      }>;
       _count: { missions: number; missionsInProgress: number };
     }>
   >([]);

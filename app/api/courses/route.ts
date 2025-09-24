@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
     // 검색 조건
     const where = search
       ? {
-          name: { contains: search, mode: "insensitive" as any },
-        }
+        name: { contains: search, mode: "insensitive" as any },
+      }
       : {};
 
     // 전체 개수 조회
@@ -60,6 +60,13 @@ export async function GET(request: NextRequest) {
               id: true,
               openDate: true,
               dueDate: true,
+            },
+          },
+          tags: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
             },
           },
         },
@@ -150,10 +157,10 @@ export async function POST(request: NextRequest) {
         groups:
           groupIds && groupIds.length > 0
             ? {
-                create: groupIds.map((groupId: number) => ({
-                  groupId: groupId,
-                })),
-              }
+              create: groupIds.map((groupId: number) => ({
+                groupId: groupId,
+              })),
+            }
             : undefined,
       },
       include: {
