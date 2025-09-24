@@ -49,6 +49,13 @@ export async function GET(
             },
           },
         },
+        tags: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+          },
+        },
       },
     });
 
@@ -127,10 +134,10 @@ export async function PUT(
         groups:
           groupIds && groupIds.length > 0
             ? {
-                create: groupIds.map((groupId: number) => ({
-                  groupId: groupId,
-                })),
-              }
+              create: groupIds.map((groupId: number) => ({
+                groupId: groupId,
+              })),
+            }
             : undefined,
       },
       include: {

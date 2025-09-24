@@ -234,6 +234,32 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                     </span>
                   </dd>
                 </div>
+                <div className="col-span-2">
+                  <dt className="text-sm font-medium text-gray-500 mb-2">
+                    태그
+                  </dt>
+                  <dd className="text-sm">
+                    {mission.tags && mission.tags.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {mission.tags.map((missionTag) => (
+                          <span
+                            key={missionTag.tag.id}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                            style={{
+                              backgroundColor: missionTag.tag.color ? `${missionTag.tag.color}20` : '#f3f4f6',
+                              color: missionTag.tag.color || '#374151',
+                              border: `1px solid ${missionTag.tag.color || '#d1d5db'}`
+                            }}
+                          >
+                            {missionTag.tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-500">등록된 태그가 없습니다.</span>
+                    )}
+                  </dd>
+                </div>
               </dl>
             </div>
 

@@ -38,13 +38,7 @@ export type CreateMissionData = {
   isPublic: boolean;
   courseId: string;
   subDescriptions: string[];
-  tags: {
-    tag: {
-      id: string;
-      name: string;
-      color: string | null;
-    };
-  }[];
+  tags: string[];
 };
 
 // 미션 참여자 수행 관련 타입

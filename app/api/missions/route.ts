@@ -127,7 +127,11 @@ export async function POST(request: NextRequest) {
         courseId,
         isPublic: isPublic || false,
         subDescriptions: subDescriptions,
-        tags: tags,
+        tags: {
+          create: tags.map((tag: string) => ({
+            tagId: tag,
+          })),
+        },
       },
       include: {
         course: {

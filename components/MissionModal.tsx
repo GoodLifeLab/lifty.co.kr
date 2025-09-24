@@ -69,7 +69,7 @@ export default function MissionModal({
           placeholder: mission.placeholder || "",
           courseId: mission.courseId,
           isPublic: mission.isPublic,
-          tags: mission.tags || [],
+          tags: mission.tags.map((tag) => tag.tag.id) || [],
           subDescriptions: mission.subDescriptions || [],
         });
         setUploadedImages(mission.image ? [mission.image] : []);
@@ -166,13 +166,7 @@ export default function MissionModal({
       const availableTags = getAvailableTags();
       const selectedTags = availableTags
         .filter(tag => newSelected.includes(tag.id))
-        .map(tag => ({
-          tag: {
-            id: tag.id,
-            name: tag.name,
-            color: tag.color
-          }
-        }));
+        .map(tag => tag.id);
       setFormData(prev => ({ ...prev, tags: selectedTags }));
 
       return newSelected;
@@ -185,13 +179,7 @@ export default function MissionModal({
       const availableTags = getAvailableTags();
       const selectedTags = availableTags
         .filter(tag => newSelected.includes(tag.id))
-        .map(tag => ({
-          tag: {
-            id: tag.id,
-            name: tag.name,
-            color: tag.color
-          }
-        }));
+        .map(tag => tag.id);
       setFormData(prev => ({ ...prev, tags: selectedTags }));
       return newSelected;
     });
@@ -304,38 +292,6 @@ export default function MissionModal({
                   태그
                   <span className="text-xs text-gray-500"> (선택)</span>
                 </label>
-
-                {/* 선택된 태그 표시 */}
-                {selectedTagIds.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {selectedTagIds.map(tagId => {
-                      const availableTags = getAvailableTags();
-                      const tag = availableTags.find(t => t.id === tagId);
-                      if (!tag) return null;
-                      return (
-                        <span
-                          key={tagId}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                          style={{
-                            backgroundColor: tag.color ? `${tag.color}20` : '#f3f4f6',
-                            color: tag.color || '#374151',
-                            border: `1px solid ${tag.color || '#d1d5db'}`
-                          }}
-                        >
-                          {tag.name}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(tagId)}
-                            className="ml-2 hover:text-red-600"
-                          >
-                            <XMarkIcon className="h-3 w-3" />
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-
                 {/* 태그 선택 드롭다운 */}
                 {formData.courseId && (
                   <div className="relative">
@@ -363,6 +319,37 @@ export default function MissionModal({
 
                 {!formData.courseId && (
                   <p className="text-sm text-gray-500">먼저 과정을 선택해주세요.</p>
+                )}
+
+                {/* 선택된 태그 표시 */}
+                {selectedTagIds.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {selectedTagIds.map(tagId => {
+                      const availableTags = getAvailableTags();
+                      const tag = availableTags.find(t => t.id === tagId);
+                      if (!tag) return null;
+                      return (
+                        <span
+                          key={tagId}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                          style={{
+                            backgroundColor: tag.color ? `${tag.color}20` : '#f3f4f6',
+                            color: tag.color || '#374151',
+                            border: `1px solid ${tag.color || '#d1d5db'}`
+                          }}
+                        >
+                          {tag.name}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tagId)}
+                            className="ml-2 hover:text-red-600"
+                          >
+                            <XMarkIcon className="h-3 w-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
 

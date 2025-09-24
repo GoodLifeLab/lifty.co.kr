@@ -62,13 +62,7 @@ export async function GET(request: NextRequest) {
               dueDate: true,
             },
           },
-          tags: {
-            select: {
-              id: true,
-              name: true,
-              color: true,
-            },
-          },
+          tags: true,
         },
       }),
     ]);
@@ -98,6 +92,7 @@ export async function GET(request: NextRequest) {
           missions: totalMissions,
           missionsInProgress: missionsInProgress,
         },
+        tags: course.tags,
       };
     });
 

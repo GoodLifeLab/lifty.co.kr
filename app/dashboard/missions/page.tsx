@@ -30,6 +30,7 @@ export default function MissionsPage() {
       try {
         const response = await fetch("/api/courses");
         const data = await response.json();
+        console.log(1, data.allCourses);
         setAllCourses(data.allCourses || []);
       } catch (error) {
         console.error("과정 목록을 불러오는 중 오류:", error);
