@@ -225,14 +225,14 @@ model Tag {
   name     String // 태그 이름
   courseId String // 소속 코스 ID
   color    String? // 태그 색상 (선택사항)
-  
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  
+
   // 관계
-  course     Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  missions   MissionTag[]  // 미션과의 다대다 관계
-  
+  course   Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  missions MissionTag[] // 미션과의 다대다 관계
+
   // 복합 유니크: 같은 코스 내에서 태그 이름은 유일해야 함
   @@unique([name, courseId])
   @@map("tags")
@@ -243,13 +243,13 @@ model MissionTag {
   id        String @id @default(cuid())
   missionId String
   tagId     String
-  
+
   createdAt DateTime @default(now()) @map("created_at")
-  
+
   // 관계
   mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
   tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  
+
   // 복합 유니크: 같은 미션에 같은 태그는 중복 불가
   @@unique([missionId, tagId])
   @@map("mission_tags")
@@ -257,18 +257,18 @@ model MissionTag {
 
 // 미션 모델
 model Mission {
-  id             String      @id @default(cuid())
-  title          String // 제목
-  missionType    MissionType @default(ACTION) @map("mission_type")
-  openDate       DateTime    @default(now()) @map("open_date") // 공개 일자
-  dueDate        DateTime    @map("due_date") // 수행일자
-  image          String? // 이미지 URL
-  shortDesc      String      @map("short_desc") // 간략 설명
-  detailDesc     String      @map("detail_desc") // 상세 설명
-  placeholder    String? // placeholder 텍스트
-  subDescription String[]    @map("sub_description") // 하위 미션 설명 목록 (보여주기 용도)
-  courseId       String // 과정 ID
-  isPublic       Boolean     @default(false) @map("is_public") // 공개 여부
+  id              String      @id @default(cuid())
+  title           String // 제목
+  missionType     MissionType @default(ACTION) @map("mission_type")
+  openDate        DateTime    @default(now()) @map("open_date") // 공개 일자
+  dueDate         DateTime    @map("due_date") // 수행일자
+  image           String? // 이미지 URL
+  shortDesc       String      @map("short_desc") // 간략 설명
+  detailDesc      String      @map("detail_desc") // 상세 설명
+  placeholder     String? // placeholder 텍스트
+  subDescriptions String[]    @map("sub_descriptions") // 하위 미션 설명 목록 (보여주기 용도)
+  courseId        String // 과정 ID
+  isPublic        Boolean     @default(false) @map("is_public") // 공개 여부
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -276,7 +276,7 @@ model Mission {
   // 관계
   course       Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
   userProgress UserMissionProgress[]
-  tags         MissionTag[]          // 태그 관계
+  tags         MissionTag[] // 태그 관계
 
   @@map("missions")
 }

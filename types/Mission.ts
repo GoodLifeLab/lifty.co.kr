@@ -25,7 +25,7 @@ export type CreateMissionData = {
   image?: string;
   isPublic: boolean;
   courseId: string;
-  subMissions: string[];
+  subDescriptions: string[];
 };
 
 // 미션 참여자 수행 관련 타입

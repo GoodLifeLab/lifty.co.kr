@@ -57,7 +57,7 @@ export async function PUT(
       placeholder,
       courseId,
       isPublic,
-      subMissions = [],
+      subDescriptions = [],
     } = body;
 
     // 미션 존재 여부 확인
@@ -99,7 +99,7 @@ export async function PUT(
         placeholder,
         courseId,
         isPublic,
-        subMissions: subMissions,
+        subDescriptions,
       },
       include: {
         course: {

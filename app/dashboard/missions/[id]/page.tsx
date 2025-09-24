@@ -220,11 +220,10 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                   </dt>
                   <dd className="text-sm">
                     <span
-                      className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                        mission.isPublic
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
+                      className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${mission.isPublic
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                        }`}
                     >
                       {mission.isPublic ? "공개" : "비공개"}
                     </span>
@@ -277,11 +276,11 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
             {/* 하위 미션 */}
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                하위 미션 ({mission.subMissions?.length || 0}개)
+                하위 미션 ({mission.subDescriptions?.length || 0}개)
               </h3>
-              {mission.subMissions && mission.subMissions.length > 0 ? (
+              {mission.subDescriptions && mission.subDescriptions.length > 0 ? (
                 <div className="space-y-2">
-                  {mission.subMissions.map((subMission, index) => (
+                  {mission.subDescriptions.map((subDescription, index) => (
                     <div
                       key={index}
                       className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
@@ -290,7 +289,7 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-gray-900">{subMission}</p>
+                        <p className="text-sm text-gray-900">{subDescription}</p>
                       </div>
                     </div>
                   ))}

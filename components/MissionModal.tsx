@@ -38,7 +38,7 @@ export default function MissionModal({
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
-  const [subMissions, setSubMissions] = useState<string[]>([]);
+  const [subDescriptions, setSubDescriptions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const { deleteFile } = useFileUpload();
@@ -62,7 +62,7 @@ export default function MissionModal({
           isPublic: mission.isPublic,
         });
         setUploadedImages(mission.image ? [mission.image] : []);
-        setSubMissions(mission.subMissions || []);
+        setSubDescriptions(mission.subDescriptions || []);
       } else {
         resetForm();
         // course가 있으면 자동으로 설정
@@ -88,7 +88,7 @@ export default function MissionModal({
       isPublic: true,
     });
     setUploadedImages([]);
-    setSubMissions([]);
+    setSubDescriptions([]);
   };
 
   const handleInputChange = (
@@ -121,15 +121,15 @@ export default function MissionModal({
   };
 
   const addSubMission = () => {
-    setSubMissions((prev) => [...prev, ""]);
+    setSubDescriptions((prev) => [...prev, ""]);
   };
 
   const updateSubMission = (index: number, text: string) => {
-    setSubMissions((prev) => prev.map((sub, i) => (i === index ? text : sub)));
+    setSubDescriptions((prev) => prev.map((sub, i) => (i === index ? text : sub)));
   };
 
   const removeSubMission = (index: number) => {
-    setSubMissions((prev) => prev.filter((_, i) => i !== index));
+    setSubDescriptions((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,7 +141,7 @@ export default function MissionModal({
         ...formData,
         openDate: new Date(formData.openDate),
         dueDate: new Date(formData.dueDate),
-        subMissions: subMissions.filter((sub) => sub.trim() !== ""),
+        subDescriptions: subDescriptions.filter((sub) => sub.trim() !== ""),
       };
 
       await onSave(missionData);
@@ -272,13 +272,13 @@ export default function MissionModal({
 
             <div className="flex flex-col gap-2">
               <label className="block text-sm font-medium text-gray-700">
-                하위 미션
+                하위 미션 설명
                 <span className="text-xs text-gray-500"> (선택)</span>
               </label>
 
-              {subMissions.length > 0 && (
+              {subDescriptions.length > 0 && (
                 <div className="space-y-2 mt-2">
-                  {subMissions.map((subMission, index) => (
+                  {subDescriptions.map((subMission, index) => (
                     <div key={index} className="flex items-center space-x-2">
                       <input
                         type="text"
