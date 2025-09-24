@@ -226,8 +226,8 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                   <dd className="text-sm">
                     <span
                       className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${mission.isPublic
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
                         }`}
                     >
                       {mission.isPublic ? "공개" : "비공개"}
@@ -246,9 +246,11 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                             key={missionTag.tag.id}
                             className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                             style={{
-                              backgroundColor: missionTag.tag.color ? `${missionTag.tag.color}20` : '#f3f4f6',
-                              color: missionTag.tag.color || '#374151',
-                              border: `1px solid ${missionTag.tag.color || '#d1d5db'}`
+                              backgroundColor: missionTag.tag.color
+                                ? `${missionTag.tag.color}20`
+                                : "#f3f4f6",
+                              color: missionTag.tag.color || "#374151",
+                              border: `1px solid ${missionTag.tag.color || "#d1d5db"}`,
                             }}
                           >
                             {missionTag.tag.name}
@@ -256,7 +258,9 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                         ))}
                       </div>
                     ) : (
-                      <span className="text-gray-500">등록된 태그가 없습니다.</span>
+                      <span className="text-gray-500">
+                        등록된 태그가 없습니다.
+                      </span>
                     )}
                   </dd>
                 </div>
@@ -320,7 +324,9 @@ export default function MissionDetailPage({ params }: MissionDetailPageProps) {
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-gray-900">{subDescription}</p>
+                        <p className="text-sm text-gray-900">
+                          {subDescription}
+                        </p>
                       </div>
                     </div>
                   ))}

@@ -9,7 +9,11 @@ import { useFileUpload } from "@/hooks/useFileUpload";
 
 interface MissionModalProps {
   isOpen: boolean;
-  courses: Array<{ id: string; name: string; tags: Array<{ id: string; name: string; color: string }> }>;
+  courses: Array<{
+    id: string;
+    name: string;
+    tags: Array<{ id: string; name: string; color: string }>;
+  }>;
   onClose: () => void;
   onSave: (missionData: CreateMissionData) => void;
   mission?: Mission | null;
@@ -35,7 +39,7 @@ export default function MissionModal({
     courseId: "",
     isPublic: true,
     tags: [],
-    subDescriptions: [] // subDescriptions를 formData에 포함
+    subDescriptions: [], // subDescriptions를 formData에 포함
   });
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -48,7 +52,9 @@ export default function MissionModal({
 
   // 선택된 과정의 태그 가져오기
   const getAvailableTags = () => {
-    const selectedCourse = courses.find(course => course.id === formData.courseId);
+    const selectedCourse = courses.find(
+      (course) => course.id === formData.courseId,
+    );
     return selectedCourse?.tags || [];
   };
 
@@ -75,7 +81,7 @@ export default function MissionModal({
         setUploadedImages(mission.image ? [mission.image] : []);
 
         // 기존 미션의 태그 ID 설정
-        const existingTagIds = mission.tags?.map(tag => tag.tag.id) || [];
+        const existingTagIds = mission.tags?.map((tag) => tag.tag.id) || [];
 
         setSelectedTagIds(existingTagIds);
       } else {
@@ -139,22 +145,33 @@ export default function MissionModal({
   };
 
   const addSubMission = () => {
-    setFormData((prev) => ({ ...prev, subDescriptions: [...prev.subDescriptions, ""] }));
+    setFormData((prev) => ({
+      ...prev,
+      subDescriptions: [...prev.subDescriptions, ""],
+    }));
   };
 
   const updateSubMission = (index: number, text: string) => {
-    setFormData((prev) => ({ ...prev, subDescriptions: prev.subDescriptions.map((sub, i) => (i === index ? text : sub)) }));
+    setFormData((prev) => ({
+      ...prev,
+      subDescriptions: prev.subDescriptions.map((sub, i) =>
+        i === index ? text : sub,
+      ),
+    }));
   };
 
   const removeSubMission = (index: number) => {
-    setFormData((prev) => ({ ...prev, subDescriptions: prev.subDescriptions.filter((_, i) => i !== index) }));
+    setFormData((prev) => ({
+      ...prev,
+      subDescriptions: prev.subDescriptions.filter((_, i) => i !== index),
+    }));
   };
 
   // 태그 선택/해제 함수들
   const toggleTag = (tagId: string) => {
-    setSelectedTagIds(prev => {
+    setSelectedTagIds((prev) => {
       const newSelected = prev.includes(tagId)
-        ? prev.filter(id => id !== tagId)
+        ? prev.filter((id) => id !== tagId)
         : [...prev, tagId];
 
       return newSelected;
@@ -162,8 +179,8 @@ export default function MissionModal({
   };
 
   const removeTag = (tagId: string) => {
-    setSelectedTagIds(prev => {
-      const newSelected = prev.filter(id => id !== tagId);
+    setSelectedTagIds((prev) => {
+      const newSelected = prev.filter((id) => id !== tagId);
       return newSelected;
     });
   };
@@ -175,7 +192,9 @@ export default function MissionModal({
     try {
       const missionData = {
         ...formData,
-        subDescriptions: formData.subDescriptions.filter((sub) => sub.trim() !== ""),
+        subDescriptions: formData.subDescriptions.filter(
+          (sub) => sub.trim() !== "",
+        ),
         tags: selectedTagIds,
       };
 
@@ -287,15 +306,15 @@ export default function MissionModal({
                       onChange={(e) => {
                         if (e.target.value) {
                           toggleTag(e.target.value);
-                          e.target.value = ''; // 선택 후 초기화
+                          e.target.value = ""; // 선택 후 초기화
                         }
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="">태그를 선택하세요</option>
                       {getAvailableTags()
-                        .filter(tag => !selectedTagIds.includes(tag.id))
-                        .map(tag => (
+                        .filter((tag) => !selectedTagIds.includes(tag.id))
+                        .map((tag) => (
                           <option key={tag.id} value={tag.id}>
                             {tag.name}
                           </option>
@@ -305,24 +324,28 @@ export default function MissionModal({
                 )}
 
                 {!formData.courseId && (
-                  <p className="text-sm text-gray-500">먼저 과정을 선택해주세요.</p>
+                  <p className="text-sm text-gray-500">
+                    먼저 과정을 선택해주세요.
+                  </p>
                 )}
 
                 {/* 선택된 태그 표시 */}
                 {selectedTagIds.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {selectedTagIds.map(tagId => {
+                    {selectedTagIds.map((tagId) => {
                       const availableTags = getAvailableTags();
-                      const tag = availableTags.find(t => t.id === tagId);
+                      const tag = availableTags.find((t) => t.id === tagId);
                       if (!tag) return null;
                       return (
                         <span
                           key={tagId}
                           className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                           style={{
-                            backgroundColor: tag.color ? `${tag.color}20` : '#f3f4f6',
-                            color: tag.color || '#374151',
-                            border: `1px solid ${tag.color || '#d1d5db'}`
+                            backgroundColor: tag.color
+                              ? `${tag.color}20`
+                              : "#f3f4f6",
+                            color: tag.color || "#374151",
+                            border: `1px solid ${tag.color || "#d1d5db"}`,
                           }}
                         >
                           {tag.name}

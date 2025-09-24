@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
     // 검색 조건
     const where = search
       ? {
-        name: { contains: search, mode: "insensitive" as any },
-      }
+          name: { contains: search, mode: "insensitive" as any },
+        }
       : {};
 
     // 전체 개수 조회
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, startDate, endDate, groupIds } = body;
+    const { name, startDate, endDate, groupIds, missionCount } = body;
 
     // 필수 필드 검증
     if (!name || !startDate || !endDate) {
@@ -149,13 +149,14 @@ export async function POST(request: NextRequest) {
         name,
         startDate: start,
         endDate: end,
+        missionCount: missionCount || 0,
         groups:
           groupIds && groupIds.length > 0
             ? {
-              create: groupIds.map((groupId: number) => ({
-                groupId: groupId,
-              })),
-            }
+                create: groupIds.map((groupId: number) => ({
+                  groupId: groupId,
+                })),
+              }
             : undefined,
       },
       include: {

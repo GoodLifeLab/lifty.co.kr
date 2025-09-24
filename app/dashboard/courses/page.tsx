@@ -58,6 +58,7 @@ export default function CoursesPage() {
     startDate: string;
     endDate: string;
     groupIds: number[];
+    missionCount: number;
   }) => {
     try {
       await CourseService.createCourse(data);

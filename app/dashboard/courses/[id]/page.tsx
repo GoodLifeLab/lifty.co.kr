@@ -7,12 +7,12 @@ import {
   ArrowLeftIcon,
   PencilIcon,
   TrashIcon,
-  AcademicCapIcon,
   CalendarIcon,
   UserGroupIcon,
-  MagnifyingGlassIcon,
+  FlagIcon,
 } from "@heroicons/react/24/outline";
 import MissionTable from "@/components/course/MissionTable";
+import CourseModal from "@/components/course/CourseModal";
 
 interface Course {
   id: string;
@@ -20,6 +20,7 @@ interface Course {
   createdAt: string;
   startDate: string;
   endDate: string;
+  missionCount: number;
   tags: Array<{
     id: string;
     name: string;
@@ -55,20 +56,9 @@ export default function CourseDetailPage({
   const { id } = use(params);
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showCourseModal, setShowCourseModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    startDate: "",
-    endDate: "",
-  });
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [selectedGroups, setSelectedGroups] = useState<Group[]>([]);
-  const [groupsLoading, setGroupsLoading] = useState(false);
-  const [groupSearchTerm, setGroupSearchTerm] = useState("");
-  const [groupPage, setGroupPage] = useState(1);
-  const [hasMoreGroups, setHasMoreGroups] = useState(true);
-  const [groupSearchLoading, setGroupSearchLoading] = useState(false);
+  const [isUpdatingCourse, setIsUpdatingCourse] = useState(false);
 
   // 태그 관리 상태 (통합)
   const [showTagModal, setShowTagModal] = useState(false);
@@ -76,11 +66,14 @@ export default function CourseDetailPage({
   const [tagColor, setTagColor] = useState("");
   const [isProcessingTag, setIsProcessingTag] = useState(false);
   const [isDeletingTag, setIsDeletingTag] = useState<string | null>(null);
-  const [editingTag, setEditingTag] = useState<{ id: string; name: string; color: string | null } | null>(null);
+  const [editingTag, setEditingTag] = useState<{
+    id: string;
+    name: string;
+    color: string | null;
+  } | null>(null);
 
   useEffect(() => {
     fetchCourse();
-    fetchGroups();
   }, [id]);
 
   const fetchCourse = async () => {
@@ -90,12 +83,6 @@ export default function CourseDetailPage({
       if (response.ok) {
         const data = await response.json();
         setCourse(data);
-        setFormData({
-          name: data.name,
-          startDate: data.startDate.split("T")[0],
-          endDate: data.endDate.split("T")[0],
-        });
-        setSelectedGroups(data.groups || []);
       } else {
         router.push("/dashboard/courses");
       }
@@ -107,99 +94,33 @@ export default function CourseDetailPage({
     }
   };
 
-  const fetchGroups = async (page = 1, search = "", append = false) => {
+  const handleCourseSubmit = async (data: {
+    name: string;
+    startDate: string;
+    endDate: string;
+    missionCount: number;
+    groupIds: number[];
+  }) => {
     try {
-      if (page === 1) {
-        setGroupsLoading(true);
-      } else {
-        setGroupSearchLoading(true);
-      }
-
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: "20",
-        ...(search && { search }),
-      });
-
-      const response = await fetch(`/api/groups?${params}`);
-      if (response.ok) {
-        const data = await response.json();
-
-        if (append) {
-          setGroups((prev) => [...prev, ...data.groups]);
-        } else {
-          setGroups(data.groups || []);
-        }
-
-        setHasMoreGroups(data.pagination?.hasMore || false);
-        setGroupPage(page);
-      }
-    } catch (error) {
-      console.error("그룹 목록 조회 실패:", error);
-    } finally {
-      setGroupsLoading(false);
-      setGroupSearchLoading(false);
-    }
-  };
-
-  const handleStartDateChange = (startDate: string) => {
-    setFormData((prev) => {
-      const newData = { ...prev, startDate };
-
-      if (newData.endDate && newData.endDate <= startDate) {
-        const nextDay = new Date(startDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        newData.endDate = nextDay.toISOString().split("T")[0];
-      }
-
-      return newData;
-    });
-  };
-
-  const toggleGroupSelection = (group: Group) => {
-    const isSelected = selectedGroups.some((g) => g.id === group.id);
-    if (isSelected) {
-      setSelectedGroups(selectedGroups.filter((g) => g.id !== group.id));
-    } else {
-      setSelectedGroups([...selectedGroups, group]);
-    }
-  };
-
-  const removeSelectedGroup = (groupId: number) => {
-    setSelectedGroups(selectedGroups.filter((g) => g.id !== groupId));
-  };
-
-  const handleGroupSearch = async (searchTerm: string) => {
-    setGroupSearchTerm(searchTerm);
-    setGroupPage(1);
-    await fetchGroups(1, searchTerm, false);
-  };
-
-  const loadMoreGroups = async () => {
-    if (!hasMoreGroups || groupSearchLoading) return;
-    await fetchGroups(groupPage + 1, groupSearchTerm, true);
-  };
-
-  const handleEditCourse = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
+      setIsUpdatingCourse(true);
       const response = await fetch(`/api/courses/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
-          groupIds: selectedGroups.map((g) => g.id),
+          ...data,
         }),
       });
 
       if (response.ok) {
-        setShowEditModal(false);
+        setShowCourseModal(false);
         fetchCourse();
       }
     } catch (error) {
       console.error("프로젝트 수정 실패:", error);
+    } finally {
+      setIsUpdatingCourse(false);
     }
   };
 
@@ -218,7 +139,11 @@ export default function CourseDetailPage({
   };
 
   // 태그 관리 함수들 (통합)
-  const openTagModal = (tag?: { id: string; name: string; color: string | null }) => {
+  const openTagModal = (tag?: {
+    id: string;
+    name: string;
+    color: string | null;
+  }) => {
     if (tag) {
       setEditingTag(tag);
       setTagName(tag.name);
@@ -262,11 +187,13 @@ export default function CourseDetailPage({
         fetchCourse(); // 코스 정보 다시 로드
       } else {
         const error = await response.json();
-        alert(error.error || `태그 ${isEditing ? '수정' : '생성'}에 실패했습니다.`);
+        alert(
+          error.error || `태그 ${isEditing ? "수정" : "생성"}에 실패했습니다.`,
+        );
       }
     } catch (error) {
-      console.error(`태그 ${editingTag ? '수정' : '생성'} 실패:`, error);
-      alert(`태그 ${editingTag ? '수정' : '생성'}에 실패했습니다.`);
+      console.error(`태그 ${editingTag ? "수정" : "생성"} 실패:`, error);
+      alert(`태그 ${editingTag ? "수정" : "생성"}에 실패했습니다.`);
     } finally {
       setIsProcessingTag(false);
     }
@@ -294,7 +221,6 @@ export default function CourseDetailPage({
       setIsDeletingTag(null);
     }
   };
-
 
   if (loading) {
     return (
@@ -336,7 +262,7 @@ export default function CourseDetailPage({
         </div>
         <div className="flex space-x-3">
           <button
-            onClick={() => setShowEditModal(true)}
+            onClick={() => setShowCourseModal(true)}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center"
           >
             <PencilIcon className="h-4 w-4 mr-2" />
@@ -385,6 +311,15 @@ export default function CourseDetailPage({
               {course.groups.length}개 그룹
             </div>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              예상 미션 개수
+            </label>
+            <div className="flex items-center text-sm text-gray-900">
+              <FlagIcon className="h-4 w-4 mr-1" />
+              {course.missionCount || 0}개 미션
+            </div>
+          </div>
         </div>
 
         {/* 태그 섹션 */}
@@ -406,9 +341,9 @@ export default function CourseDetailPage({
                   key={tag.id}
                   className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium group gap-1 cursor-pointer"
                   style={{
-                    backgroundColor: tag.color ? `${tag.color}20` : '#f3f4f6',
-                    color: tag.color || '#374151',
-                    border: `1px solid ${tag.color || '#d1d5db'}`
+                    backgroundColor: tag.color ? `${tag.color}20` : "#f3f4f6",
+                    color: tag.color || "#374151",
+                    border: `1px solid ${tag.color || "#d1d5db"}`,
                   }}
                   onClick={() => openTagModal(tag)}
                   title="태그 수정"
@@ -426,7 +361,7 @@ export default function CourseDetailPage({
                     {isDeletingTag === tag.id ? (
                       <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      '×'
+                      "×"
                     )}
                   </button>
                 </div>
@@ -511,182 +446,25 @@ export default function CourseDetailPage({
         course={course ? { id: course.id, name: course.name } : undefined}
       />
 
-      {/* 수정 모달 */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              프로젝트 수정
-            </h3>
-
-            <form onSubmit={handleEditCourse} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  프로젝트명 *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="프로젝트명을 입력하세요"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  시작일 *
-                </label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => handleStartDateChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  종료일 *
-                </label>
-                <input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
-                  }
-                  min={formData.startDate || undefined}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  참여 그룹 (선택사항)
-                </label>
-                {selectedGroups.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-sm text-gray-600 mb-2">선택된 그룹:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedGroups.map((group) => (
-                        <span
-                          key={group.id}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800"
-                        >
-                          {group.name}
-                          <button
-                            type="button"
-                            onClick={() => removeSelectedGroup(group.id)}
-                            className="ml-1 text-indigo-600 hover:text-indigo-800"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 검색 입력 */}
-                <div className="mb-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={groupSearchTerm}
-                      onChange={(e) => handleGroupSearch(e.target.value)}
-                      placeholder="그룹명으로 검색..."
-                      className="w-full px-3 py-2 pl-9 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                    />
-                    <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                  </div>
-                </div>
-
-                {/* 그룹 목록 */}
-                <div className="h-48 overflow-y-auto border border-gray-300 rounded-md">
-                  {groupsLoading ? (
-                    <div className="p-3 text-center text-sm text-gray-500">
-                      그룹 목록을 불러오는 중...
-                    </div>
-                  ) : groups.length === 0 ? (
-                    <div className="p-3 text-center text-sm text-gray-500">
-                      {groupSearchTerm
-                        ? "검색 결과가 없습니다"
-                        : "사용 가능한 그룹이 없습니다"}
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-gray-200">
-                      {groups.map((group) => (
-                        <div
-                          key={group.id}
-                          className={`p-3 cursor-pointer hover:bg-gray-50 ${selectedGroups.some((g) => g.id === group.id)
-                            ? "bg-indigo-50"
-                            : ""
-                            }`}
-                          onClick={() => toggleGroupSelection(group)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {group.name}
-                              </p>
-                            </div>
-                            {selectedGroups.some((g) => g.id === group.id) && (
-                              <div className="w-4 h-4 bg-indigo-600 rounded-full flex items-center justify-center">
-                                <div className="w-2 h-2 bg-white rounded-full"></div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* 무한 스크롤 로딩 */}
-                      {groupSearchLoading && (
-                        <div className="p-3 text-center text-sm text-gray-500">
-                          더 불러오는 중...
-                        </div>
-                      )}
-
-                      {/* 더 보기 버튼 */}
-                      {hasMoreGroups && !groupSearchLoading && (
-                        <div className="p-3 text-center">
-                          <button
-                            type="button"
-                            onClick={loadMoreGroups}
-                            className="text-sm text-indigo-600 hover:text-indigo-800"
-                          >
-                            더 보기
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-indigo-700 text-white px-4 py-2 rounded-md hover:bg-indigo-800 transition-colors"
-                >
-                  수정
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* 코스 관리 모달 */}
+      <CourseModal
+        isOpen={showCourseModal}
+        onClose={() => setShowCourseModal(false)}
+        onSubmit={handleCourseSubmit}
+        initialData={
+          course
+            ? {
+                id: course.id,
+                name: course.name,
+                startDate: course.startDate,
+                endDate: course.endDate,
+                missionCount: course.missionCount,
+                groups: course.groups.map((g) => ({ id: g.id, name: g.name })),
+              }
+            : null
+        }
+        loading={isUpdatingCourse}
+      />
 
       {/* 삭제 확인 모달 */}
       {showDeleteModal && (
@@ -780,16 +558,18 @@ export default function CourseDetailPage({
                   className="flex-1 bg-indigo-700 text-white px-4 py-2 rounded-md hover:bg-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isProcessingTag
-                    ? (editingTag ? "수정 중..." : "생성 중...")
-                    : (editingTag ? "수정" : "생성")
-                  }
+                    ? editingTag
+                      ? "수정 중..."
+                      : "생성 중..."
+                    : editingTag
+                      ? "수정"
+                      : "생성"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 }
