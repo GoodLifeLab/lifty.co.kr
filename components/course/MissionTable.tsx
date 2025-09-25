@@ -41,6 +41,7 @@ export default function MissionTable({
       id: string;
       name: string;
       _count: { missions: number; missionsInProgress: number };
+      tags: Array<{ id: string; name: string; color: string }>;
     }>
   >([]);
 

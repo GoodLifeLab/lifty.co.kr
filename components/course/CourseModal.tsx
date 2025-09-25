@@ -7,6 +7,7 @@ interface Course {
   name: string;
   startDate: string;
   endDate: string;
+  missionCount: number;
   groups: Array<{
     id: number;
     name: string;
@@ -20,6 +21,7 @@ interface CourseModalProps {
     name: string;
     startDate: string;
     endDate: string;
+    missionCount: number;
     groupIds: number[];
   }) => void;
   initialData?: Course | null;
@@ -37,6 +39,7 @@ export default function CourseModal({
     name: "",
     startDate: "",
     endDate: "",
+    missionCount: 0,
   });
 
   const {
@@ -61,10 +64,11 @@ export default function CourseModal({
         name: initialData.name,
         startDate: initialData.startDate.split("T")[0],
         endDate: initialData.endDate.split("T")[0],
+        missionCount: initialData.missionCount || 0,
       });
       setSelectedGroups(initialData.groups);
     } else {
-      setFormData({ name: "", startDate: "", endDate: "" });
+      setFormData({ name: "", startDate: "", endDate: "", missionCount: 0 });
       setSelectedGroups([]);
     }
   }, [initialData, setSelectedGroups]);
@@ -153,6 +157,28 @@ export default function CourseModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              미션 개수
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={formData.missionCount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  missionCount: parseInt(e.target.value) || 0,
+                })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="예상 미션 개수를 입력하세요"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              이 프로젝트에서 예상되는 미션의 개수입니다.
+            </p>
           </div>
 
           <div>

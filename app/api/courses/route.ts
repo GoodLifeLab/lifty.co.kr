@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
               dueDate: true,
             },
           },
+          tags: true,
         },
       }),
     ]);
@@ -91,6 +92,7 @@ export async function GET(request: NextRequest) {
           missions: totalMissions,
           missionsInProgress: missionsInProgress,
         },
+        tags: course.tags,
       };
     });
 
@@ -121,7 +123,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, startDate, endDate, groupIds } = body;
+    const { name, startDate, endDate, groupIds, missionCount } = body;
 
     // 필수 필드 검증
     if (!name || !startDate || !endDate) {
@@ -147,6 +149,7 @@ export async function POST(request: NextRequest) {
         name,
         startDate: start,
         endDate: end,
+        missionCount: missionCount || 0,
         groups:
           groupIds && groupIds.length > 0
             ? {

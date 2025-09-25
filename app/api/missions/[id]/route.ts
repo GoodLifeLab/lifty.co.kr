@@ -19,6 +19,18 @@ export async function GET(
             name: true,
           },
         },
+        tags: {
+          select: {
+            id: true,
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -57,7 +69,8 @@ export async function PUT(
       placeholder,
       courseId,
       isPublic,
-      subMissions = [],
+      subDescriptions = [],
+      tags = [],
     } = body;
 
     // 미션 존재 여부 확인
@@ -86,6 +99,11 @@ export async function PUT(
       }
     }
 
+    // 기존 태그 연결 삭제
+    await prisma.missionTag.deleteMany({
+      where: { missionId: id },
+    });
+
     // 미션 업데이트
     const updatedMission = await prisma.mission.update({
       where: { id },
@@ -99,13 +117,30 @@ export async function PUT(
         placeholder,
         courseId,
         isPublic,
-        subMissions: subMissions,
+        subDescriptions,
+        tags: {
+          create: tags.map((tag: string) => ({
+            tagId: tag,
+          })),
+        },
       },
       include: {
         course: {
           select: {
             id: true,
             name: true,
+          },
+        },
+        tags: {
+          select: {
+            id: true,
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
           },
         },
       },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Mission, CreateMissionData } from "@/types/Mission";
 import ImageUploadInput from "./ImageUploadInput";
 import RichTextEditor from "./RichTextEditor";
@@ -9,7 +9,11 @@ import { useFileUpload } from "@/hooks/useFileUpload";
 
 interface MissionModalProps {
   isOpen: boolean;
-  courses: Array<{ id: string; name: string }>;
+  courses: Array<{
+    id: string;
+    name: string;
+    tags: Array<{ id: string; name: string; color: string }>;
+  }>;
   onClose: () => void;
   onSave: (missionData: CreateMissionData) => void;
   mission?: Mission | null;
@@ -24,7 +28,7 @@ export default function MissionModal({
   mission,
   course,
 }: MissionModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateMissionData>({
     title: "",
     openDate: new Date().toISOString().slice(0, 16),
     dueDate: "",
@@ -34,14 +38,25 @@ export default function MissionModal({
     placeholder: "",
     courseId: "",
     isPublic: true,
+    tags: [],
+    subDescriptions: [], // subDescriptions를 formData에 포함
   });
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
-  const [subMissions, setSubMissions] = useState<string[]>([]);
+  // subDescriptions 상태는 제거하고 formData에서 관리
   const [isLoading, setIsLoading] = useState(false);
 
   const { deleteFile } = useFileUpload();
+
+  // 선택된 과정의 태그 가져오기
+  const getAvailableTags = () => {
+    const selectedCourse = courses.find(
+      (course) => course.id === formData.courseId,
+    );
+    return selectedCourse?.tags || [];
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -60,15 +75,22 @@ export default function MissionModal({
           placeholder: mission.placeholder || "",
           courseId: mission.courseId,
           isPublic: mission.isPublic,
+          tags: mission.tags.map((tag) => tag.tag.id) || [],
+          subDescriptions: mission.subDescriptions || [],
         });
         setUploadedImages(mission.image ? [mission.image] : []);
-        setSubMissions(mission.subMissions || []);
+
+        // 기존 미션의 태그 ID 설정
+        const existingTagIds = mission.tags?.map((tag) => tag.tag.id) || [];
+
+        setSelectedTagIds(existingTagIds);
       } else {
         resetForm();
         // course가 있으면 자동으로 설정
         if (course) {
           setFormData((prev) => ({ ...prev, courseId: course.id }));
         }
+        setSelectedTagIds([]);
       }
     }
   }, [isOpen, mission, course]);
@@ -86,9 +108,11 @@ export default function MissionModal({
       placeholder: "",
       courseId: "",
       isPublic: true,
+      tags: [],
+      subDescriptions: [],
     });
     setUploadedImages([]);
-    setSubMissions([]);
+    setSelectedTagIds([]);
   };
 
   const handleInputChange = (
@@ -121,15 +145,44 @@ export default function MissionModal({
   };
 
   const addSubMission = () => {
-    setSubMissions((prev) => [...prev, ""]);
+    setFormData((prev) => ({
+      ...prev,
+      subDescriptions: [...prev.subDescriptions, ""],
+    }));
   };
 
   const updateSubMission = (index: number, text: string) => {
-    setSubMissions((prev) => prev.map((sub, i) => (i === index ? text : sub)));
+    setFormData((prev) => ({
+      ...prev,
+      subDescriptions: prev.subDescriptions.map((sub, i) =>
+        i === index ? text : sub,
+      ),
+    }));
   };
 
   const removeSubMission = (index: number) => {
-    setSubMissions((prev) => prev.filter((_, i) => i !== index));
+    setFormData((prev) => ({
+      ...prev,
+      subDescriptions: prev.subDescriptions.filter((_, i) => i !== index),
+    }));
+  };
+
+  // 태그 선택/해제 함수들
+  const toggleTag = (tagId: string) => {
+    setSelectedTagIds((prev) => {
+      const newSelected = prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId];
+
+      return newSelected;
+    });
+  };
+
+  const removeTag = (tagId: string) => {
+    setSelectedTagIds((prev) => {
+      const newSelected = prev.filter((id) => id !== tagId);
+      return newSelected;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,9 +192,10 @@ export default function MissionModal({
     try {
       const missionData = {
         ...formData,
-        openDate: new Date(formData.openDate),
-        dueDate: new Date(formData.dueDate),
-        subMissions: subMissions.filter((sub) => sub.trim() !== ""),
+        subDescriptions: formData.subDescriptions.filter(
+          (sub) => sub.trim() !== "",
+        ),
+        tags: selectedTagIds,
       };
 
       await onSave(missionData);
@@ -165,8 +219,8 @@ export default function MissionModal({
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1">
           <div className="flex-1 overflow-y-scroll p-6 space-y-4 max-h-[80vh]">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
+              <div className="sm:col-span-3">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   미션명 *
                 </label>
@@ -181,7 +235,7 @@ export default function MissionModal({
                 />
               </div>
 
-              <div>
+              <div className="sm:col-span-3">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   과정 *
                 </label>
@@ -193,7 +247,10 @@ export default function MissionModal({
                   <select
                     name="courseId"
                     value={formData.courseId}
-                    onChange={handleInputChange}
+                    onChange={(e) => {
+                      handleInputChange(e);
+                      setSelectedTagIds([]);
+                    }}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
@@ -208,7 +265,7 @@ export default function MissionModal({
                 )}
               </div>
 
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   공개일자 *
                 </label>
@@ -222,7 +279,7 @@ export default function MissionModal({
                 />
               </div>
 
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   종료일자 *
                 </label>
@@ -234,6 +291,76 @@ export default function MissionModal({
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  태그
+                  <span className="text-xs text-gray-500"> (선택)</span>
+                </label>
+                {/* 태그 선택 드롭다운 */}
+                {formData.courseId && (
+                  <div className="relative">
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          toggleTag(e.target.value);
+                          e.target.value = ""; // 선택 후 초기화
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="">태그를 선택하세요</option>
+                      {getAvailableTags()
+                        .filter((tag) => !selectedTagIds.includes(tag.id))
+                        .map((tag) => (
+                          <option key={tag.id} value={tag.id}>
+                            {tag.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
+                {!formData.courseId && (
+                  <p className="text-sm text-gray-500">
+                    먼저 과정을 선택해주세요.
+                  </p>
+                )}
+
+                {/* 선택된 태그 표시 */}
+                {selectedTagIds.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {selectedTagIds.map((tagId) => {
+                      const availableTags = getAvailableTags();
+                      const tag = availableTags.find((t) => t.id === tagId);
+                      if (!tag) return null;
+                      return (
+                        <span
+                          key={tagId}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                          style={{
+                            backgroundColor: tag.color
+                              ? `${tag.color}20`
+                              : "#f3f4f6",
+                            color: tag.color || "#374151",
+                            border: `1px solid ${tag.color || "#d1d5db"}`,
+                          }}
+                        >
+                          {tag.name}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tagId)}
+                            className="ml-2 hover:text-red-600"
+                          >
+                            <XMarkIcon className="h-3 w-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* <div>
@@ -272,13 +399,13 @@ export default function MissionModal({
 
             <div className="flex flex-col gap-2">
               <label className="block text-sm font-medium text-gray-700">
-                하위 미션
+                하위 미션 설명
                 <span className="text-xs text-gray-500"> (선택)</span>
               </label>
 
-              {subMissions.length > 0 && (
+              {formData.subDescriptions.length > 0 && (
                 <div className="space-y-2 mt-2">
-                  {subMissions.map((subMission, index) => (
+                  {formData.subDescriptions.map((subMission, index) => (
                     <div key={index} className="flex items-center space-x-2">
                       <input
                         type="text"

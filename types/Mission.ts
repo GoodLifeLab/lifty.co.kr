@@ -9,6 +9,17 @@ export type Mission = Prisma.MissionGetPayload<{
         name: true;
       };
     };
+    tags: {
+      select: {
+        tag: {
+          select: {
+            id: true;
+            name: true;
+            color: true;
+          };
+        };
+      };
+    };
   };
 }> & {
   totalParticipants?: number;
@@ -21,11 +32,13 @@ export type CreateMissionData = {
   shortDesc: string;
   detailDesc: string;
   placeholder?: string;
-  dueDate: Date;
+  openDate?: string;
+  dueDate: string;
   image?: string;
   isPublic: boolean;
   courseId: string;
-  subMissions: string[];
+  subDescriptions: string[];
+  tags: string[];
 };
 
 // 미션 참여자 수행 관련 타입

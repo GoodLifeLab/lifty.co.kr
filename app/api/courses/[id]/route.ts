@@ -49,6 +49,13 @@ export async function GET(
             },
           },
         },
+        tags: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+          },
+        },
       },
     });
 
@@ -91,7 +98,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, startDate, endDate, groupIds } = body;
+    const { name, startDate, endDate, groupIds, missionCount } = body;
 
     // 필수 필드 검증
     if (!name || !startDate || !endDate) {
@@ -124,6 +131,7 @@ export async function PUT(
         name,
         startDate: start,
         endDate: end,
+        missionCount: missionCount || 0,
         groups:
           groupIds && groupIds.length > 0
             ? {

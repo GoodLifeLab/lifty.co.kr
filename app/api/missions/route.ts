@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
       placeholder,
       courseId,
       isPublic,
-      subMissions = [],
+      tags = [],
+      subDescriptions = [],
     } = body;
 
     // 필수 필드 검증
@@ -125,7 +126,12 @@ export async function POST(request: NextRequest) {
         placeholder,
         courseId,
         isPublic: isPublic || false,
-        subMissions: subMissions,
+        subDescriptions: subDescriptions,
+        tags: {
+          create: tags.map((tag: string) => ({
+            tagId: tag,
+          })),
+        },
       },
       include: {
         course: {
